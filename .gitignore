@@ -1,0 +1,10 @@
+*.pyc
+.*.swp
+*~
+reports/*
+.settings/*
+.pydevproject
+.DS_Store
+/.metadata
+/.settings
+*/.svn/tmp
