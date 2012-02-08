@@ -71,7 +71,10 @@ class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
 
         if value and hasattr(value, "url"):
             template = self.template_with_initial
-            substitutions['size'] = filesizeformat(value.size)
+            try:
+                substitutions['size'] = filesizeformat(value.size)
+            except OSError as e:
+                substitutions['size'] = "Unknown"
             substitutions['initial'] = (u'<a href="%s">%s</a>'
                                         % (escape(value.url),
                                            escape(force_unicode(value))))
