@@ -34,6 +34,7 @@ from django import forms
 from django.contrib import admin
 from django.forms import ModelForm
 from django.forms.util import flatatt as attributes_to_str
+from django.forms.util import ErrorList
 from django.forms.widgets import ClearableFileInput, CheckboxInput
 from django.template.defaultfilters import filesizeformat
 from django.utils.encoding import force_unicode
@@ -111,7 +112,7 @@ class IntranetUserForm(ModelForm):
     
     COMPLETE_BOTH = 'You must complete both password boxes to set or ' + \
         'change the password'
-    
+        
     def clean(self):
         password1 = self.cleaned_data.get('password1')
         password2 = self.cleaned_data.get('password2')
@@ -146,6 +147,9 @@ class IntranetUserForm(ModelForm):
                 self.instance.set_password(password1)
 
 class IntranetUserAdmin(admin.ModelAdmin):
+    def __init__(self, model, admin_site):
+        admin.ModelAdmin.__init__(self, model, admin_site)
+        
     list_display = ('username', 'full_name', 'job_title', 'program',
         models.IntranetUser.get_userlevel)
 
@@ -171,7 +175,30 @@ class IntranetUserAdmin(admin.ModelAdmin):
         # print 'get_form => %s' % dir(result)
         # print 'declared_fields => %s' % result.declared_fields
         # print 'base_fields => %s' % result.base_fields
+        result.base_fields['is_logged_in'] = forms.BooleanField(initial=True,
+            required=False)
         return result
+
+    def render_change_form(self, request, context, add=False, change=False,
+        form_url='', obj=None):
+        """
+        This is called right at the end of change_view. It seems like the
+        best place to set fields to read-only.  
+        """
+        
+        adminForm = context['adminform']
+        adminForm.readonly_fields = ('is_logged_in',)
+
+        return super(IntranetUserAdmin, self).render_change_form(request,
+            context, add=add, change=change, form_url=form_url, obj=obj)
+
+    """
+    def get_fieldsets(self, request, obj=None):
+        result = super(IntranetUserAdmin, self).get_fieldsets(request, obj)
+        fields = result[0][1]['fields']
+        fields.append('logged_in')
+        return result
+    """
 
 admin.site.register(models.IntranetUser, IntranetUserAdmin)
 admin.site.register(models.Program, admin.ModelAdmin)

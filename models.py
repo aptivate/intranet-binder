@@ -62,6 +62,12 @@ class IntranetUser(User):
             return None
     get_userlevel.short_description = 'User Level'
 
+    def is_logged_in(self):
+        import datetime
+        n = SessionWithIntranetUser.objects.filter(user=self,
+            expire_date__gt=datetime.datetime.now()).count()
+        return (n > 0)  
+
 """
 from django.db.models.signals import post_save
 
