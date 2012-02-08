@@ -71,3 +71,8 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 post_save.connect(create_user_profile, sender=User)
 """
+
+from django.contrib.sessions.models import Session
+
+class SessionWithIntranetUser(Session):
+    user = models.ForeignKey(User, blank=True, null=True)
