@@ -1,6 +1,10 @@
 {% extends "default_layout.dhtml" %}
 {% load i18n %}
 
+{% block extrastyle %}
+	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
+{% endblock %}
+
 {% block title %}{{ title }}{% endblock %}
 {% block heading %}{{ title }}{% endblock %}
 
