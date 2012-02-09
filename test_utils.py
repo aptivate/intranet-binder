@@ -142,8 +142,14 @@ class SuperClient(Client):
             return False
 
 class AptivateEnhancedTestCase(TestCase):
-    def setUp(self):
-        TestCase.setUp(self)
+    def _pre_setup(self):
+        """
+        We need to change the Haystack configuration before fixtures are
+        loaded, otherwise they end up in the developer's index and not the
+        temporary test index, which is bad for both developers and tests.
+        
+        This is an internal interface and its use is not recommended.
+        """
 
         from haystack.constants import DEFAULT_ALIAS
         settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['PATH'] = '/dev/shm/whoosh'
@@ -151,6 +157,11 @@ class AptivateEnhancedTestCase(TestCase):
         from haystack import connections
         self.search_conn = connections[DEFAULT_ALIAS]
         self.search_conn.get_backend().delete_index()
+        
+        TestCase._pre_setup(self)
+        
+    def setUp(self):
+        TestCase.setUp(self)
 
         self.unified_index = self.search_conn.get_unified_index()
         self.client = SuperClient()
