@@ -27,11 +27,14 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdminWithProfile)
 """
 
+import django.contrib.admin
 import django.db.models
 import models
 
 from django import forms
 from django.contrib import admin
+from django.core.urlresolvers import reverse
+from django.db import models as db_fields
 from django.forms import ModelForm
 from django.forms.util import flatatt as attributes_to_str
 from django.forms.util import ErrorList
@@ -48,16 +51,13 @@ from django.utils.safestring import mark_safe
 # from django.db import transaction
 # from models import IntranetUser
 
-from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
-
-class RelatedFieldWithoutAddLink(RelatedFieldWidgetWrapper):
-    def __init__(self, widget, rel, admin_site, can_add_related=None):
-        RelatedFieldWidgetWrapper.__init__(self, widget, rel, admin_site,
-            can_add_related=False)
-
 class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
-    template_with_initial = u'%(initial_text)s: %(initial)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
-    readonly_template = u'%(initial)s (%(size)s)'
+    template_with_initial = u'%(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
+    readonly_template = u'%(link_to_file)s (%(size)s)'
+    
+    from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
+    readonly_unset_template = EMPTY_CHANGELIST_VALUE
+    
     has_readonly_view = True
 
     def render(self, name, value, attrs=None):
@@ -76,7 +76,7 @@ class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
                 substitutions['size'] = filesizeformat(value.size)
             except OSError as e:
                 substitutions['size'] = "Unknown"
-            substitutions['initial'] = (u'<a href="%s">%s</a>'
+            substitutions['link_to_file'] = (u'<a href="%s">%s</a>'
                                         % (escape(value.url),
                                            escape(force_unicode(value))))
             if not self.is_required:
@@ -88,7 +88,10 @@ class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
                 substitutions['clear_template'] = self.template_with_clear % substitutions
         
         if attrs.get('readonly'):
-            template = self.readonly_template
+            if value and hasattr(value, "url"):
+                template = self.readonly_template
+            else:
+                template = self.readonly_unset_template
         
         return mark_safe(template % substitutions)
 
@@ -102,6 +105,173 @@ class URLFieldWidgetWithLink(admin.widgets.AdminURLFieldWidget):
             html += " <a %s>(open)</a>" % attributes_to_str(final_attrs)
         
         return mark_safe(html)
+
+from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
+class RelatedFieldWithoutAddLink(RelatedFieldWidgetWrapper):
+    def __init__(self, widget, rel, admin_site, can_add_related=None):
+        RelatedFieldWidgetWrapper.__init__(self, widget, rel, admin_site,
+            can_add_related=False)
+
+from django.contrib.admin.views.main import ChangeList
+class ChangeListWithLinksToReadOnlyView(ChangeList):
+    def url_for_result(self, result):
+        opts = self.model._meta
+        info = opts.app_label, opts.module_name
+        return reverse('admin:%s_%s_readonly' % info,
+            args=[getattr(result, self.pk_attname)])
+
+from django.contrib.admin import ModelAdmin
+class AdminWithReadOnly(ModelAdmin):
+    # customise the default display of some form fields:
+    formfield_overrides = {
+        db_fields.URLField: {'widget': URLFieldWidgetWithLink},
+        db_fields.FileField: {'widget': AdminFileWidgetWithSize},
+    }
+    
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        """
+        Disable the "add related" option on ForeignKey fields, as
+        it will cause difficulties for users if they start adding Programs
+        and DocumentTypes!
+        """
+        
+        old_formfield = django.contrib.admin.ModelAdmin.formfield_for_dbfield(
+            self, db_field, **kwargs)
+        if (hasattr(old_formfield, 'widget') and
+            isinstance(old_formfield.widget, RelatedFieldWidgetWrapper)):
+            old_formfield.widget.can_add_related = False
+        return old_formfield
+    
+    def get_urls(self):
+        """
+        Add a URL pattern for a read-only view to the default admin views.
+        Place key called "read_only" with value True in the context which
+        ends up being passed to render_change_form().
+        """
+        
+        urlpatterns = super(AdminWithReadOnly, self).get_urls()
+        # print "patterns = %s" % urlpatterns
+        # print "name = %s" % urlpatterns[0].name
+        # print "login template = %s" % admin.sites.site.login_template
+
+        from django.utils.functional import update_wrapper
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        from django.conf.urls.defaults import url
+        from django.utils.encoding import force_unicode
+
+        opts = self.model._meta
+        info = opts.app_label, opts.module_name
+        extra_context = {
+            'read_only': True,
+            'title': 'View %s' % force_unicode(opts.verbose_name),
+            'change_view': 'admin:%s_%s_change' % info,
+        }
+
+        urlpatterns = [url(r'^(.+)/readonly$',
+                wrap(self.change_view),
+                {'extra_context': extra_context},
+                name='%s_%s_readonly' % info)] + urlpatterns
+
+        return urlpatterns
+    
+    def change_view(self, request, object_id, extra_context=None):
+        """
+        In order for get_form() to know whether this is a read-only form,
+        not having access to the extra_context, we have to poke something
+        into the request to help it.
+        """
+        request.is_read_only = (extra_context is not None and
+            'read_only' in extra_context)
+        return super(AdminWithReadOnly, self).change_view(request, object_id,
+            extra_context)
+    
+    def render_change_form(self, request, context, add=False, change=False,
+        form_url='', obj=None):
+        """
+        This is called right at the end of change_view. It seems like the
+        best place to set all fields to read-only if this is a read-only
+        view, as the fields have already been calculated and are available
+        to us. We shouldn't really muck about with the internals of the
+        AdminForm object, but this seems like the cleanest (least invasive)
+        solution to making a completely read-only admin form.  
+        """
+        
+        if 'read_only' in context:
+            adminForm = context['adminform']
+            readonly = []
+            for name, options in adminForm.fieldsets:
+                readonly.extend(options['fields'])
+            adminForm.readonly_fields = readonly
+            form_template = 'admin/view_form.html'
+        else:
+            form_template = None
+
+        context['referrer'] = request.META.get('HTTP_REFERER')
+
+        is_popup = context['is_popup']
+        
+        context['show_delete_link'] = (not is_popup and
+            self.has_delete_permission(request, obj))
+         
+        """
+        return django.contrib.admin.ModelAdmin.render_change_form(self,
+            request, context, add=add, change=change, form_url=form_url,
+            obj=obj)
+        """
+        
+        # What follows was copied from super.render_change_form and
+        # adapted to allow passing in a custom template by making
+        # form_template an optional method parameter, defaulting to None
+        
+        from django.utils.safestring import mark_safe
+        from django.contrib.contenttypes.models import ContentType
+        from django import template
+        from django.shortcuts import render_to_response
+
+        opts = self.model._meta
+        app_label = opts.app_label
+        ordered_objects = opts.get_ordered_objects()
+        context.update({
+            'add': add,
+            'change': change,
+            'has_add_permission': self.has_add_permission(request),
+            'has_change_permission': self.has_change_permission(request, obj),
+            'has_delete_permission': self.has_delete_permission(request, obj),
+            'has_file_field': True, # FIXME - this should check if form or formsets have a FileField,
+            'has_absolute_url': hasattr(self.model, 'get_absolute_url'),
+            'ordered_objects': ordered_objects,
+            'form_url': mark_safe(form_url),
+            'opts': opts,
+            'content_type_id': ContentType.objects.get_for_model(self.model).id,
+            'save_as': self.save_as,
+            'save_on_top': self.save_on_top,
+            'root_path': self.admin_site.root_path,
+        })
+        
+        if form_template is None:
+            if add and self.add_form_template is not None:
+                form_template = self.add_form_template
+            else:
+                form_template = self.change_form_template
+        
+        context_instance = template.RequestContext(request, current_app=self.admin_site.name)
+        return render_to_response(form_template or [
+            "admin/%s/%s/change_form.html" % (app_label, opts.object_name.lower()),
+            "admin/%s/change_form.html" % app_label,
+            "admin/change_form.html"
+        ], context, context_instance=context_instance)
+    
+    def get_changelist(self, request, **kwargs): 
+        """
+        Return a custom ChangeList that links each object to the read-only
+        view instead of the editable one.
+        """
+        return ChangeListWithLinksToReadOnlyView
 
 class IntranetUserForm(ModelForm):
     class Meta:
@@ -146,9 +316,9 @@ class IntranetUserForm(ModelForm):
             if password1 == password2:
                 self.instance.set_password(password1)
 
-class IntranetUserAdmin(admin.ModelAdmin):
+class IntranetUserAdmin(AdminWithReadOnly):
     def __init__(self, model, admin_site):
-        admin.ModelAdmin.__init__(self, model, admin_site)
+        super(IntranetUserAdmin, self).__init__(model, admin_site)
         
     list_display = ('username', 'full_name', 'job_title', 'program',
         models.IntranetUser.get_userlevel)
@@ -162,21 +332,17 @@ class IntranetUserAdmin(admin.ModelAdmin):
         django.db.models.ImageField: {'widget': AdminFileWidgetWithSize},
     }
     
-    def formfield_for_dbfield(self, db_field, **kwargs):
-        old_formfield = admin.ModelAdmin.formfield_for_dbfield(self,
-            db_field, **kwargs)
-        if (hasattr(old_formfield, 'widget') and
-            isinstance(old_formfield.widget, RelatedFieldWidgetWrapper)):
-            old_formfield.widget.can_add_related = False
-        return old_formfield
-    
     def get_form(self, request, obj=None, **kwargs):
-        result = admin.ModelAdmin.get_form(self, request, obj=obj, **kwargs)
+        if 'form' not in kwargs:
+            kwargs['form'] = ModelForm if request.is_read_only else IntranetUserForm
+                
+        result = super(IntranetUserAdmin, self).get_form(request, obj=obj,
+            **kwargs)
         # print 'get_form => %s' % dir(result)
         # print 'declared_fields => %s' % result.declared_fields
         # print 'base_fields => %s' % result.base_fields
-        result.base_fields['is_logged_in'] = forms.BooleanField(initial=True,
-            required=False)
+        result.base_fields['is_logged_in'] = forms.BooleanField(required=False)
+        
         return result
 
     def render_change_form(self, request, context, add=False, change=False,
@@ -192,19 +358,10 @@ class IntranetUserAdmin(admin.ModelAdmin):
         return super(IntranetUserAdmin, self).render_change_form(request,
             context, add=add, change=change, form_url=form_url, obj=obj)
 
-    """
-    def get_fieldsets(self, request, obj=None):
-        result = super(IntranetUserAdmin, self).get_fieldsets(request, obj)
-        fields = result[0][1]['fields']
-        fields.append('logged_in')
-        return result
-    """
-
 admin.site.register(models.IntranetUser, IntranetUserAdmin)
 admin.site.register(models.Program, admin.ModelAdmin)
 
 from django.contrib.admin.helpers import AdminReadonlyField
-
 class CustomAdminReadOnlyField(AdminReadonlyField):
     """
     Allow widgets that support a custom read-only view to declare it,
@@ -219,3 +376,4 @@ class CustomAdminReadOnlyField(AdminReadonlyField):
             return form[field].as_widget(attrs={'readonly': True})
         else:
             return AdminReadonlyField.contents(self)
+        
