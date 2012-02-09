@@ -17,8 +17,24 @@ from models import IntranetUser, SessionWithIntranetUser
 from session import SessionStore
 from test_utils import AptivateEnhancedTestCase
 
+from django.forms.forms import BoundField
+
+def extract_fields(form):
+    for fieldset in form:
+        for line in fieldset:
+            for field in line:
+                if isinstance(field.field, BoundField):
+                    yield field.field.name, field
+                else:
+                    yield field.field['name'], field
+
 class BinderTest(AptivateEnhancedTestCase):
     fixtures = ['test_permissions', 'test_users']
+
+    def setUp(self):
+        AptivateEnhancedTestCase.setUp(self)
+        self.john = IntranetUser.objects.get(username='john')
+        self.ringo = IntranetUser.objects.get(username='ringo')
 
     def test_front_page(self):
         response = self.client.get('/')
@@ -48,7 +64,7 @@ class BinderTest(AptivateEnhancedTestCase):
             menu_tag.menu_item(context, 'front_page', 'Home'))
 
     def login(self):
-        self.assertTrue(self.client.login(username=self.john.username,
+        self.assertTrue(self.client.login(username=self.ringo.username,
             password='johnpassword'), "Login failed")
         self.assertIn(settings.SESSION_COOKIE_NAME, self.client.cookies)
          
@@ -58,8 +74,6 @@ class BinderTest(AptivateEnhancedTestCase):
         """
 
     def test_session_updated_by_access(self):
-        self.john = IntranetUser.objects.get(username='john')
-
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(self.client.session, SessionStore)
@@ -78,5 +92,46 @@ class BinderTest(AptivateEnhancedTestCase):
         self.login()
         session_record = SessionWithIntranetUser.objects.get(
             session_key=self.client.session.session_key)
-        self.assertEqual(User.objects.get(id=self.john.id), session_record.user)
+        self.assertEqual(User.objects.get(id=self.ringo.id), session_record.user)
         self.assertNotEqual(old_date, session_record.expire_date)
+        
+    def test_logged_in_status_shown_in_admin_form(self):
+        self.login()
+        response = self.client.get(reverse('admin:binder_intranetuser_change',
+            args=[self.ringo.id]))
+
+        self.assertTrue(hasattr(response, 'context'), "Missing context " +
+            "in response: %s: %s" % (response, dir(response)))
+        self.assertIsNotNone(response.context, "Empty context in response: " +
+            "%s: %s" % (response, dir(response)))
+        self.assertIn('adminform', response.context)
+        form = response.context['adminform']
+        
+        fields = dict(extract_fields(form))
+        self.assertIn('is_logged_in', fields)
+        f = fields['is_logged_in']
+        self.assertEquals("True", f.contents())
+
+    def test_logged_in_status_is_false_for_not_logged_in_user(self):
+        self.login()
+        response = self.client.get(reverse('admin:binder_intranetuser_change',
+            args=[self.john.id]))
+        self.assertIn('adminform', response.context)
+        form = response.context['adminform']
+        fields = dict(extract_fields(form))
+        self.assertEquals("False", fields['is_logged_in'].contents())
+
+    def test_documents_shown_in_readonly_admin_form(self):
+        self.login()
+        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
+            args=[self.john.id]))
+        self.assertIn('adminform', response.context)
+        form = response.context['adminform']
+        fields = dict(extract_fields(form))
+        self.assertIn('documents_authored', fields)
+        f = fields['documents_authored']
+        table = f.contents(return_table=True)
+        
+        from admin import DocumentsAuthoredTable
+        self.assertIsInstance(table, DocumentsAuthoredTable)
+        self.assertItemsEqual(self.john.document_set.all(), table.data.queryset)
