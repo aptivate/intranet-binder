@@ -637,3 +637,14 @@ def modify_return_value(target_class_or_module, target_method_name):
 
 # from django.forms.forms import BoundField
 # before(BoundField, 'value')(breakpoint)
+
+from haystack.management.commands.update_index import Command as UpdateCommand
+@before(UpdateCommand, 'handle')
+def before_update_command_handle(self, *items, **options):
+    def replacement_prepare_text(original_function, self, document):
+        try:
+            return original_function(self, document)
+        except IOError as e: # missing file, cannot index
+            return e
+    from documents.search_indexes import DocumentIndex
+    patch(DocumentIndex, 'prepare_text', replacement_prepare_text)
