@@ -1,24 +1,60 @@
-# https://bitbucket.org/ikasamt/googleappenginejukebox/src/438c44768ab5/plugins/alias_method_chain/__init__.py
+def before(target_class_or_module, target_method_name):
+    """
+    This decorator generator takes two arguments, a class or module to
+    patch, and the name of the method in that class (or function in that
+    module) to patch.
+    
+    It returns a decorator, i.e. a function that can be called with a
+    function as its argument (the before_function), and returns a function
+    (the wrapper_with_before) that executes the before_function and then
+    the original function/method.
+    
+    You can use this to monkey patch a class or method to execute arbitrary
+    code before a method or function is called; the original method is called
+    with the same arguments and its return value is returned for you, so
+    you don't have to worry about it.
+    """
 
-import logging
+    # must return a decorator, i.e. a function that takes one arg,
+    # which is the before_function, and returns a function (a wrapper)
+    # that uses the before_function 
+    original_function = getattr(target_class_or_module, target_method_name)
+    def decorator(before_function):
+        def wrapper_with_before(*args, **kwargs):
+            before_function(*args, **kwargs)
+            return original_function(*args, **kwargs)
+        # only now do we have access to the before_function
+        setattr(target_class_or_module, target_method_name, wrapper_with_before)
+        return wrapper_with_before
+    return decorator
 
-def alias_method_chain(clazz, old_name, name):
-  setattr(clazz, "%s_without_%s" % (old_name, name), clazz)
-  setattr(clazz, old_name, getattr(clazz, "%s_with_%s" % (old_name, name)))
 
-"""
-class A: 
-  def dan(self): 
-    print "dan"
-
-class B(A):
-  def dan_with_kogai(self):
-    self.dan_without_kogai()
-    print "kogai"
-
-alias_method_chain(B, A.dan, "kogai")
-B().dan()
-"""
+def after(target_class_or_module, target_method_name):
+    """
+    This decorator generator takes two arguments, a class or module to
+    patch, and the name of the method in that class (or function in that
+    module) to patch.
+    
+    It returns a decorator, i.e. a function that can be called with a
+    function as its argument (the after_function), and returns a function
+    (the wrapper_with_after) that executes the original function/method and
+    then the after_function.
+    
+    You can use this to monkey patch a class or method to execute arbitrary
+    code after a method or function returns; the original return value
+    is retained for you and you don't have to worry about it.
+    """
+       
+    original_function = getattr(target_class_or_module, target_method_name)
+    def decorator(after_function):
+        def wrapper_with_after(*args, **kwargs):
+            result = original_function(*args, **kwargs)
+            after_function(*args, **kwargs)
+            return result
+        # only now do we have access to the after_function
+        setattr(target_class_or_module, target_method_name, wrapper_with_after)
+        return wrapper_with_after
+    return decorator
 
 from django.utils.functional import curry
 
@@ -34,7 +70,9 @@ from django.test.client import ClientHandler
 def get_response_with_exception_passthru(original_function, self, request):
     """
     Returns an HttpResponse object for the given HttpRequest. Unlike
-    the original get_response, this does not catch exceptions.
+    the original get_response, this does not catch exceptions, which
+    allows you to see the full stack trace in your tests instead of
+    a 500 error page.
     """
     
     # print("get_response(%s)" % request)
@@ -117,7 +155,8 @@ from django.db.models.query import QuerySet
 def queryset_get_with_exception_detail(original_function, self, *args, **kwargs):
     """
     Performs the query and returns a single object matching the given
-    keyword arguments.
+    keyword arguments. This version provides extra details about the query
+    if it fails to find any results.
     """
     clone = self.filter(*args, **kwargs)
     if self.query.can_filter():
@@ -132,59 +171,6 @@ def queryset_get_with_exception_detail(original_function, self, *args, **kwargs)
     raise self.model.MultipleObjectsReturned("get() returned more than one %s -- it returned %s! Lookup parameters were %s"
             % (self.model._meta.object_name, num, kwargs))
 patch(QuerySet, 'get', queryset_get_with_exception_detail)
-
-from django.forms.fields import FileField
-def to_python_with_debugging(original_function, self, data):
-    # print "data = %s" % data
-    return original_function(self, data)
-# patch(FileField, 'to_python', to_python_with_debugging)
-
-from django.contrib.admin.sites import AdminSite
-def has_permission_with_debugging(original_function, self, request):
-    """
-    Returns True if the given HttpRequest has permission to view
-    *at least one* page in the admin site.
-    """
-    has_permission = original_function(self, request)
-    # print "has_permission = %s" % has_permission
-    # print "request.user = %s" % request.user
-    # print "request.user.is_active = %s" % request.user.is_active
-    # print "request.user.is_staff = %s" % request.user.is_staff
-    return has_permission
-# patch(AdminSite, 'has_permission', has_permission_with_debugging)
-
-import django.contrib.auth.views
-def login_with_debugging(original_function, request,
-    template_name='registration/login.html',
-    redirect_field_name=django.contrib.auth.views.REDIRECT_FIELD_NAME,
-    authentication_form=django.contrib.auth.views.AuthenticationForm,
-    current_app=None, extra_context=None):
-    """
-    Displays the login form and handles the login action.
-    """
-    if request.method == "POST":
-        form = authentication_form(data=request.POST)
-        print "form.is_valid = %s" % form.is_valid()
-        
-        username = form['username'].value()
-        password = form['password'].value()
-        print "username = %s" % username
-        print "password = %s" % password
-
-        if username and password:
-            from django.contrib.auth import authenticate
-            form.user_cache = authenticate(username=username, password=password)
-            print "user_cache = %s" % repr(form.user_cache)
-            print "get_user = %s" % form.get_user()
-    
-    # print "user_cache.is_active = %s" % form.user_cache.is_active
-    # print "user_cache.is_staff = %s" % form.user_cache.is_staff
-    
-    result = original_function(request, template_name, redirect_field_name,
-        authentication_form, current_app, extra_context)
-    print "result = %s" % result
-    return result
-# patch(django.contrib.auth.views, 'login', login_with_debugging)
 
 from django.test.client import RequestFactory, MULTIPART_CONTENT, urlparse, \
     FakePayload
@@ -210,77 +196,18 @@ def post_with_string_data_support(original_function, self, path, data={},
         return original_function(self, path, data, content_type, **extra)
 patch(RequestFactory, 'post', post_with_string_data_support)
 
-from django.forms.models import ModelFormMetaclass
-def new_with_debugging(original_function, cls, name, bases, attrs):
-    from django.forms.forms import get_declared_fields
-    print 'cls = %s' % cls
-    print 'bases = %s' % bases
-    print 'attrs = %s' % attrs
-    print "declared_fields = %s" % get_declared_fields(bases, attrs, False)
-    return original_function(cls, name, bases, attrs)
-# patch(ModelFormMetaclass, '__new__', new_with_debugging)
-
-import django.contrib.admin.validation
-def check_formfield_with_debugging(original_function, cls, model, opts, label, field):
-    print 'checking %s.%s: base_fields = %s\n' % (cls.__name__, field,
-        getattr(cls.form, 'base_fields'))
-    return original_function(cls, model, opts, label, field)
-# patch(django.contrib.admin.validation, 'check_formfield', 
-#     check_formfield_with_debugging)
-
 from django.forms.models import BaseModelForm, InlineForeignKeyField, \
     construct_instance, NON_FIELD_ERRORS
     
-def is_valid_with_debugging(original_function, self):
-    print "is_valid: errors before = %s" % self._errors
-    print "is_bound = %s" % self.is_bound
-    print "self.empty_permitted = %s" % self.empty_permitted 
-    print "self.has_changed = %s" % self.has_changed()
-    ret = original_function(self)
-    print "is_valid = %s" % ret
-    print "is_valid: errors after = %s" % self._errors
-    return ret
-# patch(BaseModelForm, 'is_valid', is_valid_with_debugging)
-
-def post_clean(original_function, self):
-    print "post_clean: instance = %s" % self.instance
-    return original_function(self)
-# patch(BaseModelForm, '_post_clean', post_clean)
-
-def update_errors(original_function, self, message_dict):
-    print "update_errors: %s" % message_dict
-    return original_function(self, message_dict)
-# patch(BaseModelForm, '_update_errors', update_errors)
-
-from django.db.models.base import Model
 from django.core.exceptions import ValidationError
-def full_clean_with_debugging(original_function, self, exclude=None):
-    errors = {}
 
-    print "full_clean starting"
-
-    # Form.clean() is run even if other validation fails, so do the
-    # same with Model.clean() for consistency.
-    try:
-        self.clean()
-    except ValidationError, e:
-        errors = e.update_error_dict(errors)
-    except:
-        print "Model.clean() raised an unknown exception"
-        raise
-        
-    print "errors after Model.clean() = %s" % errors
-
-    try:
-        return original_function(self, exclude)
-    except Exception as e:
-        print "full_clean_with_debugging threw %s" % e
-        raise e
-# patch(Model, 'full_clean', full_clean_with_debugging)
-
-# Until https://code.djangoproject.com/ticket/16423#comment:3 is implemented,
-# patch it in ourselves
 def post_clean_with_simpler_validation(original_function, self):
+    """
+    Until https://code.djangoproject.com/ticket/16423#comment:3 is implemented,
+    patch it in ourselves: do the same validation on objects when called
+    from the form, as the object would do on itself.
+    """
+    
     opts = self._meta
     # Update the model instance with self.cleaned_data.
     # print "construct_instance with password = %s" % self.cleaned_data.get('password')
@@ -309,6 +236,12 @@ patch(BaseModelForm, '_post_clean', post_clean_with_simpler_validation)
 
 from django.forms import BaseForm
 def clean_form_with_field_errors(original_function, self):
+    """
+    Allow BaseForm._clean_form to report errors on individual fields
+    as well as the whole form. The standard version only works on the
+    whole form.
+    """
+    
     try:
         self.cleaned_data = self.clean()
     except ValidationError, e:
@@ -323,6 +256,11 @@ from django.core.urlresolvers import RegexURLResolver, NoReverseMatch
 from pprint import PrettyPrinter
 pp = PrettyPrinter()
 def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs):
+    """
+    Show all the patterns in the reverse_dict if a reverse lookup fails,
+    to help figure out why.
+    """
+    
     try:
         return original_function(self, lookup_view, *args, **kwargs)
     except NoReverseMatch as e:
@@ -334,6 +272,11 @@ from haystack.backends.whoosh_backend import WhooshSearchBackend, \
     AsyncWriter, SpellChecker
 def update_with_extra_debugging(original_function, self, index, iterable,
     commit=True):
+    """
+    Log details about which document could not be added to the Whoosh
+    index, and why, to help fix it.
+    """
+    
     if not self.setup_complete:
         self.setup()
 
@@ -371,6 +314,10 @@ from whoosh.searching import Searcher
 def search_without_optimisation(original_function, self, q, limit=10,
     sortedby=None, reverse=False, groupedby=None, optimize=True, filter=None,
     mask=None, terms=False, maptype=None):
+    """
+    Disable search optimisation until Whoosh issue 221 is resolved:
+    https://bitbucket.org/mchaput/whoosh/issue/221
+    """
     return original_function(self, q, limit, sortedby, reverse, groupedby,
         False, filter, mask, terms, maptype)
 patch(Searcher, 'search', search_without_optimisation)
@@ -378,6 +325,11 @@ patch(Searcher, 'search', search_without_optimisation)
 from django.contrib.admin.helpers import Fieldline, AdminField, mark_safe
 from binder.admin import CustomAdminReadOnlyField
 class FieldlineWithCustomReadOnlyField(object):
+    """
+    Custom replacement for Fieldline that allows fields in the Admin
+    interface to render their own read-only view if they like.
+    """
+    
     def __init__(self, form, field, readonly_fields=None, model_admin=None):
         self.form = form # A django.forms.Form instance
         if not hasattr(field, "__iter__"):
@@ -408,19 +360,23 @@ def destroy_test_db_disabled(original_function, self, test_database_name,
     pass
 # patch(BaseDatabaseCreation, 'destroy_test_db', destroy_test_db_disabled)
 
-# allow group lookups by name in fixtures, until
-# https://code.djangoproject.com/ticket/13914 lands
 from django.contrib.auth import models as auth_models
-from django.db import models as db_models
-class GroupManagerWithNaturalKey(db_models.Manager):
-    def get_by_natural_key(self, name):
-        return self.get(name=name)
-# print "auth_models.Group.objects = %s" % auth_models.Group.objects
-del auth_models.Group._default_manager
-GroupManagerWithNaturalKey().contribute_to_class(auth_models.Group, 'objects')
-def group_natural_key(self):
-    return (self.name,)
-auth_models.Group.natural_key = group_natural_key
+if not hasattr(auth_models.Group, 'natural_key'):
+    """
+    Allow group lookups by name in fixtures, until
+    https://code.djangoproject.com/ticket/13914 lands.
+    """
+    
+    from django.db import models as db_models
+    class GroupManagerWithNaturalKey(db_models.Manager):
+        def get_by_natural_key(self, name):
+            return self.get(name=name)
+    # print "auth_models.Group.objects = %s" % auth_models.Group.objects
+    del auth_models.Group._default_manager
+    GroupManagerWithNaturalKey().contribute_to_class(auth_models.Group, 'objects')
+    def group_natural_key(self):
+        return (self.name,)
+    auth_models.Group.natural_key = group_natural_key
 
 import django.core.serializers.python
 def Deserializer_with_debugging(original_function, object_list, **options):
@@ -608,20 +564,6 @@ def setup_with_debugging(original_function, self):
     return original_function(self)
 # patch(LazySettings, '_setup', setup_with_debugging)
 
-def before(target_class_or_module, target_method_name):
-    # must return a decorator, i.e. a function that takes one arg,
-    # which is the before_function, and returns a function (a wrapper)
-    # that uses the before_function 
-    original_function = getattr(target_class_or_module, target_method_name)
-    def decorator(before_function):
-        def wrapper_with_before(*args, **kwargs):
-            before_function(*args, **kwargs)
-            return original_function(*args, **kwargs)
-        # only now do we have access to the before_function
-        setattr(target_class_or_module, target_method_name, wrapper_with_before)
-        return wrapper_with_before
-    return decorator
-
 def breakpoint(*args, **kwargs):
     import pdb; pdb.set_trace()
         
@@ -633,44 +575,34 @@ def get_results_with_debugging(self, request):
     print "get_results query = %s" % object.__str__(self.query_set.query)
 """
 
-def after(target_class_or_module, target_method_name):
-    """
-    This decorator generator takes two arguments, a class or module to
-    patch, and the name of the method in that class (or function in that
-    module) to patch.
-    
-    It returns a decorator, i.e. a function that can be called with a
-    function as its argument (the after_function), and returns a function
-    (the wrapper_with_after) that executes the original function/method and
-    then the after_function.
-    
-    You can use this to monkey patch a class or method to execute arbitrary
-    code after a method or function returns; the original return value
-    is retained for you and you don't have to worry about it.
-    """
-       
-    original_function = getattr(target_class_or_module, target_method_name)
-    def decorator(after_function):
-        def wrapper_with_after(*args, **kwargs):
-            result = original_function(*args, **kwargs)
-            after_function(*args, **kwargs)
-            return result
-        # only now do we have access to the after_function
-        setattr(target_class_or_module, target_method_name, wrapper_with_after)
-        return wrapper_with_after
-    return decorator
-
-# Work around https://github.com/toastdriven/django-haystack/issues/495 and
-# http://south.aeracode.org/ticket/1023 by resetting the UnifiedIndex
-# after South's syncdb has run
 from south.management.commands.syncdb import Command as SouthSyncdbCommand
-@after(SouthSyncdbCommand, 'handle_noargs')
+# @after(SouthSyncdbCommand, 'handle_noargs')
 def syncdb_handle_noargs_with_haystack_reset(self, migrate_all=False, **options):
+    """
+    Work around https://github.com/toastdriven/django-haystack/issues/495 and
+    http://south.aeracode.org/ticket/1023 by resetting the UnifiedIndex
+    after South's syncdb has run.
+    """
+
     from haystack import connections
     for conn in connections.all():
         conn.get_unified_index().teardown_indexes()
         conn.get_unified_index().reset()
         conn.get_unified_index().setup_indexes()
+
+@before(SouthSyncdbCommand, 'handle_noargs')
+def syncdb_handle_noargs_with_haystack_reset(self, migrate_all=False, **options):
+    """
+    Alternative workaround, that initialises Haystack first, so that
+    fixtures can be indexed.
+    """
+    # breakpoint()
+    from haystack import connections
+    for conn in connections.all():
+        conn.get_unified_index().setup_indexes()
+
+# from haystack.indexes import SearchIndex
+# before(SearchIndex, 'update_object')(breakpoint)
 
 def modify_return_value(target_class_or_module, target_method_name):
     """
@@ -702,3 +634,6 @@ def modify_return_value(target_class_or_module, target_method_name):
 
 # from haystack.indexes import RealTimeSearchIndex
 # before(RealTimeSearchIndex, '_setup_save')(breakpoint)
+
+# from django.forms.forms import BoundField
+# before(BoundField, 'value')(breakpoint)
