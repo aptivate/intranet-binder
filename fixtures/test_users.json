@@ -28,7 +28,7 @@
             "office_location": "7",
             "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
             "sex": "M",
-            "program": null,
+            "program": 1,
             "full_name": "John Lennon",
             "cell_phone": "32543",
             "date_left": null,
