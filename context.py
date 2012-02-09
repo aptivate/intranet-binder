@@ -4,6 +4,10 @@ import settings
 import binder.main_menu
 
 def additions(request):
+    if not hasattr(request, 'session'):
+        # probably a fake request for rendering a table
+        return {"fake": __file__}
+
     return {
         'global': {
             'app_title': settings.APP_TITLE,
