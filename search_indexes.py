@@ -7,6 +7,7 @@ class UserIndex(indexes.RealTimeSearchIndex, indexes.Indexable):
     title = fields.CharField(model_attr='full_name')
     job_title = fields.CharField(model_attr='job_title')
     programs = fields.MultiValueField()
+    program = fields.CharField(model_attr='program', null=True)
     
     def get_model(self):
         return IntranetUser
