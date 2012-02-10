@@ -181,6 +181,22 @@ class AdminWithReadOnly(ModelAdmin):
 
         return urlpatterns
     
+    def has_change_permission(self, request, obj=None):
+        """
+        Returns True if the given request has permission to change the given
+        Django model instance. Overridden to allow us to reuse change_view
+        as a read-only view, by pretending to have "change" permissions when
+        the access is read-only.
+        """
+        
+        if request.user.is_authenticated() and \
+        getattr(request, 'is_read_only', False) and \
+        request.method == 'GET':
+            return True
+
+        return super(AdminWithReadOnly, self).has_change_permission(request,
+            obj)
+
     def change_view(self, request, object_id, extra_context=None):
         """
         In order for get_form() to know whether this is a read-only form,
