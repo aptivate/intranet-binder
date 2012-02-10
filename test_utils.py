@@ -10,7 +10,7 @@ from django.utils.importlib import import_module
 
 class SuperClient(Client):
     def get(self, *args, **extra):
-        response = Client.get(self, *args)
+        response = Client.get(self, *args, **extra)
         return self.capture_results('get', response, *args, **extra)
 
     def post(self, path, data={}, content_type=MULTIPART_CONTENT,
@@ -178,3 +178,8 @@ class AptivateEnhancedTestCase(TestCase):
         from django.core.files import File as DjangoFile
         df = DjangoFile(open(path))
         filefield.save(fixture_file_name, df, save=False) 
+
+    def login(self, user):
+        self.assertTrue(self.client.login(username=user.username,
+            password='johnpassword'), "Login failed")
+        
