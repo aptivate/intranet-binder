@@ -66,7 +66,8 @@ class IntranetUser(User):
         import datetime
         n = SessionWithIntranetUser.objects.filter(user=self,
             expire_date__gt=datetime.datetime.now()).count()
-        return (n > 0)  
+        # print "sessions for %s = %s" % (self, n)
+        return (n > 0)
 
     @models.permalink
     def get_absolute_url(self):
