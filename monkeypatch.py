@@ -151,6 +151,16 @@ def get_response_with_exception_passthru(original_function, self, request):
     return response
 patch(ClientHandler, 'get_response', get_response_with_exception_passthru) 
 
+def dont_apply_response_fixes(original_function, self, request, response):
+    """
+    It doesn't make any sense to rewrite location headers in tests,
+    because the test client doesn't know or care what hostname is
+    used in a request, so it could change in future without breaking
+    most people's tests, EXCEPT tests for redirect URLs!
+    """
+    return response
+patch(ClientHandler, 'apply_response_fixes', dont_apply_response_fixes)
+
 from django.db.models.query import QuerySet
 def queryset_get_with_exception_detail(original_function, self, *args, **kwargs):
     """
