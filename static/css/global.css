@@ -191,8 +191,8 @@ div.error-message, div.formError
 	border: 2px solid #fbb;
 }
 
-li.search-box form,
-li.search-box ul
+.search-box form,
+.search-box ul
 {
 	display: inline;
 	padding: 0;
