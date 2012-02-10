@@ -68,15 +68,13 @@ class IntranetUser(User):
             expire_date__gt=datetime.datetime.now()).count()
         return (n > 0)  
 
-"""
-from django.db.models.signals import post_save
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-post_save.connect(create_user_profile, sender=User)
-"""
+    @models.permalink
+    def get_absolute_url(self):
+        """
+        The URL used in search results to link to the "document" found:
+        we use this to point to the read-only user profile page.
+        """
+        return ('admin:binder_intranetuser_readonly', [str(self.id)])
 
 from django.contrib.sessions.models import Session
 
