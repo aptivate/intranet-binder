@@ -67,11 +67,6 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertTrue(self.client.login(username=self.ringo.username,
             password='johnpassword'), "Login failed")
         self.assertIn(settings.SESSION_COOKIE_NAME, self.client.cookies)
-         
-        """
-        print "session cookie = %s" % (
-            self.client.cookies[django_settings.SESSION_COOKIE_NAME])
-        """
 
     def test_session_updated_by_access(self):
         response = self.client.get('/')
