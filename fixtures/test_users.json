@@ -70,5 +70,77 @@
             "date_left": null,
             "job_title": "Drummer"
         }
-    }    
+    },
+    {
+        "pk": 3,
+        "model": "auth.user",
+        "fields": {
+            "username": "ken",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [
+                [
+                    "User"
+                ]
+            ],
+            "user_permissions": [],
+            "password": "sha1$03d63$4ae1e7f3426c5c8bb4e008dea8d178f88a0c62ed",
+            "email": "starr@report.example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "binder.intranetuser",
+        "fields": {
+            "office_location": "7",
+            "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
+            "sex": "M",
+            "program": null,
+            "full_name": "Kenneth Starr",
+            "cell_phone": "4560936",
+            "date_left": null,
+            "job_title": "Prosecutor"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "auth.user",
+        "fields": {
+            "username": "smith",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [
+                [
+                    "User"
+                ]
+            ],
+            "user_permissions": [],
+            "password": "sha1$03d63$4ae1e7f3426c5c8bb4e008dea8d178f88a0c62ed",
+            "email": "john@smithy.example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "binder.intranetuser",
+        "fields": {
+            "office_location": "7",
+            "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
+            "sex": "M",
+            "program": null,
+            "full_name": "John Smith",
+            "cell_phone": "4560936",
+            "date_left": null,
+            "job_title": "Disambiguator"
+        }
+    }
 ]
