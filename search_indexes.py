@@ -14,4 +14,4 @@ class UserIndex(indexes.RealTimeSearchIndex, indexes.Indexable):
         if user.program is None:
             return []
         else:
-            return [user.program]
+            return [user.program.id]
