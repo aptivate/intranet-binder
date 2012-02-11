@@ -278,48 +278,6 @@ def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs
             pp.pformat(self.reverse_dict)))
 patch(RegexURLResolver, 'reverse', reverse_with_debugging)
 
-from haystack.backends.whoosh_backend import WhooshSearchBackend, \
-    AsyncWriter, SpellChecker
-def update_with_extra_debugging(original_function, self, index, iterable,
-    commit=True):
-    """
-    Log details about which document could not be added to the Whoosh
-    index, and why, to help fix it.
-    """
-    
-    if not self.setup_complete:
-        self.setup()
-
-    self.index = self.index.refresh()
-    writer = AsyncWriter(self.index)
-
-    for obj in iterable:
-        doc = index.full_prepare(obj)
-
-        # Really make sure it's unicode, because Whoosh won't have it any
-        # other way.
-        for key in doc:
-            doc[key] = self._from_python(doc[key])
-
-        try:
-            writer.update_document(**doc)
-        except Exception, e:
-            if not self.silently_fail:
-                raise
-
-            self.log.error("Failed to add documents to Whoosh: %s (%s)" %
-                (e, doc))
-
-    if len(iterable) > 0:
-        # For now, commit no matter what, as we run into locking issues otherwise.
-        writer.commit()
-
-        # If spelling support is desired, add to the dictionary.
-        if self.include_spelling is True:
-            sp = SpellChecker(self.storage)
-            sp.add_field(self.index, self.content_field_name)
-patch(WhooshSearchBackend, 'update', update_with_extra_debugging)
-
 from whoosh.searching import Searcher
 def search_without_optimisation(original_function, self, q, limit=10,
     sortedby=None, reverse=False, groupedby=None, optimize=True, filter=None,
