@@ -153,9 +153,12 @@ class AptivateEnhancedTestCase(TestCase):
 
         from haystack.constants import DEFAULT_ALIAS
         settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['PATH'] = '/dev/shm/whoosh'
+        # settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['STORAGE'] = 'ram'
 
         from haystack import connections
         self.search_conn = connections[DEFAULT_ALIAS]
+        # self.search_conn.get_backend().use_file_storage = False
+        # self.search_conn.get_backend().setup()
         self.search_conn.get_backend().delete_index()
         
         TestCase._pre_setup(self)
@@ -167,7 +170,6 @@ class AptivateEnhancedTestCase(TestCase):
         self.client = SuperClient()
         
     def assign_fixture_to_filefield(self, fixture_file_name, filefield):
-
         import sys
         module = sys.modules[self.__class__.__module__]
 
