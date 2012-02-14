@@ -342,7 +342,7 @@ class IntranetUserForm(ModelForm):
 
 from django_tables2 import tables
 from models import IntranetUser, Program
-from documents.models import DocumentType
+
 class DocumentsAuthoredTable(tables.Table):
     """
     Basically the same as search.search.SearchTable, but copied here
