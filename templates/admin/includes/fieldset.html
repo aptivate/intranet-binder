@@ -22,7 +22,7 @@
 												{% endcomment %}
 												
 												{% if field.is_readonly %}
-													<p>{{ field.contents }}</p>
+													{{ field.contents|linebreaks }}
 												{% else %}
 													{{ field.field }}
 												{% endif %}

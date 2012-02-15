@@ -143,6 +143,7 @@ class SuperClient(Client):
 
 class AptivateEnhancedTestCase(TestCase):
     def _pre_setup(self):
+        TestCase._pre_setup(self)
         """
         We need to change the Haystack configuration before fixtures are
         loaded, otherwise they end up in the developer's index and not the
@@ -151,7 +152,7 @@ class AptivateEnhancedTestCase(TestCase):
         This is an internal interface and its use is not recommended.
         """
 
-        from haystack.constants import DEFAULT_ALIAS
+        """ from haystack.constants import DEFAULT_ALIAS
         settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['PATH'] = '/dev/shm/whoosh'
         # settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['STORAGE'] = 'ram'
 
@@ -161,12 +162,12 @@ class AptivateEnhancedTestCase(TestCase):
         # self.search_conn.get_backend().setup()
         self.search_conn.get_backend().delete_index()
         
-        TestCase._pre_setup(self)
+        """
         
     def setUp(self):
         TestCase.setUp(self)
 
-        self.unified_index = self.search_conn.get_unified_index()
+        #self.unified_index = self.search_conn.get_unified_index()
         self.client = SuperClient()
         
     def assign_fixture_to_filefield(self, fixture_file_name, filefield):

@@ -24,15 +24,7 @@
 				
 				<td class="padding"></td>
 
-				<td class="search-box">
-					<form method="get" action="{% url search %}">
-						{% comment %}<span class="search-for">Search for:</span>{% endcomment %}
-						<span class="search-models">{{ search.form.models }}</span>
-						<span class="search-input">{{ search.form.q }}</span>
-						{% comment %}<span class="search-models">{{ search.form.models }}</span>{% endcomment %}
-						<span class="search-button"><input type="submit" 
-							value="Search" /></span>
-					</form>
+				<td class="padding">
 				</td>
 			</tr>
 		</table>
