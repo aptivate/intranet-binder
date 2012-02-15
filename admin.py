@@ -150,12 +150,6 @@ class AdminWithReadOnly(ModelAdmin):
         Place key called "read_only" with value True in the context which
         ends up being passed to render_change_form().
         """
-        
-        urlpatterns = super(AdminWithReadOnly, self).get_urls()
-        # print "patterns = %s" % urlpatterns
-        # print "name = %s" % urlpatterns[0].name
-        # print "login template = %s" % admin.sites.site.login_template
-
         from django.utils.functional import update_wrapper
 
         def wrap(view):
@@ -174,10 +168,25 @@ class AdminWithReadOnly(ModelAdmin):
             'change_view': 'admin:%s_%s_change' % info,
         }
 
-        urlpatterns = [url(r'^(.+)/readonly$',
+        urlpatterns = [url(r'^$',
+                wrap(self.changelist_view),
+                name='%s_%s_changelist' % info),
+            url(r'^add/$',
+                wrap(self.add_view),
+                name='%s_%s_add' % info),
+            url(r'^(.+)/history/$',
+                wrap(self.history_view),
+                name='%s_%s_history' % info),
+            url(r'^(.+)/delete/$',
+                wrap(self.delete_view),
+                name='%s_%s_delete' % info),
+            url(r'^(.+)/$',
+                wrap(self.change_view),
+                name='%s_%s_change' % info),
+            url(r'^(.+)/readonly$',
                 wrap(self.change_view),
                 {'extra_context': extra_context},
-                name='%s_%s_readonly' % info)] + urlpatterns
+                name='%s_%s_readonly' % info)]
 
         return urlpatterns
     
@@ -196,6 +205,10 @@ class AdminWithReadOnly(ModelAdmin):
 
         return super(AdminWithReadOnly, self).has_change_permission(request,
             obj)
+    
+    def changelist_view(self, request, extra_context=None):
+        request.is_read_only = True
+        return super(AdminWithReadOnly, self).changelist_view(request, extra_context)
 
     def change_view(self, request, object_id, extra_context=None):
         """
@@ -235,6 +248,9 @@ class AdminWithReadOnly(ModelAdmin):
         
         context['show_delete_link'] = (not is_popup and
             self.has_delete_permission(request, obj))
+        
+        context['show_edit_link'] = (not is_popup and
+            super(AdminWithReadOnly, self).has_change_permission(request, obj))
          
         """
         return django.contrib.admin.ModelAdmin.render_change_form(self,
