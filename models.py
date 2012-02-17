@@ -1,15 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import User, get_hexdigest
+from django.contrib.auth.models import User, UserManager
 
 class Program(models.Model):
     name = models.CharField(max_length=255, unique=True)
     def __unicode__(self):
         return self.name
 
-# class UserProfile(models.Model):
 class IntranetUser(User):
-    # This field is required.
-    # user = models.OneToOneField(User)
+    objects = UserManager()
 
     SEX_CHOICE = (
         ('M', 'Male'),
@@ -22,7 +20,6 @@ class IntranetUser(User):
         ('9', '9th Floor'),
     )
 
-    # Other fields here
     full_name = models.CharField(max_length=100)
     job_title = models.CharField(max_length=100)
     sex = models.CharField(max_length=1, choices=SEX_CHOICE)
@@ -30,7 +27,6 @@ class IntranetUser(User):
     cell_phone = models.CharField(max_length=30)
     office_location = models.CharField(max_length=1, choices=OFFICE_LOCATIONS)
     photo = models.ImageField(upload_to='profile_photos', blank=True, null=True)
-    # date_joined = models.DateField(blank=True)
     date_left = models.DateField(blank=True, null=True)
     notes = models.TextField(blank=True)
     
@@ -77,6 +73,10 @@ class IntranetUser(User):
         we use this to point to the read-only user profile page.
         """
         return ('admin:binder_intranetuser_readonly', [str(self.id)])
+    
+    @property
+    def is_manager(self):
+        return (self.is_superuser or self.groups.filter(name='Manager')) 
 
 from django.contrib.sessions.models import Session
 

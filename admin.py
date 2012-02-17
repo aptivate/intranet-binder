@@ -473,7 +473,7 @@ class IntranetUserAdmin(AdminWithReadOnly):
         django.db.models.FileField: {'widget': AdminFileWidgetWithSize},
         django.db.models.ImageField: {'widget': AdminFileWidgetWithSize},
     }
-    
+
     def get_form(self, request, obj=None, **kwargs):
         if 'form' not in kwargs:
             if request.is_read_only:

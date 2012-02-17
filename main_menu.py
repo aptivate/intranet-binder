@@ -24,9 +24,9 @@ class MainMenu(Menu):
         Menu.__init__(self)
         self.append("Home", 'front_page')
         
-        if request.user.is_authenticated:
-            self.append("Users", 'admin:binder_intranetuser_changelist')
+        if request.user.is_authenticated():
+            self.append("Documents", 'admin:documents_document_changelist')
         
-        if request.user.is_superuser or \
-            request.user.groups.filter(name='Manager'): 
-            self.append("Admin", 'admin:index')
+            if request.user.is_manager: 
+                self.append("Users", 'admin:binder_intranetuser_changelist')
+                self.append("Admin", 'admin:index')
