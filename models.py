@@ -32,6 +32,7 @@ class IntranetUser(User):
     photo = models.ImageField(upload_to='profile_photos', blank=True, null=True)
     # date_joined = models.DateField(blank=True)
     date_left = models.DateField(blank=True, null=True)
+    notes = models.TextField(blank=True)
     
     def get_full_name(self):
         return self.full_name

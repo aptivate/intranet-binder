@@ -1,10 +1,11 @@
+import django.db.models
+
+import binder.templatetags.menu as menu_tag
+
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.test import TestCase
 from django.template import Context
-
-import binder.templatetags.menu as menu_tag
 
 from models import IntranetUser, SessionWithIntranetUser
 from session import SessionStore
@@ -123,3 +124,7 @@ class BinderTest(AptivateEnhancedTestCase):
         from admin import DocumentsAuthoredTable
         self.assertIsInstance(table, DocumentsAuthoredTable)
         self.assertItemsEqual(self.john.document_set.all(), table.data.queryset)
+        
+    def test_notes_field_for_user(self):
+        self.assertIsInstance(IntranetUser._meta.get_field('notes'),
+            django.db.models.TextField)

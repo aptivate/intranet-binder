@@ -32,7 +32,8 @@
             "full_name": "John Lennon",
             "cell_phone": "32543",
             "date_left": null,
-            "job_title": "Songwriter"
+            "job_title": "Songwriter",
+            "notes": "Partner's name is Yoko Ono"
         }
     },
     {
