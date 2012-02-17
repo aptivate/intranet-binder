@@ -57,51 +57,51 @@ ul.tabs.level2 li.selected a
 	border-bottom-color: white;
 }
 
-table.ruled > thead > tr > th,
-table.ruled > tbody > tr > th,
-table.ruled > caption
+.ruled > thead > tr > th,
+.ruled > tbody > tr > th,
+.ruled > caption
 {
 	border-color: #ccc;
 	background-color: #eee;
 }
 
-table.ruled > caption
+.ruled > caption
 {
 	border-top: 1px solid #ccc;
 }
 
-table.ruled
+.ruled
 {
 	border-color: #eee;
 }
 
-table.ruled > tbody > tr > td
+.ruled > tbody > tr > td
 {
 	border-color: #ddd;
 	background: white;
 }
 
-table.ruled > tbody > tr.alt > td
+.ruled > tbody > tr.alt > td
 {
 	background-color: #eee;
 }
 
-table.ruled > tbody > tr.errors > th
+.ruled > tbody > tr.errors > th
 {
 	background-color: #fdd;
 }
 
-table.ruled > tbody > tr.errors > td 
+.ruled > tbody > tr.errors > td 
 {
 	background-color: #fee;
 }
 
-table.ruled tr.errors td.fields-cell
+.ruled tr.errors td.fields-cell
 {
 	padding-right: 1em;
 }
 
-table.ruled tr.errors td.errors-cell
+.ruled tr.errors td.errors-cell
 {
 	border-left: 2px solid #daa;
 	padding-left: 1em;
@@ -112,13 +112,19 @@ table.edit tr.errors td.errors-cell ul.errorlist
 	margin: 0;
 }
 
-table.search-options ul
+.search-options
+{
+	/* match the indent of the warning box below */
+	margin: 1em;
+}
+
+.search-options ul
 {
 	padding: 0;
 	list-style-type: none;
 }
 
-table.search-options li
+.search-options li
 {
 	display: inline;
 }
