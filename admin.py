@@ -1,32 +1,5 @@
 # https://code.djangoproject.com/ticket/16929
 
-"""
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
-
-from models import UserProfile
-
-# Define an inline admin descriptor for UserProfile model
-# which acts a bit like a singleton
-import django.contrib.admin.options
-class UserProfileInline(django.contrib.admin.options.StackedInline):
-    template = 'admin/includes/embedded_fieldset.html'
-    model = UserProfile
-    fk_name = 'user'
-    can_delete = False
-    max_num = 1 
-    verbose_name_plural = 'profile'
-
-# Define a new User admin
-class UserAdminWithProfile(UserAdmin):
-    inlines = (UserProfileInline, )
-
-# Re-register UserAdmin
-admin.site.unregister(User)
-admin.site.register(User, UserAdminWithProfile)
-"""
-
 import django.contrib.admin
 import django.db.models
 import models
@@ -135,10 +108,16 @@ class AdminWithReadOnly(ModelAdmin):
         Disable the "add related" option on ForeignKey fields, as
         it will cause difficulties for users if they start adding Programs
         and DocumentTypes!
-        """
         
-        old_formfield = django.contrib.admin.ModelAdmin.formfield_for_dbfield(
-            self, db_field, **kwargs)
+        Allow overriding form field settings by field name as well as
+        by class.
+        """
+
+        if db_field.name in self.formfield_overrides:
+            kwargs = dict(self.formfield_overrides[db_field.name], **kwargs)
+
+        old_formfield = super(AdminWithReadOnly, self).formfield_for_dbfield(
+            db_field, **kwargs)
         if (hasattr(old_formfield, 'widget') and
             isinstance(old_formfield.widget, RelatedFieldWidgetWrapper)):
             old_formfield.widget.can_add_related = False
