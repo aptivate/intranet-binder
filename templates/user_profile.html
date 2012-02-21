@@ -1,0 +1,43 @@
+{% extends 'default_layout.dhtml' %}
+
+{% load i18n admin_modify adminmedia %}
+
+{% block extrastyle %}
+	{{ block.super }}
+	<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+	{% comment %}
+	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery-1.7.1.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery.multiSelect.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery.bgiframe.min.js"></script>
+	<link rel="stylesheet" href="{{ STATIC_URL }}binder/js/jquery.multiSelect.css" />
+	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
+	<script type="text/javascript">
+		jQuery(document).ready(function()
+		{
+			opts = { selectAll: false, selectNone: true };
+			$(".multiselect-jquery").multiSelect(opts);
+		});
+	</script>
+	{% endcomment %}
+{% endblock %}
+
+{% block title %}
+	User Profile
+{% endblock %}
+
+{% block heading %}
+	User Profile
+{% endblock %}
+
+{% block body %}
+	<form method="post">
+		{% csrf_token %}
+		<table class="ruled user-profile">
+		{{ profile_form.as_table }}
+		</table>
+		
+		<div class="submit-row">
+			<input type="submit" name="save" value="Save" />
+		</div>
+	</form>
+{% endblock %}
