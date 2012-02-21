@@ -159,7 +159,7 @@ def dont_apply_response_fixes(original_function, self, request, response):
     most people's tests, EXCEPT tests for redirect URLs!
     """
     return response
-patch(ClientHandler, 'apply_response_fixes', dont_apply_response_fixes)
+# patch(ClientHandler, 'apply_response_fixes', dont_apply_response_fixes)
 
 from django.db.models.query import QuerySet
 def queryset_get_with_exception_detail(original_function, self, *args, **kwargs):

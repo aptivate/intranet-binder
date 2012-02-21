@@ -4,11 +4,21 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.http import HttpRequest
 from django.test import TestCase
-from django.test.client import Client, encode_multipart, \
+from django.test.client import Client, ClientHandler, encode_multipart, \
     MULTIPART_CONTENT, BOUNDARY
 from django.utils.importlib import import_module
 
+class SuperClientHandler(ClientHandler):
+    def get_response(self, request):
+        response = super(SuperClientHandler, self).get_response(request)
+        response.real_request = request
+        return response
+
 class SuperClient(Client):
+    def __init__(self, enforce_csrf_checks=False, **defaults):
+        super(SuperClient, self).__init__(enforce_csrf_checks, **defaults)
+        self.handler = SuperClientHandler(enforce_csrf_checks)
+        
     def get(self, *args, **extra):
         response = Client.get(self, *args, **extra)
         return self.capture_results('get', response, *args, **extra)
