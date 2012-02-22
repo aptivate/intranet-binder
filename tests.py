@@ -24,7 +24,7 @@ def extract_fields(form):
                     yield field.field['name'], field
 
 class BinderTest(AptivateEnhancedTestCase):
-    fixtures = ['test_permissions', 'test_users']
+    fixtures = ['ata_programs', 'test_permissions', 'test_users']
 
     def setUp(self):
         AptivateEnhancedTestCase.setUp(self)

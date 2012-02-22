@@ -1,8 +1,14 @@
-from django.db import models
+from django.db import models as db_fields
 from django.contrib.auth.models import User, UserManager
 
-class Program(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+class ProgramType(db_fields.Model):
+    name = db_fields.CharField(max_length=255, unique=True)
+    def __unicode__(self):
+        return self.name
+
+class Program(db_fields.Model):
+    name = db_fields.CharField(max_length=255, unique=True)
+    program_type = db_fields.ForeignKey(ProgramType, null=True)
     def __unicode__(self):
         return self.name
 
@@ -20,15 +26,15 @@ class IntranetUser(User):
         ('9', '9th Floor'),
     )
 
-    full_name = models.CharField(max_length=100)
-    job_title = models.CharField(max_length=100)
-    sex = models.CharField(max_length=1, choices=SEX_CHOICE)
-    program = models.ForeignKey(Program, blank=True, null=True)
-    cell_phone = models.CharField(max_length=30)
-    office_location = models.CharField(max_length=1, choices=OFFICE_LOCATIONS)
-    photo = models.ImageField(upload_to='profile_photos', blank=True, null=True)
-    date_left = models.DateField(blank=True, null=True)
-    notes = models.TextField(blank=True)
+    full_name = db_fields.CharField(max_length=100)
+    job_title = db_fields.CharField(max_length=100)
+    sex = db_fields.CharField(max_length=1, choices=SEX_CHOICE)
+    program = db_fields.ForeignKey(Program, blank=True, null=True)
+    cell_phone = db_fields.CharField(max_length=30)
+    office_location = db_fields.CharField(max_length=1, choices=OFFICE_LOCATIONS)
+    photo = db_fields.ImageField(upload_to='profile_photos', blank=True, null=True)
+    date_left = db_fields.DateField(blank=True, null=True)
+    notes = db_fields.TextField(blank=True)
     
     def get_full_name(self):
         return self.full_name
@@ -66,7 +72,7 @@ class IntranetUser(User):
         # print "sessions for %s = %s" % (self, n)
         return (n > 0)
 
-    @models.permalink
+    @db_fields.permalink
     def get_absolute_url(self):
         """
         The URL used in search results to link to the "document" found:
@@ -81,4 +87,4 @@ class IntranetUser(User):
 from django.contrib.sessions.models import Session
 
 class SessionWithIntranetUser(Session):
-    user = models.ForeignKey(User, blank=True, null=True)
+    user = db_fields.ForeignKey(User, blank=True, null=True)

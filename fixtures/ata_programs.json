@@ -1,100 +1,135 @@
 [
     {
         "pk": 1,
+        "model": "binder.programtype",
+        "fields": {
+            "name": "Systems"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "binder.programtype",
+        "fields": {
+            "name": "Initiatives"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "binder.programtype",
+        "fields": {
+            "name": "Value Chains"
+        }
+    },
+    {
+        "pk": 1,
         "model": "binder.program",
         "fields": {
-            "name": "Seeds"
+            "name": "Seeds",
+            "program_type": 1
         }
     },
     {
         "pk": 2,
         "model": "binder.program",
         "fields": {
-            "name": "Soil"
+            "name": "Soil",
+            "program_type": 1
         }
     },
     {
         "pk": 3,
         "model": "binder.program",
         "fields": {
-            "name": "Co-ops"
+            "name": "Co-ops",
+            "program_type": 1
         }
     },
     {
         "pk": 4,
         "model": "binder.program",
         "fields": {
-            "name": "Input/Output Markets"
+            "name": "Input/Output Markets",
+            "program_type": 1
         }
     },
     {
         "pk": 5,
         "model": "binder.program",
         "fields": {
-            "name": "Extension and Research"
+            "name": "Extension and Research",
+            "program_type": 1
         }
     },
     {
         "pk": 6,
         "model": "binder.program",
         "fields": {
-            "name": "Maize"
+            "name": "Maize",
+            "program_type": 3
         }
     },
     {
         "pk": 7,
         "model": "binder.program",
         "fields": {
-            "name": "Wheat"
+            "name": "Wheat",
+            "program_type": 3
         }
     },
     {
         "pk": 8,
         "model": "binder.program",
         "fields": {
-            "name": "Tef"
+            "name": "Tef",
+            "program_type": 3
         }
     },
     {
         "pk": 9,
         "model": "binder.program",
         "fields": {
-            "name": "Rice"
+            "name": "Rice",
+            "program_type": 3
         }
     },
     {
         "pk": 10,
         "model": "binder.program",
         "fields": {
-            "name": "Pulses"
+            "name": "Pulses",
+            "program_type": 3
         }
     },
     {
         "pk": 11,
         "model": "binder.program",
         "fields": {
-            "name": "Oilseeds"
+            "name": "Oilseeds",
+            "program_type": 3
         }
     },
     {
         "pk": 12,
         "model": "binder.program",
         "fields": {
-            "name": "Gender"
+            "name": "Gender",
+            "program_type": 2
         }
     },
     {
         "pk": 13,
         "model": "binder.program",
         "fields": {
-            "name": "Climate"
+            "name": "Climate",
+            "program_type": 2
         }
     },
     {
         "pk": 14,
         "model": "binder.program",
         "fields": {
-            "name": "Technology"
+            "name": "Technology",
+            "program_type": 2
         }
     }
 ]

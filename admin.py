@@ -490,8 +490,13 @@ class IntranetUserAdmin(AdminWithReadOnly):
         return "bar"
     """
 
+class ProgramAdmin(admin.ModelAdmin):
+    list_display = ('name', 'program_type')
+    ordering = ('name',)
+
 admin.site.register(models.IntranetUser, IntranetUserAdmin)
-admin.site.register(models.Program, admin.ModelAdmin)
+admin.site.register(models.ProgramType, admin.ModelAdmin)
+admin.site.register(models.Program, ProgramAdmin)
 
 from django.contrib.admin.helpers import AdminReadonlyField
 class CustomAdminReadOnlyField(AdminReadonlyField):
