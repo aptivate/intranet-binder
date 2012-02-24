@@ -19,6 +19,9 @@
 				<li><a href="{% url admin:binder_intranetuser_add %}">Add user</a></li>
 			{% endif %}
 		</ul>
+		
+		{% block extrabody %}
+		{% endblock %}
 	{% else %}
 		<p>Welcome to the {{ global.app_title }}. Please
 			<a href="{% url django.contrib.auth.views.login %}">log in</a>
