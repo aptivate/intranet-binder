@@ -28,16 +28,10 @@ admin.site.register(User, UserAdminWithProfile)
 """
 
 import django.contrib.admin
-import django.db.models
-import models
-
-from django import forms
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.db import models as db_fields
-from django.forms import ModelForm
 from django.forms.util import flatatt as attributes_to_str
-from django.forms.util import ErrorList
 from django.forms import widgets
 from django.template.defaultfilters import filesizeformat
 from django.utils.encoding import force_unicode
@@ -75,7 +69,7 @@ class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
             template = self.template_with_initial
             try:
                 substitutions['size'] = filesizeformat(value.size)
-            except OSError as e:
+            except OSError:
                 substitutions['size'] = "Unknown"
             substitutions['link_to_file'] = (u'<a href="%s">%s</a>'
                                         % (escape(value.url),
@@ -158,7 +152,6 @@ class AdminWithReadOnly(ModelAdmin):
             return update_wrapper(wrapper, view)
 
         from django.conf.urls.defaults import url
-        from django.utils.encoding import force_unicode
 
         opts = self.model._meta
         info = opts.app_label, opts.module_name
@@ -262,7 +255,6 @@ class AdminWithReadOnly(ModelAdmin):
         # adapted to allow passing in a custom template by making
         # form_template an optional method parameter, defaulting to None
         
-        from django.utils.safestring import mark_safe
         from django.contrib.contenttypes.models import ContentType
         from django import template
         from django.shortcuts import render_to_response
@@ -306,213 +298,6 @@ class AdminWithReadOnly(ModelAdmin):
         view instead of the editable one.
         """
         return ChangeListWithLinksToReadOnlyView
-    
-class IntranetUserForm(ModelForm):
-    class Meta:
-        model = models.IntranetUser
-    
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, 
-        initial=None, error_class=ErrorList, label_suffix=':', 
-        empty_permitted=False, instance=None):
-        # print "IntranetUserForm.__init__: data = %s, initial = %s" % (data, initial)
-        super(IntranetUserForm, self).__init__(data=data, files=files, auto_id=auto_id, prefix=prefix, initial=initial, error_class=error_class, label_suffix=label_suffix, empty_permitted=empty_permitted, instance=instance)
-    
-    password1 = forms.CharField(required=False, label="New password")
-    password2 = forms.CharField(required=False, label="Confirm new password")
-    
-    COMPLETE_BOTH = 'You must complete both password boxes to set or ' + \
-        'change the password'
-        
-    def clean(self):
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
-        
-        from django.core.exceptions import ValidationError
-        
-        if password2 and not password1:
-            raise ValidationError({'password1': [self.COMPLETE_BOTH]})
-
-        if password1 and not password2:
-            raise ValidationError({'password2': [self.COMPLETE_BOTH]})
-        
-        if password1 and password2:
-            if password1 != password2:
-                raise ValidationError({'password2': ['Please enter ' +
-                    'the same password in both boxes.']})
-        
-        return ModelForm.clean(self)
-
-    def _post_clean(self):
-        ModelForm._post_clean(self)
-
-        # because password is excluded from the form, it's not updated
-        # in the model instance, so it's never changed unless we poke it
-        # in here.
-        
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
-
-        if password1 and password2:
-            if password1 == password2:
-                self.instance.set_password(password1)
-
-from django_tables2 import tables
-from models import IntranetUser, Program
-
-class DocumentsAuthoredTable(tables.Table):
-    """
-    Basically the same as search.search.SearchTable, but copied here
-    in order to avoid introducing a dependency.
-    """
-    
-    title = tables.Column(verbose_name="Title")
-    authors = tables.Column(verbose_name="Authors")
-    created = tables.Column(verbose_name="Date Added")
-    programs = tables.Column(verbose_name="Programs")
-    document_type = tables.Column(verbose_name="Document Type")
-    
-    def render_title(self, value, record):
-        # print "record = %s (%s)" % (record, dir(record))
-        return mark_safe("<a href='%s'>%s</a>" % (record.get_absolute_url(),
-            value))
-
-    def render_authors(self, value):
-        users = value.all()
-        return ', '.join([user.full_name for user in users])
-    
-    def render_programs(self, value):
-        programs = value.all()
-        return ', '.join([program.name for program in programs])
-    
-    def render_document_type(self, value):
-        return value.name
-    
-    class Meta:
-        attrs = {'class': 'paleblue'}
-        sortable = False # doesn't make sense on a form, would lose changes
-
-class DocumentsAuthoredWidget(widgets.Widget):
-    """
-    A widget that displays documents authored by the user being viewed.
-    Actually the data is initialised by
-    IntranetUserReadOnlyForm.get_documents_authored(), and just rendered
-    into a table here. 
-    """
-
-    has_readonly_view = True
-    def render(self, name, value, attrs=None):
-        # print "DocumentsAuthoredWidget.render(%s, %s)" % (name, value)
-        # raise Exception("Where did this value come from?")
-        table = DocumentsAuthoredTable(value)
-        
-        if 'return_table' in attrs:
-            return table
-        else:
-            return table.as_html()
-        
-class DocumentsAuthoredField(forms.Field):
-    """
-    A field that displays documents authored by the user being viewed.
-    Actually the data is initialised by
-    IntranetUserReadOnlyForm.get_documents_authored(), and just rendered here. 
-    """
-    widget = DocumentsAuthoredWidget
-
-class IntranetUserReadOnlyForm(ModelForm):
-    """
-    Some ugly stuff to add fields to an admin form:
-    http://groups.google.com/group/django-developers/browse_thread/thread/2bfa60a122016d6d
-    """
-
-    documents_authored = DocumentsAuthoredField()
-    
-    class Meta:
-        model = models.IntranetUser
-
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, 
-        initial=None, error_class=ErrorList, label_suffix=':', 
-        empty_permitted=False, instance=None):
-        
-        """
-        Add a "method" to the initial data which is used to lookup the
-        value of documents_authored by BoundField.
-        """
-        
-        if initial is None:
-            initial = {}
-        from django.utils.functional import curry
-        initial['documents_authored'] = curry(self.get_documents_authored, instance)
-        
-        # print "IntranetUserReadOnlyForm.__init__: data = %s, initial = %s" % (data, initial)
-        super(IntranetUserReadOnlyForm, self).__init__(data, files,
-            auto_id, prefix, initial, error_class, label_suffix,
-            empty_permitted, instance)
-        
-    def get_documents_authored(self, instance):
-        # print "get_documents_authored(%s)" % instance
-        return instance.document_set.all()
-
-class IntranetUserAdmin(AdminWithReadOnly):
-    """
-    Some ugly stuff to add fields to an admin form:
-    http://groups.google.com/group/django-developers/browse_thread/thread/2bfa60a122016d6d
-    """
-    
-    # inlines = [AdminDocumentsInline]
-     
-    def __init__(self, model, admin_site):
-        super(IntranetUserAdmin, self).__init__(model, admin_site)
-        
-    list_display = ('username', 'full_name', 'job_title', 'program',
-        models.IntranetUser.get_userlevel)
-
-    exclude = ['password', 'first_name', 'last_name', 'user_permissions']
-
-    formfield_overrides = {
-        django.db.models.URLField: {'widget': URLFieldWidgetWithLink},
-        django.db.models.FileField: {'widget': AdminFileWidgetWithSize},
-        django.db.models.ImageField: {'widget': AdminFileWidgetWithSize},
-    }
-    
-    def get_form(self, request, obj=None, **kwargs):
-        if 'form' not in kwargs:
-            if request.is_read_only:
-                form = IntranetUserReadOnlyForm
-            else:
-                form = IntranetUserForm
-            kwargs['form'] = form
-                
-        result = super(IntranetUserAdmin, self).get_form(request, obj=obj,
-            **kwargs)
-        # print 'get_form => %s' % dir(result)
-        # print 'declared_fields => %s' % result.declared_fields
-        # print 'base_fields => %s' % result.base_fields
-        result.base_fields['is_logged_in'] = forms.BooleanField(required=False)
-        
-        return result
-
-    def render_change_form(self, request, context, add=False, change=False,
-        form_url='', obj=None):
-        """
-        This is called right at the end of change_view. It seems like the
-        best place to set fields to read-only.  
-        """
-        
-        adminForm = context['adminform']
-        adminForm.readonly_fields = ('is_logged_in',)
-
-        return super(IntranetUserAdmin, self).render_change_form(request,
-            context, add=add, change=change, form_url=form_url, obj=obj)
-       
-    documents_authored = None
-     
-    """
-    def documents_authored(self):
-        return "bar"
-    """
-
-admin.site.register(models.IntranetUser, IntranetUserAdmin)
-admin.site.register(models.Program, admin.ModelAdmin)
 
 from django.contrib.admin.helpers import AdminReadonlyField
 class CustomAdminReadOnlyField(AdminReadonlyField):
