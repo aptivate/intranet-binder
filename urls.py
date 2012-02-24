@@ -11,6 +11,7 @@ urlpatterns = patterns('',
         {'template_name': 'admin/login.html'}, 
         name="login"),
     url(r'^logout$', django.contrib.auth.views.logout,
-        {'template_name': 'front_page.dhtml'}, 
+        {'next_page': '/login',
+         'template_name': 'front_page.dhtml'}, 
         name="logout"),
 )
