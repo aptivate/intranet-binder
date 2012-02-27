@@ -9,7 +9,7 @@
 {% block heading %}{{ title }}{% endblock %}
 
 {% block nav-global %}{% endblock %}
-	
+{% block breadcrumbs %}{{ block.super }} &rsaquo; {% url admin:index as admin_url %}{% if request.path != admin_url %}<a href="{% url admin:index %}">Admin</a>{% else %}Admin{% endif %}{% endblock %}
 {% block body %}
 	{% comment %}
 		{% block userlinks %}
