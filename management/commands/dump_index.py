@@ -7,6 +7,7 @@ class Command(NoArgsCommand):
         from whoosh.index import open_dir
         from settings import HAYSTACK_CONNECTIONS
         ix = open_dir(HAYSTACK_CONNECTIONS['default']['PATH'])
+        # ix = open_dir('/dev/shm/whoosh')
         
         with ix.searcher() as searcher:
             from whoosh import query

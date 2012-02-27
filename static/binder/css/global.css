@@ -96,15 +96,15 @@ table.tabs.level1
 	border-bottom: 1px solid white;
 }
 
-table.ruled
+.ruled
 {
 	margin: 1em 0;
 	border-collapse: collapse;
 }
 
-table.ruled > thead > tr > th,
-table.ruled > tbody > tr > td,
-table.ruled > tbody > tr > th
+.ruled > thead > tr > th,
+.ruled > tbody > tr > td,
+.ruled > tbody > tr > th
 {
 	border-style: solid none;
 	border-width: 1px;
@@ -112,37 +112,37 @@ table.ruled > tbody > tr > th
 	padding: 0.2em 1em;
 }
 
-table.ruled > thead > tr > th,
-table.ruled > tbody > tr > th
+.ruled > thead > tr > th,
+.ruled > tbody > tr > th
 {
 	/*border-right:  1px solid white;*/
 	text-align: left;
 	vertical-align: bottom;
 }
 
-table.ruled > tbody > tr > tr.alt > td
+.ruled > tbody > tr > tr.alt > td
 {
 }
 
-table.ruled > tbody > tr > td a
+.ruled > tbody > tr > td a
 {
 	text-decoration: none;
 	color: #408;
 }
 
-table.ruled > tbody > tr > td a:hover
+.ruled > tbody > tr > td a:hover
 {
 	text-decoration: underline;
 }
 
-table.ruled > tbody > tr > td,
-table.ruled > tbody > tr > th
+.ruled > tbody > tr > td,
+.ruled > tbody > tr > th
 {
 	padding: 0.2em 1em;
 }
 
-table.ruled > tbody > tr > td,
-table.ruled > tbody > tr > th
+.ruled > tbody > tr > td,
+.ruled > tbody > tr > th
 {
 	vertical-align: middle;
 }
@@ -153,26 +153,26 @@ form
 	margin: 0;
 }
 
-div.warning-message, div.success-message, div.error-message, ul.errorlist
+.warning-message, .success-message, .error-message, .errorlist
 {
 	color: black;
 	padding: 0.5em;
 	margin: 1em;
 }
 
-div#warning-message
+.warning-message
 {
 	border: 2px solid #fc8;
-	background: #ffd;
+	background: #fec;
 }
 
-div.success-message
+.success-message
 {
 	border: 2px solid #8f8;
 	background: #dfd;
 }
 
-div.error-message, ul.errorlist
+.error-message, ul.errorlist
 {
 	padding: 8px 8px 8px 40px;
 	border: 2px solid #fcc;
@@ -206,4 +206,10 @@ div.error-message, div.formError
 table.fields-box p /* read-only field */
 {
 	margin: 0;
+}
+
+.search-suggestion .correction
+{
+	font-weight: bold;
+	font-style: italic;
 }

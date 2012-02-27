@@ -6,6 +6,7 @@
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/global.css" />
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/colours.css" />
+		{% block extrahead %}{% endblock %}
 		{% block extrastyle %}{% endblock %}
 	</head>
 	<body>

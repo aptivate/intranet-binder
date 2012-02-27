@@ -27,6 +27,9 @@
 													{{ field.field }}
 												{% endif %}
 											{% endif %}
+						  					{% if field.field.help_text %}
+                        						<p class="help">{{ field.field.help_text|safe }}</p>
+						                    {% endif %}
 										</td>
 										{% if not line.fields|length_is:'1' and not field.is_readonly %}
 											<td class="errors-cell">

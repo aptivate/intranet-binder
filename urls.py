@@ -14,4 +14,6 @@ urlpatterns = patterns('',
         {'next_page': '/login',
          'template_name': 'front_page.dhtml'}, 
         name="logout"),
+    url(r'^profile$', views.UserProfileView.as_view(),
+        name="user_profile"),
 )

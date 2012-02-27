@@ -4,11 +4,21 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.http import HttpRequest
 from django.test import TestCase
-from django.test.client import Client, encode_multipart, \
+from django.test.client import Client, ClientHandler, encode_multipart, \
     MULTIPART_CONTENT, BOUNDARY
 from django.utils.importlib import import_module
 
+class SuperClientHandler(ClientHandler):
+    def get_response(self, request):
+        response = super(SuperClientHandler, self).get_response(request)
+        response.real_request = request
+        return response
+
 class SuperClient(Client):
+    def __init__(self, enforce_csrf_checks=False, **defaults):
+        super(SuperClient, self).__init__(enforce_csrf_checks, **defaults)
+        self.handler = SuperClientHandler(enforce_csrf_checks)
+        
     def get(self, *args, **extra):
         response = Client.get(self, *args, **extra)
         return self.capture_results('get', response, *args, **extra)
@@ -154,6 +164,7 @@ class AptivateEnhancedTestCase(TestCase):
 
         """ from haystack.constants import DEFAULT_ALIAS
         settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['PATH'] = '/dev/shm/whoosh'
+        settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['SILENTLY_FAIL'] = False
         # settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['STORAGE'] = 'ram'
 
         from haystack import connections
@@ -185,4 +196,14 @@ class AptivateEnhancedTestCase(TestCase):
     def login(self, user):
         self.assertTrue(self.client.login(username=user.username,
             password='johnpassword'), "Login failed")
+    
+    def assertIn(self, member, container, msg=None):
+        """
+        Returns the member if the assertion passes.
         
+        Makes sense that if you're asserting that a dictionary has a
+        member, you might want to use that member! Just saying.
+        """
+        
+        super(AptivateEnhancedTestCase, self).assertIn(member, container, msg=msg)
+        return container[member]
