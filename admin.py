@@ -189,6 +189,17 @@ class AdminWithReadOnly(ModelAdmin):
         request.is_read_only = True
         return super(AdminWithReadOnly, self).changelist_view(request, extra_context)
 
+    def add_view(self, request, form_url='', extra_context=None):
+        """
+        In order for get_form() to know whether this is a read-only form,
+        not having access to the extra_context, we have to poke something
+        into the request to help it.
+        """
+        request.is_read_only = (extra_context is not None and
+            'read_only' in extra_context)
+        return super(AdminWithReadOnly, self).add_view(request, form_url,
+            extra_context)
+    
     def change_view(self, request, object_id, extra_context=None):
         """
         In order for get_form() to know whether this is a read-only form,
