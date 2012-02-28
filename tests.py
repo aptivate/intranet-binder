@@ -189,4 +189,8 @@ class BinderTest(AptivateEnhancedTestCase):
         new_john = IntranetUser.objects.get(id=self.john.id)
         self.assertFalse(new_john.is_superuser)
         self.assertEqual("Wheee", new_john.full_name)
+    
+    def test_add_user_page(self):
+        self.login(self.ringo)
+        self.client.get(reverse('admin:binder_intranetuser_add'))
         
