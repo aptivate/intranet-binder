@@ -213,3 +213,8 @@ table.fields-box p /* read-only field */
 	font-weight: bold;
 	font-style: italic;
 }
+
+body{
+	margin-left: 20%;
+	margin-right: 20%;
+}
