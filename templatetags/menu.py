@@ -12,8 +12,7 @@ def menu_item(context, uri_or_name, label):
         href = reverse(uri_or_name)
     
     attributes = {}
-    if context['global']['path'] == href:
-        attributes['class'] = 'selected'
+    attributes['class'] = 'selected'
     
     element = 'td'
     
