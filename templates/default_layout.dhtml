@@ -32,10 +32,12 @@
 		<div class="breadcrumbs">
 		{% block breadcrumbs %}<a href="{% url front_page %}">Home</a>{% endblock %}
 		</div>
-		<h2>{% block heading %}{% endblock %}</h2>
-		
-		{% block body %}
-		Default Body
-		{% endblock %}
+		<div class="main_content">
+			<h2>{% block heading %}{% endblock %}</h2>
+			
+			{% block body %}
+			Default Body
+			{% endblock %}
+		</div>
 	</body>
 </html> 
