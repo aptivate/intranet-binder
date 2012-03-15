@@ -6,38 +6,88 @@
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/global.css" />
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/colours.css" />
+		<link rel="stylesheet" href="{{ STATIC_URL }}mande/css/style.css" />
+		<link rel="stylesheet" href="{{ STATIC_URL }}mande/css/youwin.css" />
+		<link rel="stylesheet" href="{{ STATIC_URL }}mande/css/common.css" />
 		{% block extrahead %}{% endblock %}
 		{% block extrastyle %}{% endblock %}
 	</head>
 	<body>
-		<h1>{{ global.app_title }}</h1>
-		<table class="main_menu tabs level1">
-			<tr>
-				{% for m in global.main_menu %}
-					{% menu_item m.url_name m.title %}
-				{% endfor %}
-				
-				
-				
-				<td class="padding"></td>
-
-				<td class="padding">{% if user.username %}
-					Welcome {{ user.username }} | <a class="nopadding" href="{% url logout %}">Log out</a>
-				{% else %}
-					<a href="{% url login %}">Log in</a>
-				{% endif %}
-				</td>
-			</tr>
-		</table>
-		<div class="breadcrumbs">
-		{% block breadcrumbs %}<a href="{% url front_page %}">Home</a>{% endblock %}
-		</div>
-		<div class="main_content">
-			<h2>{% block heading %}{% endblock %}</h2>
-			
-			{% block body %}
-			Default Body
-			{% endblock %}
-		</div>
+		<div id="wrapper">
+			<div id="header">
+				<div id="branding">
+					<h1><a href="/">{{ global.app_title }}</a></h1>
+					<h2 class="strapline">Youth Enterprise <br/> with Innovation in Nigeria</h2>
+				</div>
+				<div id="navigation">
+					<ul class="nav">
+						<li><a href="index.php" title="Home">Home</a></li>
+						<li><a href="whatisyouwin.php" title="WHAT IS YOUWIN">WHAT IS YouWiN!</a></li>
+						<li><a href="howapply.php" title="How to Apply">APPLY NOW!</a></li>
+						<li><a href="forum/" title="FORUM">FORUM</a></li>
+						<li><a href="faq.php" title="FAQ">FAQ</a></li>
+		
+						<li><a href="news.php" title="NEWS">NEWS</a></li>
+						<li><a href="contactus.php" title="CONTACT US">CONTACT US</a></li>
+					</ul>
+					<div id="user-access">
+						<a href="myaccount.php">My Account</a> | <a href="logout.php">Logout</a>
+						</div><!--end user access -->
+						<table class="main_menu tabs level1">
+							<tr>
+								{% for m in global.main_menu %}
+									{% menu_item m.url_name m.title %}
+								{% endfor %}
+								
+								<td class="padding"></td>
+								<td class="padding">{% if user.username %}
+									Welcome {{ user.username }} | <a class="nopadding" href="{% url logout %}">Log out</a>
+								{% else %}
+									<a href="{% url login %}">Log in</a>
+								{% endif %}
+								</td>
+							</tr>
+						</table>
+				</div><!--end navigation -->
+				<div id="social-media">
+					<ul>
+						<li><a href="http://www.facebook.com/pages/YouWinNigeria/172928756119774"><img src="images/facebook-icon.gif" alt="Facebook" width="22"/></a></li>
+						<li><a href="http://twitter.com/#!/YouWinNigeria"><img src="images/twitter-icon.gif" alt="Twitter" width="22"/></a></li>
+						<li><a href="http://www.youtube.com/youwinnigeria#p/a"><img src="images/youtube-icon.gif" alt="YouTube" width="22"/></a></li>
+					</ul>
+					<span>Get updates, be inspired, join the conversation</span>
+				</div>
+				<div class="breadcrumbs">
+				{% block breadcrumbs %}<a href="{% url front_page %}">Home</a>{% endblock %}
+				</div>
+			</div><!--end Header -->
+		<div id="page-wrapper" class="home">
+								
+			<div id="content-wrapper">
+					<div id="content" class="main_content">
+						<div class="inner">
+						<h2>{% block heading %}{% endblock %}</h2>
+						{% block body %}
+							Default Body
+						{% endblock %}
+						</div><!--end inner -->
+					</div><!--end content -->
+			</div><!--end content-wrapper -->
+					
+		<div id="sidebar">
+			<div class="inner">
+				{% block sidebar %}{% endblock %}
+			</div><!--end sidebar inner -->
+		</div><!--end sidebar -->
+		</div><!--end page wrapper -->
+		<div id="footer">
+			<div class="copyright"><p>Copyright © YouWiN!, 2011</p></div>
+				<ul class="footer-nav">
+					<li><a href="/">Home</a></li>
+					<li><a href="/contactus.php">Contact us</a></li>
+					<li><a href="/forum">Discussion Forum</a></li>
+				</ul>
+			</div><!--end footer -->
+		</div><!--end wrapper -->	
 	</body>
 </html> 
