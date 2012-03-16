@@ -21,7 +21,7 @@
 				<div id="navigation">
 					<ul class="nav">
 						{% for m in global.main_menu %}
-								<li>{% menu_item m.url_name m.title %}</li>
+								{% menu_item m.url_name m.title "li" %}
 						{% endfor %}
 						<li><a href="http://www.youwin.org.ng">YouWin site</a></li>
 					</ul>

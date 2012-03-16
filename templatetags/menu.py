@@ -5,7 +5,7 @@ from django.utils import html
 register = template.Library()
 
 @register.simple_tag(takes_context=True)
-def menu_item(context, uri_or_name, label):
+def menu_item(context, uri_or_name, label, element="td"):
     if uri_or_name[0] == '/':
         href = uri_or_name
     else:
@@ -13,8 +13,6 @@ def menu_item(context, uri_or_name, label):
     
     attributes = {}
     attributes['class'] = 'selected'
-    
-    element = 'td'
     
     attributes = ['%s="%s"' % (html.escape(k), html.escape(v))
         for k, v in attributes.iteritems()]
