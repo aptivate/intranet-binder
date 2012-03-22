@@ -200,6 +200,8 @@ class BinderTest(AptivateEnhancedTestCase):
         form = response.context['profile_form']
         from django.forms import fields as form_fields
         self.assertIsInstance(form.base_fields['photo'], form_fields.ImageField) 
+        self.assertTrue(form.is_multipart, "Must be a multipart form " +
+            "to allow file uploads")
         
         import os
         f = open(os.path.join(os.path.dirname(__file__), 'fixtures',
