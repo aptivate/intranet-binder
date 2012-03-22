@@ -172,6 +172,13 @@ class AptivateEnhancedTestCase(TestCase):
         # self.search_conn.get_backend().setup()
         self.search_conn.get_backend().delete_index()
         
+        settings.MEDIA_ROOT = '/dev/shm/test_uploads'
+        import os
+        if os.path.exists(settings.MEDIA_ROOT):
+            import shutil
+            shutil.rmtree(settings.MEDIA_ROOT)
+        os.mkdir(settings.MEDIA_ROOT)
+        
         TestCase._pre_setup(self)
         
     def setUp(self):
