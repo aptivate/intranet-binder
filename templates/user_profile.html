@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block body %}
-	<form method="post">
+	<form method="post" enctype="multipart/form-data">
 		{% csrf_token %}
 		<table class="ruled user-profile">
 		{{ profile_form.as_table }}
