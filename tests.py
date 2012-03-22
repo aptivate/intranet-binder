@@ -193,4 +193,40 @@ class BinderTest(AptivateEnhancedTestCase):
     def test_add_user_page(self):
         self.login(self.ringo)
         self.client.get(reverse('admin:binder_intranetuser_add'))
+    
+    def test_profile_photo_upload(self):
+        self.login(self.ringo)
+        response = self.client.get(reverse('user_profile'))
+        form = response.context['profile_form']
+        from django.forms import fields as form_fields
+        self.assertIsInstance(form.base_fields['photo'], form_fields.ImageField) 
         
+        import os
+        f = open(os.path.join(os.path.dirname(__file__), 'fixtures',
+            'transparent.gif'))
+        # setattr(f, 'name', 'transparent.gif')
+
+        values = form.initial
+        values['photo'] = f
+        # None cannot be sent over HTTP, so this means
+        # "send an empty value back" rather than "send a None value"
+        none_keys = [k for k, v in values.iteritems() if v is None]
+        for k in none_keys:
+            values[k] = ''
+        
+        response = self.client.post(reverse('user_profile'),
+            values, follow=True)
+        
+        if not response.redirect_chain:
+            # this probably means that the form was not saved properly, and 
+            # we have a context to look at for errors
+            form = response.context['profile_form']
+            self.assertDictEqual({}, form.errors, "form should not have errors")
+         
+        url = response.real_request.build_absolute_uri(reverse('front_page'))
+        self.assertSequenceEqual([(url, 302)], response.redirect_chain,
+            "saving profile should have caused a redirect: %s" % 
+            response.content)
+        
+        new_ringo = IntranetUser.objects.get(id=self.ringo.id)
+        self.assertEqual('profile_photos/transparent.gif', new_ringo.photo.name)

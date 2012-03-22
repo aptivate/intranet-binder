@@ -27,7 +27,9 @@ class UserProfileView(TemplateView):
         return self.render_to_response(context)
 
     def post(self, request):
-        form = UserProfileForm(request.POST, instance=request.user)
+        form = UserProfileForm(request.POST, request.FILES,
+            instance=request.user)
+        
         if form.is_valid():
             form.save(True)
             return http.HttpResponseRedirect(reverse('front_page'))
