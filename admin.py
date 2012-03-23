@@ -243,11 +243,19 @@ class AdminWithReadOnly(ModelAdmin):
 
         is_popup = context['is_popup']
         
-        context['show_delete_link'] = (not is_popup and
-            self.has_delete_permission(request, obj))
-        
-        context['show_edit_link'] = (not is_popup and
+        # We call the superclass' has_change_permission method here,
+        # because if we're looking at a read-only view, our own 
+        # has_change_permission always returns True, even if the user
+        # doesn't really have the change permission, and here we want to
+        # know if they really do have that permission.
+        has_change_permission = (obj is not None and 
             super(AdminWithReadOnly, self).has_change_permission(request, obj))
+        has_delete_permission = (obj is not None and 
+            self.has_delete_permission(request, obj))
+
+        context['show_edit_link'] = (not is_popup and has_change_permission)
+        context['show_delete_link'] = (not is_popup and has_delete_permission)
+        
          
         """
         return django.contrib.admin.ModelAdmin.render_change_form(self,
@@ -271,8 +279,8 @@ class AdminWithReadOnly(ModelAdmin):
             'add': add,
             'change': change,
             'has_add_permission': self.has_add_permission(request),
-            'has_change_permission': self.has_change_permission(request, obj),
-            'has_delete_permission': self.has_delete_permission(request, obj),
+            'has_change_permission': has_change_permission,
+            'has_delete_permission': has_delete_permission,
             'has_file_field': True, # FIXME - this should check if form or formsets have a FileField,
             'has_absolute_url': hasattr(self.model, 'get_absolute_url'),
             'ordered_objects': ordered_objects,
