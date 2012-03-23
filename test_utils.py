@@ -96,10 +96,12 @@ class SuperClient(Client):
         return getattr(self, self.last_method)(*self.last_method_args,
             **self.last_method_kwargs)
     
+    """
     def request(self, **request):
-        # print "request = %s" % request
+        print "request = %s" % request
         return super(SuperClient, self).request(**request)
-
+    """
+    
     def login(self, **credentials):
         """
         Sets the Factory to appear as if it has successfully logged into a site.
