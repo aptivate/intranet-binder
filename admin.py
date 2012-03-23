@@ -4,18 +4,25 @@ import django.contrib.admin
 import django.db.models
 import models
 
-from django import forms
+from django import forms, template
 from django.contrib import admin
+from django.contrib.admin.options import csrf_protect_m
+from django.contrib.admin.util import unquote
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db import models as db_fields
+from django.db import transaction, router
 from django.forms import ModelForm
 from django.forms.util import flatatt as attributes_to_str
 from django.forms.util import ErrorList
 from django.forms import widgets
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import render_to_response
 from django.template.defaultfilters import filesizeformat
 from django.utils.encoding import force_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext as _
 
 # from django.utils.decorators import method_decorator
 # from django.views.decorators.csrf import csrf_protect
@@ -296,6 +303,77 @@ class AdminWithReadOnly(ModelAdmin):
         view instead of the editable one.
         """
         return ChangeListWithLinksToReadOnlyView
+
+    # remove when https://code.djangoproject.com/ticket/17962 lands
+    @csrf_protect_m
+    @transaction.commit_on_success
+    def get_deleted_objects(self, objs, opts, request, using):
+        
+        return django.contrib.admin.util.get_deleted_objects(objs, opts,
+            request.user, self.admin_site, using)
+    
+    # remove when https://code.djangoproject.com/ticket/17962 lands
+    @csrf_protect_m
+    @transaction.commit_on_success
+    def delete_view(self, request, object_id, extra_context=None):
+        "The 'delete' admin view for this model."
+        opts = self.model._meta
+        app_label = opts.app_label
+    
+        obj = self.get_object(request, unquote(object_id))
+    
+        if not self.has_delete_permission(request, obj):
+            raise PermissionDenied
+    
+        if obj is None:
+            raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_unicode(opts.verbose_name), 'key': escape(object_id)})
+    
+        using = router.db_for_write(self.model)
+    
+        # Populate deleted_objects, a data structure of all related objects that
+        # will also be deleted.
+        (deleted_objects, perms_needed, protected) = self.get_deleted_objects(
+            [obj], opts, request, using)
+    
+        if request.POST: # The user has already confirmed the deletion.
+            if perms_needed:
+                raise PermissionDenied
+            obj_display = force_unicode(obj)
+            self.log_deletion(request, obj, obj_display)
+            self.delete_model(request, obj)
+    
+            self.message_user(request, _('The %(name)s "%(obj)s" was deleted successfully.') % {'name': force_unicode(opts.verbose_name), 'obj': force_unicode(obj_display)})
+    
+            if not self.has_change_permission(request, None):
+                return HttpResponseRedirect("../../../../")
+            return HttpResponseRedirect("../../")
+    
+        object_name = force_unicode(opts.verbose_name)
+    
+        if perms_needed or protected:
+            title = _("Cannot delete %(name)s") % {"name": object_name}
+        else:
+            title = _("Are you sure?")
+    
+        context = {
+            "title": title,
+            "object_name": object_name,
+            "object": obj,
+            "deleted_objects": deleted_objects,
+            "perms_lacking": perms_needed,
+            "protected": protected,
+            "opts": opts,
+            "root_path": self.admin_site.root_path,
+            "app_label": app_label,
+        }
+        context.update(extra_context or {})
+        context_instance = template.RequestContext(request, current_app=self.admin_site.name)
+        return render_to_response(self.delete_confirmation_template or [
+            "admin/%s/%s/delete_confirmation.html" % (app_label, opts.object_name.lower()),
+            "admin/%s/delete_confirmation.html" % app_label,
+            "admin/delete_confirmation.html"
+        ], context, context_instance=context_instance)
+
     
 class IntranetUserForm(ModelForm):
     class Meta:
