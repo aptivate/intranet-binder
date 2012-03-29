@@ -223,3 +223,8 @@ class AptivateEnhancedTestCase(TestCase):
         
         super(AptivateEnhancedTestCase, self).assertIn(member, container, msg=msg)
         return container[member]
+    
+    def absolute_url(self, relative_url):
+        from django.contrib.sites.models import Site
+        return "http://%s%s" % (Site.objects.get_current().domain,
+            relative_url)
