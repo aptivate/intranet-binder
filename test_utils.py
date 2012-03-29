@@ -189,6 +189,14 @@ class AptivateEnhancedTestCase(TestCase):
         self.unified_index = self.search_conn.get_unified_index()
         self.client = SuperClient()
         
+        settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+        
+        from django.core.mail.backends.locmem import EmailBackend
+        EmailBackend() # create the outbox
+        
+        from django.core import mail
+        self.emails = mail.outbox
+        
     def assign_fixture_to_filefield(self, fixture_file_name, filefield):
         import sys
         module = sys.modules[self.__class__.__module__]
