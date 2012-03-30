@@ -1,7 +1,14 @@
 {% extends "default_layout.dhtml" %}
 {% load i18n %}
+{% load adminmedia %}
 
 {% block extrastyle %}
+	{# http://stackoverflow.com/questions/38601/using-django-time-date-widgets-in-custom-form #}
+	<script type="text/javascript">
+		window.__admin_media_prefix__ = "{% filter escapejs %}{% admin_media_prefix %}{% endfilter %}";
+	</script>
+
+	{% block extrahead %}{# admin pages override this #}{% endblock %}
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
 {% endblock %}
 
