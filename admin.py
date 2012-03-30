@@ -24,6 +24,8 @@ from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
+from password import PasswordChangeMixin
+
 # from django.utils.decorators import method_decorator
 # from django.views.decorators.csrf import csrf_protect
 
@@ -393,58 +395,24 @@ class AdminWithReadOnly(ModelAdmin):
             "admin/delete_confirmation.html"
         ], context, context_instance=context_instance)
 
-    
-class IntranetUserForm(ModelForm):
+
+class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
     class Meta:
         model = models.IntranetUser
+
+    password1 = forms.CharField(required=False, label="New password")
+    password2 = forms.CharField(required=False, label="Confirm new password")
     
     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, 
         initial=None, error_class=ErrorList, label_suffix=':', 
         empty_permitted=False, instance=None):
         # print "IntranetUserForm.__init__: data = %s, initial = %s" % (data, initial)
-        super(IntranetUserForm, self).__init__(data=data, files=files, auto_id=auto_id, prefix=prefix, initial=initial, error_class=error_class, label_suffix=label_suffix, empty_permitted=empty_permitted, instance=instance)
-    
-    password1 = forms.CharField(required=False, label="New password")
-    password2 = forms.CharField(required=False, label="Confirm new password")
-    
-    COMPLETE_BOTH = 'You must complete both password boxes to set or ' + \
-        'change the password'
-        
-    def clean(self):
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
-        
-        from django.core.exceptions import ValidationError
-        
-        if password2 and not password1:
-            raise ValidationError({'password1': [self.COMPLETE_BOTH]})
-
-        if password1 and not password2:
-            raise ValidationError({'password2': [self.COMPLETE_BOTH]})
-        
-        if password1 and password2:
-            if password1 != password2:
-                raise ValidationError({'password2': ['Please enter ' +
-                    'the same password in both boxes.']})
-        
-        return ModelForm.clean(self)
-
-    def _post_clean(self):
-        ModelForm._post_clean(self)
-
-        # because password is excluded from the form, it's not updated
-        # in the model instance, so it's never changed unless we poke it
-        # in here.
-        
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
-
-        if password1 and password2:
-            if password1 == password2:
-                self.instance.set_password(password1)
+        super(IntranetUserAdminForm, self).__init__(data=data, files=files,
+            auto_id=auto_id, prefix=prefix, initial=initial,
+            error_class=error_class, label_suffix=label_suffix, 
+            empty_permitted=empty_permitted, instance=instance)
 
 from django_tables2 import tables
-from models import IntranetUser, Program
 
 class DocumentsAuthoredTable(tables.Table):
     """
@@ -566,7 +534,7 @@ class IntranetUserAdmin(AdminWithReadOnly):
             if request.is_read_only:
                 form = IntranetUserReadOnlyForm
             else:
-                form = IntranetUserForm
+                form = IntranetUserAdminForm
             kwargs['form'] = form
                 
         result = super(IntranetUserAdmin, self).get_form(request, obj=obj,
