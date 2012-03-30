@@ -537,7 +537,7 @@ class IntranetUserReadOnlyForm(ModelForm):
         
     def get_documents_authored(self, instance):
         # print "get_documents_authored(%s)" % instance
-        return instance.document_set.all()
+        return instance.documents_authored.all()
 
 class IntranetUserAdmin(AdminWithReadOnly):
     """
