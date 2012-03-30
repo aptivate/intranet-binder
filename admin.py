@@ -102,6 +102,18 @@ class ChangeListWithLinksToReadOnlyView(ChangeList):
         return reverse('admin:%s_%s_readonly' % info,
             args=[getattr(result, self.pk_attname)])
 
+class AdminYesNoWidget(widgets.CheckboxInput):
+    has_readonly_view = True
+
+    def render(self, name, value, attrs=None):
+        if attrs.get('readonly'):
+            if value:
+                return "Yes"
+            else:
+                return "No"
+        else:
+            return super(AdminYesNoWidget, self).render(name, value, attrs)
+
 from django.contrib.admin import ModelAdmin
 class AdminWithReadOnly(ModelAdmin):
     # customise the default display of some form fields:
@@ -256,7 +268,6 @@ class AdminWithReadOnly(ModelAdmin):
         context['show_edit_link'] = (not is_popup and has_change_permission)
         context['show_delete_link'] = (not is_popup and has_delete_permission)
         
-         
         """
         return django.contrib.admin.ModelAdmin.render_change_form(self,
             request, context, add=add, change=change, form_url=form_url,
