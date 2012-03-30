@@ -11,17 +11,7 @@ from models import IntranetUser, SessionWithIntranetUser
 from session import SessionStore
 from test_utils import AptivateEnhancedTestCase
 
-from django.forms.forms import BoundField
 from binder.views import FrontPageView
-
-def extract_fields(form):
-    for fieldset in form:
-        for line in fieldset:
-            for field in line:
-                if isinstance(field.field, BoundField):
-                    yield field.field.name, field
-                else:
-                    yield field.field['name'], field
 
 class BinderTest(AptivateEnhancedTestCase):
     fixtures = ['ata_programs', 'test_permissions', 'test_users']
@@ -125,37 +115,29 @@ class BinderTest(AptivateEnhancedTestCase):
             "in response: %s: %s" % (response, dir(response)))
         self.assertIsNotNone(response.context, "Empty context in response: " +
             "%s: %s" % (response, dir(response)))
-        self.assertIn('adminform', response.context)
-        form = response.context['adminform']
         
-        fields = dict(extract_fields(form))
-        self.assertIn('is_logged_in', fields)
-        f = fields['is_logged_in']
-        self.assertEquals("True", f.contents())
+        self.assertEqual("True", self.extract_admin_form_field(response, 
+            'is_logged_in').contents())
 
     def test_logged_in_status_is_false_for_not_logged_in_user(self):
         self.login()
         response = self.client.get(reverse('admin:binder_intranetuser_change',
             args=[self.john.id]))
-        self.assertIn('adminform', response.context)
-        form = response.context['adminform']
-        fields = dict(extract_fields(form))
-        self.assertEquals("False", fields['is_logged_in'].contents())
+
+        self.assertEqual("False", self.extract_admin_form_field(response, 
+            'is_logged_in').contents())
 
     def test_documents_shown_in_readonly_admin_form(self):
         self.login()
         response = self.client.get(reverse('admin:binder_intranetuser_readonly',
             args=[self.john.id]))
-        self.assertIn('adminform', response.context)
-        form = response.context['adminform']
-        fields = dict(extract_fields(form))
-        self.assertIn('documents_authored', fields)
-        f = fields['documents_authored']
-        table = f.contents(return_table=True)
+        table = self.extract_admin_form_field(response, 
+            'documents_authored').contents(return_table=True)
         
         from admin import DocumentsAuthoredTable
         self.assertIsInstance(table, DocumentsAuthoredTable)
-        self.assertItemsEqual(self.john.document_set.all(), table.data.queryset)
+        self.assertItemsEqual(self.john.documents_authored.all(), 
+            table.data.queryset)
         
     def test_notes_field_for_user(self):
         self.assertIsInstance(IntranetUser._meta.get_field('notes'),

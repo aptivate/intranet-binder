@@ -228,3 +228,24 @@ class AptivateEnhancedTestCase(TestCase):
         from django.contrib.sites.models import Site
         return "http://%s%s" % (Site.objects.get_current().domain,
             relative_url)
+
+    def extract_fields(self, form):
+        from django.forms.forms import BoundField
+        
+        for fieldset in form:
+            for line in fieldset:
+                for field in line:
+                    if isinstance(field.field, BoundField):
+                        yield field.field.name, field
+                    else:
+                        yield field.field['name'], field
+
+    def extract_admin_form_field(self, response, field_name):
+        self.assertIn('adminform', response.context)
+        form = response.context['adminform']
+        
+        fields = dict(self.extract_fields(form))
+        
+        self.assertIn(field_name, fields)
+        return fields[field_name]
+        
