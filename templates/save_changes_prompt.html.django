@@ -1,0 +1,51 @@
+{% comment %}
+http://djangosnippets.org/snippets/1636/
+{% endcomment %}
+
+{% load adminmedia %}
+<script type="text/javascript" src="{% admin_media_prefix %}js/core.js"></script>
+<script type="text/javascript" src="{% admin_media_prefix %}js/getElementsBySelector.js"></script>
+
+<script type="text/javascript">
+addEvent(window, "load", function()
+{
+	var inputs = []
+	
+	inputs = inputs.concat(document.getElementsBySelector("input"));
+	inputs = inputs.concat(document.getElementsBySelector("select"));
+	inputs = inputs.concat(document.getElementsBySelector("textarea"));
+	
+	if (inputs.length > 0)
+	{
+		for (var i=0, t=inputs.length; i<t ;i++)
+		{
+			if (inputs[i].parentNode.className.indexOf('submit-row') == -1)
+			{
+				addEvent(inputs[i], "change", function()
+				{
+					// https://developer.mozilla.org/en/DOM/window.onbeforeunload
+					window.onbeforeunload = function(e)
+					{
+						var message = 'If you leave or reload this page, ' +
+							'your changes will be lost.';
+						e = e || window.event;
+
+						// For IE and Firefox prior to version 4
+						if (e)
+						{
+							e.returnValue = message;
+						}
+						
+						// For Safari
+						return message;
+					};
+				});
+			}
+			else
+			{
+				addEvent(inputs[i], "click", function(){ window.onbeforeunload = null });
+			}
+		}
+	}
+});
+</script>

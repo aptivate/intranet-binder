@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+
+{% comment %}
+http://djangosnippets.org/snippets/1636/
+{% endcomment %}
+
+{% block after_related_objects %}
+{{ block.super }}
+{% include "save_changes_prompt.html.django" %}
+{% endblock %}
