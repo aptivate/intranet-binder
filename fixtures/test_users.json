@@ -26,7 +26,6 @@
         "model": "binder.intranetuser",
         "fields": {
             "office_location": "7",
-            "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
             "sex": "M",
             "program": 1,
             "full_name": "John Lennon",
@@ -63,7 +62,6 @@
         "model": "binder.intranetuser",
         "fields": {
             "office_location": "7",
-            "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
             "sex": "M",
             "program": null,
             "full_name": "Ringo Starr",
@@ -99,7 +97,6 @@
         "model": "binder.intranetuser",
         "fields": {
             "office_location": "7",
-            "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
             "sex": "M",
             "program": null,
             "full_name": "Kenneth Starr",
@@ -135,7 +132,6 @@
         "model": "binder.intranetuser",
         "fields": {
             "office_location": "7",
-            "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
             "sex": "M",
             "program": null,
             "full_name": "John Smith",
@@ -171,7 +167,6 @@
         "model": "binder.intranetuser",
         "fields": {
             "office_location": "7",
-            "photo": "profile_photos/Work_on_Aid_Ontology_1.png",
             "sex": "M",
             "program": null,
             "full_name": "Alan Shearer",

@@ -154,6 +154,7 @@ class BinderTest(AptivateEnhancedTestCase):
         data = dict(form.initial)
         data['full_name'] = "Wheee"
         data['is_superuser'] = True
+        del data['photo']
         
         response = self.client.post(reverse('user_profile'), data=data,
             follow=True)
