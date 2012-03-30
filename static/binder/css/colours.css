@@ -128,3 +128,8 @@ table.edit tr.errors td.errors-cell ul.errorlist
 {
 	display: inline;
 }
+
+.submit-row
+{
+	text-align: left;
+}
