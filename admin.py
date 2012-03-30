@@ -630,3 +630,37 @@ class CustomAdminReadOnlyField(AdminReadonlyField):
         else:
             return AdminReadonlyField.contents(self)
         
+    # patch for https://code.djangoproject.com/ticket/16433
+    def help_text_for_field(self, name, model):
+        from django.db import models
+        from django.utils.encoding import smart_unicode
+        
+        try:
+            help_text = model._meta.get_field_by_name(name)[0].help_text
+        except (models.FieldDoesNotExist, AttributeError):
+            help_text = ""
+        return smart_unicode(help_text)
+    
+    # patch __init__ to use the patched help_text_for_field method
+    def __init__(self, form, field, is_first, model_admin=None):
+        from django.contrib.admin.util import label_for_field
+        label = label_for_field(field, form._meta.model, model_admin)
+        
+        # Make self.field look a little bit like a field. This means that
+        # {{ field.name }} must be a useful class name to identify the field.
+        # For convenience, store other field-related data here too.
+        if callable(field):
+            class_name = field.__name__ != '<lambda>' and field.__name__ or ''
+        else:
+            class_name = field
+        self.field = {
+            'name': class_name,
+            'label': label,
+            'field': field,
+            'help_text': self.help_text_for_field(class_name, form._meta.model)
+        }
+        self.form = form
+        self.model_admin = model_admin
+        self.is_first = is_first
+        self.is_checkbox = False
+        self.is_readonly = True
