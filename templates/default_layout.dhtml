@@ -3,9 +3,10 @@
 <html>
 	<head>
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
+		{% block style %}
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/global.css" />
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/colours.css" />
-		{% block extrastyle %}{% endblock %}
+		{% endblock %}
 	</head>
 	<body>
 		<h1>{{ global.app_title }}</h1>
