@@ -176,11 +176,19 @@ class BinderTest(AptivateEnhancedTestCase):
     def test_add_user_page(self):
         self.login(self.ringo)
         self.client.get(reverse('admin:binder_intranetuser_add'))
+        
+    def assert_redirect_not_form_error(self, response):
+        if not response.redirect_chain:
+            # this probably means that the form was not saved properly, and 
+            # we have a context to look at for errors
+            form = response.context['profile_form']
+            self.assertDictEqual({}, form.errors, "form should not have errors")
     
     def test_profile_photo_upload(self):
         self.login(self.ringo)
         response = self.client.get(reverse('user_profile'))
         form = response.context['profile_form']
+
         from django.forms import fields as form_fields
         self.assertIsInstance(form.base_fields['photo'], form_fields.ImageField) 
         self.assertTrue(form.is_multipart, "Must be a multipart form " +
@@ -190,23 +198,11 @@ class BinderTest(AptivateEnhancedTestCase):
         f = open(os.path.join(os.path.dirname(__file__), 'fixtures',
             'transparent.gif'))
         # setattr(f, 'name', 'transparent.gif')
-
-        values = form.initial
-        values['photo'] = f
-        # None cannot be sent over HTTP, so this means
-        # "send an empty value back" rather than "send a None value"
-        none_keys = [k for k, v in values.iteritems() if v is None]
-        for k in none_keys:
-            values[k] = ''
         
         response = self.client.post(reverse('user_profile'),
-            values, follow=True)
+            self.update_form_values(photo=f), follow=True)
         
-        if not response.redirect_chain:
-            # this probably means that the form was not saved properly, and 
-            # we have a context to look at for errors
-            form = response.context['profile_form']
-            self.assertDictEqual({}, form.errors, "form should not have errors")
+        self.assert_redirect_not_form_error(response)
          
         url = response.real_request.build_absolute_uri(reverse('front_page'))
         self.assertSequenceEqual([(url, 302)], response.redirect_chain,
@@ -215,3 +211,59 @@ class BinderTest(AptivateEnhancedTestCase):
         
         new_ringo = IntranetUser.objects.get(id=self.ringo.id)
         self.assertEqual('profile_photos/transparent.gif', new_ringo.photo.name)
+
+    def assert_password_change_fails(self, new_password, confirmation,
+        **expected_errors):
+        
+        response = self.client.get(reverse('user_profile'))
+        form = response.context['profile_form']
+
+        response = self.client.post(reverse('user_profile'),
+            self.update_form_values(form, password1=new_password,
+                password2=confirmation), follow=True)
+        self.assertListEqual([], response.redirect_chain,
+            "POST should have failed with a password mismatch.")
+        
+        form = response.context['profile_form']
+        self.assertDictEqual(expected_errors, form.errors)
+        
+    def test_change_password_using_profile_page(self):
+        self.login(self.ringo)
+        
+        response = self.client.get(reverse('user_profile'))
+        form = response.context['profile_form']
+        self.assertIn('password1', form.fields)
+        self.assertIn('password2', form.fields)
+        
+        from password import PasswordChangeMixin
+        self.assertIsInstance(form, PasswordChangeMixin)
+
+        from views import UserProfileForm        
+        
+        # leaving both fields blank does not change the password
+        response = self.client.post(reverse('user_profile'),
+            self.update_form_values(form, password1='', password2=''),
+            follow=True)
+        self.assert_redirect_not_form_error(response)
+        new_ringo = IntranetUser.objects.get(id=self.ringo.id)
+        self.assertEqual(self.ringo.password, new_ringo.password)
+        
+        # setting one requires the other to be set to the same value
+        self.assert_password_change_fails('', 'bar',
+            password1=[UserProfileForm.COMPLETE_BOTH])
+        self.assert_password_change_fails('foo', '',
+            password2=[UserProfileForm.COMPLETE_BOTH])
+        self.assert_password_change_fails('foo', 'bar',
+            password2=[UserProfileForm.MISMATCH])
+
+        response = self.client.get(reverse('user_profile'))
+        form = response.context['profile_form']
+
+        response = self.client.post(reverse('user_profile'),
+            self.update_form_values(form, password1='foo', password2='foo'),
+            follow=True)
+        self.assert_redirect_not_form_error(response)
+        
+        new_ringo = IntranetUser.objects.get(id=self.ringo.id)
+        self.assertTrue(new_ringo.check_password('foo'),
+            "password should have changed")

@@ -1,21 +1,24 @@
 # Create your views here.
 
-from django import http
+from django import forms, http
 from django.core.urlresolvers import reverse
-from django.forms import ModelForm
 from django.views.generic.base import TemplateView
 
 from models import IntranetUser
+from password import PasswordChangeMixin
 
 class FrontPageView(TemplateView):
     template_name = 'front_page.dhtml'
 
-class UserProfileForm(ModelForm):
+class UserProfileForm(PasswordChangeMixin, forms.ModelForm):
     class Meta:
         model = IntranetUser
         exclude = ('is_staff', 'is_active', 'is_superuser', 'password',
             'groups', 'user_permissions', 'first_name', 'last_name',
             'last_login', 'date_joined', 'date_left')
+
+    password1 = forms.CharField(required=False, label="New password")
+    password2 = forms.CharField(required=False, label="Confirm new password")
         
 class UserProfileView(TemplateView):
     template_name = "user_profile.html"
