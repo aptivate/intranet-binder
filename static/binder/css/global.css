@@ -167,15 +167,27 @@ form
 	background: #dfd;
 }
 
-.error-message, ul.errorlist
+.error-message, .errornote, .errorlist
 {
 	padding: 8px 8px 8px 40px;
-	border: 2px solid #fcc;
+	border: 2px solid #faa;
 	background: #fdd url(../images/warning.png) no-repeat 8px;
+}
+
+/*
+ * use different styling for an errorlist inside an admin table
+ * (.errors-cell .errorlist) where .errors-cell supplies the background
+ * colour, so we don't have to.
+ */
+.errors-cell .errorlist
+{
+	background: url(../images/warning.png) no-repeat 8px;
+	border: none;
 }
 
 ul.errorlist
 {
+	padding: 8px 8px 8px 40px;
 	list-style-type: none;
 }
 
