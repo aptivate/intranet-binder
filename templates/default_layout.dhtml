@@ -6,7 +6,7 @@
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/global.css" />
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/colours.css" />
-		<link rel="stylesheet" href="https://www.youwin.org.ng/css/style.css" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}mande/css/youwin-style.css" />
 		<link rel="stylesheet" href="{{ STATIC_URL }}mande/css/youwin-mande.css" />
 		{% block extrahead %}{% endblock %}
 		{% block extrastyle %}{% endblock %}
