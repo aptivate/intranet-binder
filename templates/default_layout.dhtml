@@ -5,7 +5,7 @@
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
 		{% block style %}
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/global.css" />
-		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/colours.css" />
+		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/atamis-intranet.css" />
 		{% endblock %}
 	</head>
 	<body>
