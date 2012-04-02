@@ -3,8 +3,8 @@
 {% load i18n admin_modify adminmedia %}
 
 {% block style %}
-	{{ block.super }}
 	<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+	{{ block.super }}
 	{% comment %}
 	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery-1.7.1.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery.multiSelect.js"></script>
