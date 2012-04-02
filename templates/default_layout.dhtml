@@ -31,12 +31,11 @@
 						{% else %}
 							<a href="{% url login %}">Log in</a>
 						{% endif %}
-						</div><!--end user access -->
-						
-					</div><!--end navigation -->
-				<div class="breadcrumbs">
-							{% block breadcrumbs %}<a href="{% url front_page %}">Home</a>{% endblock %}
-						</div>
+                    </div><!--end user access -->
+                </div><!--end navigation -->
+                <div class="breadcrumbs">
+                    {% block breadcrumbs %}<a href="{% url front_page %}">Home</a>{% endblock %}
+                </div>
 			</div><!--end Header -->
 		
 								
@@ -50,13 +49,13 @@
 						</div><!--end inner -->
 					</div><!--end content -->
 		
-		<div id="footer">
-			<div class="copyright"><p>Copyright © YouWiN!, 2011</p></div>
-				<ul class="footer-nav">
-					<li><a href="http://www.youwin.org.ng">Main YouWin site</a></li>
-					<li><a href="http://www.youwin.org.ng/contactus.php">Contact us</a></li>
-					<li><a href="http://www.youwin.org.ng/forum">Discussion Forum</a></li>
-				</ul>
+            <div id="footer">
+                <div class="copyright"><p>Copyright © YouWiN!, 2011</p></div>
+                    <ul class="footer-nav">
+                        <li><a href="http://www.youwin.org.ng">Main YouWin site</a></li>
+                        <li><a href="http://www.youwin.org.ng/contactus.php">Contact us</a></li>
+                        <li><a href="http://www.youwin.org.ng/forum">Discussion Forum</a></li>
+                    </ul>
 			</div><!--end footer -->
 		</div><!--end wrapper -->	
 	</body>
