@@ -8,7 +8,7 @@
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/atamis-intranet.css" />
 		{% endblock %}
 	</head>
-	<body>
+	<body class="{% block body_classes %}{% endblock %}">
 		<div id="header">
 			<div class="colorbar"><span class="lime"></span><span class="orange"></span><span class="red"></span><span class="yellow"></span><span class="green"></span>
 			</div>
