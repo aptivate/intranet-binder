@@ -200,7 +200,7 @@ class BinderTest(AptivateEnhancedTestCase):
         # setattr(f, 'name', 'transparent.gif')
         
         response = self.client.post(reverse('user_profile'),
-            self.update_form_values(photo=f), follow=True)
+            self.update_form_values(form, photo=f), follow=True)
         
         self.assert_redirect_not_form_error(response)
          
