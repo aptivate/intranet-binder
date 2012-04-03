@@ -14,7 +14,7 @@ from test_utils import AptivateEnhancedTestCase
 from binder.views import FrontPageView
 
 class BinderTest(AptivateEnhancedTestCase):
-    fixtures = ['ata_programs', 'test_permissions', 'test_users']
+    fixtures = ['test_programs', 'test_permissions', 'test_users']
 
     def setUp(self):
         AptivateEnhancedTestCase.setUp(self)
