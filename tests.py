@@ -43,11 +43,11 @@ class BinderTest(AptivateEnhancedTestCase):
     def test_menu_tag_with_named_route(self):
         context = Context({'global':{'path':'/'}})
         self.assertEqual('<td class="selected"><a href="/">Home</a></td>',
-            menu_tag.menu_item(context, 'front_page', 'Home'))
+            menu_tag.menu_item(context, 'td', 'front_page', 'Home'))
 
         context = Context({'global':{'path':'/foo'}})
-        self.assertEqual('<td ><a href="/">Home</a></td>',
-            menu_tag.menu_item(context, 'front_page', 'Home'))
+        self.assertEqual('<li ><a href="/">Home</a></li>',
+            menu_tag.menu_item(context, 'li', 'front_page', 'Home'))
 
     def login(self, user=None):
         if user is None:

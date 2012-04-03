@@ -18,11 +18,10 @@
 				<div class="user-access">
 					<span class="loginout">
 						{{ global.user.full_name }} | 
-						<strong>
-					{% if user.username %}
-							{% menu_item 'logout' 'Log out' %}
+						{% if user.username %}
+							{% menu_item 'strong' 'logout' 'Log out' %}
 						{% else %}
-							{% menu_item 'login' 'Log in' %}
+							{% menu_item 'strong' 'login' 'Log in' %}
 						{% endif %}
 						</strong>
 					</span>
@@ -34,7 +33,7 @@
 					<div class="menu-header">
 						<ul class="menu">
 							{% for m in global.main_menu %}
-								<li>{% menu_item m.url_name m.title %}</li>
+								{% menu_item 'li' m.url_name m.title %}
 							{% endfor %}
 						</ul>
 					</div>
