@@ -40,36 +40,6 @@ class BinderTest(AptivateEnhancedTestCase):
             ], [(item.title, item.url_name) for item in main_menu],
             "Wrong main menu for unauthenticated users")
 
-    def test_menu_with_login_as_normal_user(self):
-        self.login(self.john)
-        
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        g = response.context['global']
-        
-        main_menu = g['main_menu']
-        self.assertSequenceEqual([
-            ("Home", "front_page"),
-            ("Documents", "admin:documents_document_changelist"),
-            ], [(item.title, item.url_name) for item in main_menu],
-            "Wrong main menu for ordinary users")
-
-    def test_menu_with_login_as_manager(self):
-        self.login(self.ringo)
-        
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        g = response.context['global']
-        
-        main_menu = g['main_menu']
-        self.assertSequenceEqual([
-            ("Home", "front_page"),
-            ("Documents", "admin:documents_document_changelist"),
-            ("Users", "admin:binder_intranetuser_changelist"),
-            ("Admin", "admin:index"),
-            ], [(item.title, item.url_name) for item in main_menu],
-            "Wrong main menu for ordinary users")
-        
     def test_menu_tag_with_named_route(self):
         context = Context({'global':{'path':'/'}})
         self.assertEqual('<td class="selected"><a href="/">Home</a></td>',
