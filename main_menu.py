@@ -21,7 +21,7 @@ class MainMenu(Menu):
         self.append("Home", 'front_page')
         
         if request.user.is_authenticated():
-            self.append("Documents", 'admin:documents_document_changelist')
+            self.append("Documents", 'document_list')
         
             if request.user.is_manager: 
                 self.append("Users", 'admin:binder_intranetuser_changelist')
