@@ -242,6 +242,9 @@ class AdminWithReadOnly(ModelAdmin):
         AdminForm object, but this seems like the cleanest (least invasive)
         solution to making a completely read-only admin form.  
         """
+
+        opts = self.model._meta
+        app_label = opts.app_label
         
         if 'read_only' in context:
             adminForm = context['adminform']
@@ -249,7 +252,11 @@ class AdminWithReadOnly(ModelAdmin):
             for name, options in adminForm.fieldsets:
                 readonly.extend(options['fields'])
             adminForm.readonly_fields = readonly
-            form_template = 'admin/view_form.html'
+            form_template = [
+                "admin/%s/%s/view_form.html" % (app_label, opts.object_name.lower()),
+                "admin/%s/view_form.html" % app_label,
+                "admin/view_form.html"
+            ] 
         else:
             form_template = None
 
@@ -285,8 +292,6 @@ class AdminWithReadOnly(ModelAdmin):
         from django import template
         from django.shortcuts import render_to_response
 
-        opts = self.model._meta
-        app_label = opts.app_label
         ordered_objects = opts.get_ordered_objects()
         context.update({
             'add': add,
