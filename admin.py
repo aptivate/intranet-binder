@@ -108,7 +108,7 @@ class AdminYesNoWidget(widgets.CheckboxInput):
     has_readonly_view = True
 
     def render(self, name, value, attrs=None):
-        if attrs.get('readonly'):
+        if attrs is not None and attrs.get('readonly'):
             if value:
                 return "Yes"
             else:
