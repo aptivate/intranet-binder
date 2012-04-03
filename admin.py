@@ -596,7 +596,7 @@ class CustomAdminReadOnlyField(AdminReadonlyField):
         if hasattr(form[field].field.widget, 'has_readonly_view'):
             return form[field].as_widget(attrs=widget_attrs)
         else:
-            return AdminReadonlyField.contents(self)
+            return super(CustomAdminReadOnlyField, self).contents(widget_attrs)
         
     # patch for https://code.djangoproject.com/ticket/16433
     def help_text_for_field(self, name, model):
