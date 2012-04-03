@@ -168,6 +168,7 @@ def queryset_get_with_exception_detail(original_function, self, *args, **kwargs)
     keyword arguments. This version provides extra details about the query
     if it fails to find any results.
     """
+    
     clone = self.filter(*args, **kwargs)
     if self.query.can_filter():
         clone = clone.order_by()
