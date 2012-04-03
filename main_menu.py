@@ -1,9 +1,5 @@
 from collections import namedtuple
 
-from django.core.urlresolvers import reverse, NoReverseMatch
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
-
 Generator = namedtuple('Generator', ('url_name', 'title'))
 Item = namedtuple('Item', ('href', 'title'))
 

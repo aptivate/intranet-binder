@@ -6,7 +6,7 @@ http://djangosnippets.org/snippets/1636/
 <script type="text/javascript" src="{% admin_media_prefix %}js/core.js"></script>
 <script type="text/javascript" src="{% admin_media_prefix %}js/getElementsBySelector.js"></script>
 
-<script type="text/javascript">
+<script type="text/javascript"> // <![CDATA[
 addEvent(window, "load", function()
 {
 	var inputs = []
@@ -17,7 +17,7 @@ addEvent(window, "load", function()
 	
 	if (inputs.length > 0)
 	{
-		for (var i=0, t=inputs.length; i<t ;i++)
+		for (var i = 0, t = inputs.length; i < t; i++)
 		{
 			if (inputs[i].parentNode.className.indexOf('submit-row') == -1)
 			{
@@ -48,4 +48,4 @@ addEvent(window, "load", function()
 		}
 	}
 });
-</script>
+// ]]></script>
