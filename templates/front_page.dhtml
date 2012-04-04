@@ -8,7 +8,7 @@
 	{% if global.user.is_authenticated %}
 		<p>Welcome to the {{ global.app_title }}, {{ global.user.full_name }}.</p>
 		
-		<h3>Quick links:</h3>
+		<h2>Quick links:</h2>
 		
 		<ul id="quick_links">
 			<li><a class="addlink" href="{% url admin:documents_document_add %}">Add document</a></li>
