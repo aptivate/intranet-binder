@@ -331,6 +331,11 @@ table.ruled thead tr {border-bottom:4px solid #aaa;}
 
 table .action-checkbox {width:5%;}
 
+.submit-row
+{
+	text-align: left;
+}
+
 /* Search page-------------------------------------------------- */
 
 .warning-message, .success-message, .error-message, .errorlist {
