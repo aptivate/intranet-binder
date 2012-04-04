@@ -9,7 +9,7 @@
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/atamis-intranet.css" />
 		{% endblock %}
 	</head>
-	<body>
+	<body class="{% block body_classes %}{% endblock %}">
 		<div id="header">
 			<div class="colorbar"><span class="lime"></span><span class="orange"></span><span class="red"></span><span class="yellow"></span><span class="green"></span>
 			</div>
@@ -19,13 +19,11 @@
 				<div class="user-access">
 					<span class="loginout">
 						{{ global.user.full_name }} | 
-						<strong>
-					{% if user.username %}
-							{% menu_item 'logout' 'Log out' %}
+						{% if user.username %}
+							{% menu_item 'strong' 'logout' 'Log out' %}
 						{% else %}
-							{% menu_item 'login' 'Log in' %}
+							{% menu_item 'strong' 'login' 'Log in' %}
 						{% endif %}
-						</strong>
 					</span>
 				</div>
 			</div>
@@ -35,7 +33,7 @@
 					<div class="menu-header">
 						<ul class="menu">
 							{% for m in global.main_menu %}
-								<li>{% menu_item m.url_name m.title %}</li>
+								{% menu_item 'li' m.url_name m.title %}
 							{% endfor %}
 						</ul>
 					</div>

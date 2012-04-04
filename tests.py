@@ -14,7 +14,7 @@ from test_utils import AptivateEnhancedTestCase
 from binder.views import FrontPageView
 
 class BinderTest(AptivateEnhancedTestCase):
-    fixtures = ['ata_programs', 'test_permissions', 'test_users']
+    fixtures = ['test_programs', 'test_permissions', 'test_users']
 
     def setUp(self):
         AptivateEnhancedTestCase.setUp(self)
@@ -40,44 +40,14 @@ class BinderTest(AptivateEnhancedTestCase):
             ], [(item.title, item.url_name) for item in main_menu],
             "Wrong main menu for unauthenticated users")
 
-    def test_menu_with_login_as_normal_user(self):
-        self.login(self.john)
-        
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        g = response.context['global']
-        
-        main_menu = g['main_menu']
-        self.assertSequenceEqual([
-            ("Home", "front_page"),
-            ("Documents", "admin:documents_document_changelist"),
-            ], [(item.title, item.url_name) for item in main_menu],
-            "Wrong main menu for ordinary users")
-
-    def test_menu_with_login_as_manager(self):
-        self.login(self.ringo)
-        
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        g = response.context['global']
-        
-        main_menu = g['main_menu']
-        self.assertSequenceEqual([
-            ("Home", "front_page"),
-            ("Documents", "admin:documents_document_changelist"),
-            ("Users", "admin:binder_intranetuser_changelist"),
-            ("Admin", "admin:index"),
-            ], [(item.title, item.url_name) for item in main_menu],
-            "Wrong main menu for ordinary users")
-        
     def test_menu_tag_with_named_route(self):
         context = Context({'global':{'path':'/'}})
         self.assertEqual('<td class="selected"><a href="/">Home</a></td>',
-            menu_tag.menu_item(context, 'front_page', 'Home'))
+            menu_tag.menu_item(context, 'td', 'front_page', 'Home'))
 
         context = Context({'global':{'path':'/foo'}})
-        self.assertEqual('<td ><a href="/">Home</a></td>',
-            menu_tag.menu_item(context, 'front_page', 'Home'))
+        self.assertEqual('<li ><a href="/">Home</a></li>',
+            menu_tag.menu_item(context, 'li', 'front_page', 'Home'))
 
     def login(self, user=None):
         if user is None:
@@ -200,7 +170,7 @@ class BinderTest(AptivateEnhancedTestCase):
         # setattr(f, 'name', 'transparent.gif')
         
         response = self.client.post(reverse('user_profile'),
-            self.update_form_values(photo=f), follow=True)
+            self.update_form_values(form, photo=f), follow=True)
         
         self.assert_redirect_not_form_error(response)
          
