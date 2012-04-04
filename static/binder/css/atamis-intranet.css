@@ -156,7 +156,7 @@ form {
 #header h2 {
     color: #AAAAAA;
     position: absolute;
-    right: 0;
+    right: 10px;
     top: 50px;
     font-weight:normal;
 }
@@ -393,7 +393,7 @@ table.paleblue td, table.paleblue th {
 .content h3 {
 	clear:both;
 	color:#483737;
-	font-size:1em;
+	font-size:1.3em;
 }
 
 .content h3 a {
@@ -592,8 +592,48 @@ a.addlink:hover, .object-tools li a:hover {
 
 /* Homepage -------------------------------------------------- */
 
+.home h2.page-title {
+	padding-left:230px;
+	display:none;
+	
+}
+
+#quick_links {
+    float: left;
+    width: 230px;
+    display:block;
+    position:absolute;
+    top:20px;
+}
+
 #quick_links li {
 	clear:both;
+}
+
+.intro-text {
+	width:50%;
+	display:block;
+	float:left;
+	padding-left:230px;
+}
+
+.intro-text h2 {
+	font-weight:normal;
+	font-size:1.8em;
+}
+
+.impact li {
+    color: #483737;
+    font-weight: bold;
+    line-height: 1.9em;
+    list-style-type: none !important;
+    margin-bottom: 0.5em;
+}
+
+.impact li strong {
+    font-size: 1.2em;
+    width: 350px;
+    color:#EF9200;
 }
 
 /* Sidebar two (left side on pages)-------------------------------------------------- */
@@ -647,6 +687,7 @@ a.addlink:hover, .object-tools li a:hover {
     width: 100%;
     padding-top: 10px;
 	margin-top:10px;
+	color:#aaa;
 }
 
 #footer-left {

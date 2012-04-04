@@ -15,7 +15,7 @@
 			</div>
 			<div id="header-inner">
 				<h1><a href="/">{{ global.app_title }}</a></h1>
-				<h2>Management Information System</h2>
+				<h2>ATA Intranet</h2>
 				<div class="user-access">
 					<span class="loginout">
 						{{ global.user.full_name }} | 
@@ -62,7 +62,8 @@
 			</div>
 		</div>
 		<div id="footer">
-			<div id="footer-inner">footer content</div>
+			<div id="footer-inner">ATA Intranet platform is an open source product that can be made available to other 
+				organisations, including those in the Ethiopian agricultural sector.</div>
 		</div>
 	</body>
 </html> 
