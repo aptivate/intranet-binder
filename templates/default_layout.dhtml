@@ -23,7 +23,6 @@
 						{% else %}
 							{% menu_item 'strong' 'login' 'Log in' %}
 						{% endif %}
-						</strong>
 					</span>
 				</div>
 			</div>
