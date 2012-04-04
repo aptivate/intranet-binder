@@ -4,8 +4,23 @@
 	<head>
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
 		{% block style %}
+		<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery-1.7.1.js"></script>
+		<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery.multiSelect.js"></script>
+		<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery.bgiframe.min.js"></script>
+		<link rel="stylesheet" href="{{ STATIC_URL }}binder/js/jquery.multiSelect.css" />
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/global.css" />
 		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/atamis-intranet.css" />
+
+		<script type="text/javascript">
+			jQuery(document).ready(function()
+			{
+				$(".multiselect-jquery").multiSelect({
+					selectAll: false,
+					selectNone: true,
+					selectNoneText: 'Search All',
+				});
+			});
+		</script>
 		{% endblock %}
 	</head>
 	<body class="{% block body_classes %}{% endblock %}">
