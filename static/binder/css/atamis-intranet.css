@@ -13,7 +13,7 @@ body {
     background: #fff;
     color: #333;
     /* font sizing in ems, baby. if you want to change anything, just change this.*/
-    font-family: "ubuntu", "Trebuchet MS", Verdana, arial, "sans serif";
+    font-family:"Trebuchet MS", Verdana, arial, "sans serif";
     font-size: 85%;
 	line-height: 1.3em;
 }
@@ -257,30 +257,6 @@ form {
 	margin:0;
 }
 
-/* Search -------------------------------------------------- */
-
-.search-options
-{
-	/* match the indent of the warning box below */
-	margin: 1em;
-}
-
-.search-options ul
-{
-	padding: 0;
-	list-style-type: none;
-}
-
-.search-options li
-{
-	display: inline;
-}
-
-.submit-row
-{
-	text-align: left;
-}
-
 /* tables -------------------------------------------------- */
 
 .ruled > thead > tr > th,
@@ -304,7 +280,6 @@ form {
 .ruled > tbody > tr > td
 {
 	border-color: #ddd;
-	background: white;
 }
 
 .ruled > tbody > tr.alt > td
@@ -356,7 +331,47 @@ table.ruled thead tr {border-bottom:4px solid #aaa;}
 
 table .action-checkbox {width:5%;}
 
+/* Search page-------------------------------------------------- */
 
+.warning-message, .success-message, .error-message, .errorlist {
+	margin:1em 0;
+}
+
+.table-container {
+	width:100%;
+}
+
+.table-container table {
+    width:100%;
+  }
+  
+table.paleblue, table.paleblue + ul.pagination {
+	font-size:1em!important;
+}
+
+table.paleblue th {
+	font-size:0.95em!important;
+}
+
+table.paleblue td, table.paleblue th {
+	padding:10px!important;
+}
+
+.table-container table.paleblue thead th:first-child  {
+	width:30%;
+}
+
+.table-container table.paleblue thead th:nth-child(2)   {
+	width:10%;
+}
+
+.table-container table.paleblue thead th:nth-child(3)   {
+	width:10%;
+}
+
+.table-container table.paleblue thead th:nth-child(3)   {
+	width:10%;
+}
 
 /* Content -------------------------------------------------- */
 
@@ -555,7 +570,6 @@ a.addlink, a.changelink, .object-tools li a {
     -webkit-border-radius: 15px;
     color: #fff;
     display: block;
-    font-family: 'UbuntuRegular',Arial,'Helvetica Neue',Helvetica,sans-serif;
     font-size: 1em;
     font-weight: bold;
     height: 20px;
