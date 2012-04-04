@@ -373,6 +373,14 @@ table.paleblue td, table.paleblue th {
 	width:10%;
 }
 
+/* Document Details -------------------------------------------------- */
+
+.document-confidential table tr.confidential,
+.document-confidential table tr.confidential th label {
+	color:red;
+	font-weight:bold;
+}
+
 /* Content -------------------------------------------------- */
 
 #content h2.page-title {
@@ -598,9 +606,9 @@ a.addlink:hover, .object-tools li a:hover {
 	
 }
 
-#quick_links {
+#quick_links, .home-login {
     float: left;
-    width: 230px;
+    width: 200px;
     display:block;
     position:absolute;
     top:20px;

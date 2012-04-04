@@ -16,8 +16,17 @@
 				<li><a class="addlink" href="{% url admin:binder_intranetuser_add %}">Add user</a></li>
 			{% endif %}
 		</ul>
-		<div class="intro-text">
-			<h2>Welcome  {{ global.user.full_name }} </h2>
+		{% block extrabody %}
+		
+		{% endblock %}
+	{% else %}
+		<div class="home-login">
+			<h3>Please login to access this site.</h3>
+			<a class="addlink" href="{% url django.contrib.auth.views.login %}">log in</a> 
+		</div>
+	{% endif %}
+	<div class="intro-text {% if global.user.is_authenticated %} user {% endif %}">
+			<h2>Welcome  {% if global.user.is_authenticated %}{{ global.user.full_name }} {% else %} to the ATA Intranet {% endif %}</h2>
 			<p>The ATA Intranet can help you organise ATA-related documents and data sources, and make them searchable and 
 				help the transfer of knowledge between staff members.</p>
 				<h3>What you can do</h3>
@@ -28,13 +37,4 @@
 					<li><strong>Keep your own profile updated:</strong> let people find YOU!</li>
 				</ul>
 		</div>
-		
-		{% block extrabody %}
-		
-		{% endblock %}
-	{% else %}
-		<p>Welcome to the {{ global.app_title }}. Please
-			<a href="{% url django.contrib.auth.views.login %}">log in</a>
-			to access this site.</p>
-	{% endif %}
 {% endblock %}
