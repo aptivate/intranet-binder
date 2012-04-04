@@ -8,15 +8,15 @@
 	{% if global.user.is_authenticated %}
 		<p>Welcome to the {{ global.app_title }}, {{ global.user.full_name }}.</p>
 		
-		<h4>Quick links:</h4>
+		<h3>Quick links:</h3>
 		
 		<ul id="quick_links">
-			<li><a href="{% url admin:documents_document_add %}">Add document</a></li>
-			<li><a href="{% url user_profile %}">Edit my profile</a></li>
+			<li><a class="addlink" href="{% url admin:documents_document_add %}">Add document</a></li>
+			<li><a class="changelink" href="{% url user_profile %}">Edit my profile</a></li>
 			{% if user.is_manager %}
-				<li><a href="{% url admin:documents_documenttype_changelist %}">Document types</a></li>
-				<li><a href="{% url admin:binder_program_changelist %}">Programs</a></li>
-				<li><a href="{% url admin:binder_intranetuser_add %}">Add user</a></li>
+				<li><a class="changelink" href="{% url admin:documents_documenttype_changelist %}">Document types</a></li>
+				<li><a class="changelink" href="{% url admin:binder_program_changelist %}">Programs</a></li>
+				<li><a class="addlink" href="{% url admin:binder_intranetuser_add %}">Add user</a></li>
 			{% endif %}
 		</ul>
 		
