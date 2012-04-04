@@ -1,7 +1,8 @@
 {% load menu %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
 		{% block style %}
 		<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery-1.7.1.js"></script>
@@ -29,7 +30,7 @@
 			</div>
 			<div id="header-inner">
 				<h1><a href="/">{{ global.app_title }}</a></h1>
-				<h2>Management Information System</h2>
+				<h2>ATA Intranet</h2>
 				<div class="user-access">
 					<span class="loginout">
 						{{ global.user.full_name }} | 
@@ -68,7 +69,7 @@
 		<div id="wrapper">
 			<div id="wrapper-inner">
 				<div id="content" class="content">
-				<h2>{% block heading %}{% endblock %}</h2>
+				<h2 class="page-title">{% block heading %}{% endblock %}</h2>
 				{% block body %}
 				Default Body
 				{% endblock %}
@@ -76,7 +77,8 @@
 			</div>
 		</div>
 		<div id="footer">
-			<div id="footer-inner">footer content</div>
+			<div id="footer-inner">ATA Intranet platform is an open source product that can be made available to other 
+				organisations, including those in the Ethiopian agricultural sector.</div>
 		</div>
 	</body>
 </html> 

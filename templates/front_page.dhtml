@@ -1,26 +1,36 @@
 {% extends 'default_layout.dhtml' %}
 
 {% block heading %}
-	Front Page
+	{{ global.app_title }}
 {% endblock %}
+{% block body_classes %}home{% endblock %}
 
 {% block body %}
 	{% if global.user.is_authenticated %}
-		<p>Welcome to the {{ global.app_title }}, {{ global.user.full_name }}.</p>
-		
-		<h4>Quick links:</h4>
-		
 		<ul id="quick_links">
-			<li><a href="{% url admin:documents_document_add %}">Add document</a></li>
-			<li><a href="{% url user_profile %}">Edit my profile</a></li>
+			<li><a class="addlink" href="{% url admin:documents_document_add %}">Add document</a></li>
+			<li><a class="changelink" href="{% url user_profile %}">Edit my profile</a></li>
 			{% if user.is_manager %}
-				<li><a href="{% url admin:documents_documenttype_changelist %}">Document types</a></li>
-				<li><a href="{% url admin:binder_program_changelist %}">Programs</a></li>
-				<li><a href="{% url admin:binder_intranetuser_add %}">Add user</a></li>
+				<li><a class="changelink" href="{% url admin:documents_documenttype_changelist %}">Document types</a></li>
+				<li><a class="changelink" href="{% url admin:binder_program_changelist %}">Programs</a></li>
+				<li><a class="addlink" href="{% url admin:binder_intranetuser_add %}">Add user</a></li>
 			{% endif %}
 		</ul>
+		<div class="intro-text">
+			<h2>Welcome  {{ global.user.full_name }} </h2>
+			<p>The ATA Intranet can help you organise ATA-related documents and data sources, and make them searchable and 
+				help the transfer of knowledge between staff members.</p>
+				<h3>What you can do</h3>
+				<ul class="impact">
+					<li><strong>Upload your own documents:</strong> and find them quickly</li>
+					<li><strong>Search for ATA documents:</strong> and those uploaded by colleagues</li>
+					<li><strong>Search for colleagues:</strong> and discover what they do and where they work</li>
+					<li><strong>Keep your own profile updated:</strong> let people find YOU!</li>
+				</ul>
+		</div>
 		
 		{% block extrabody %}
+		
 		{% endblock %}
 	{% else %}
 		<p>Welcome to the {{ global.app_title }}. Please

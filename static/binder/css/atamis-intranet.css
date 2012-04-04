@@ -1,12 +1,10 @@
 /*
- Theme Name: Sustainforlife
- Theme URI: http://www.rootinteractive.com
- Description: A custom theme for Sustain For Life by Root Interactive - based on Dojo by Scott Vandehey.
- A minimal, web-standards, SEO-friendly theme with three dynamic sidebars, 3 custom menus
+ Theme Name: ATA-MIS
+ Theme URI: http://www.aptivate.org
+ Description: A custom theme for ATA Ethiopia based on a wordpress theme adapted for Sustain For Life: http://www.sustainforlife.org | theme base - Dojo by Scott Vandehey.
  Version: 1
- Author: Root Interactive
- Author URI: http://www.rootinteractive.com
- Tags: fixed-width, three-columns, right-sidebar, white, theme-options, threaded-comments
+ Author: Jay Alvarez - Aptivate
+ Author URI: http://www.aptivate.org
  
  /* Universal Rules -------------------------------------------------- */
 body {
@@ -15,7 +13,7 @@ body {
     background: #fff;
     color: #333;
     /* font sizing in ems, baby. if you want to change anything, just change this.*/
-    font-family: "ubuntu", "Trebuchet MS", Verdana, arial, "sans serif";
+    font-family:"Trebuchet MS", Verdana, arial, "sans serif";
     font-size: 85%;
 	line-height: 1.3em;
 }
@@ -52,55 +50,6 @@ form {
     clear: both;
 }
 
-/*--Fonts--------------------------------------------------------*/
-
-@font-face {
-    font-family: 'UbuntuRegular';
-    src: url('fonts/Ubuntu-R-webfont.eot');
-    src: url('fonts/Ubuntu-R-webfont.eot?iefix') format('eot'),
-         url('fonts/Ubuntu-R-webfont.woff') format('woff'),
-         url('fonts/Ubuntu-R-webfont.ttf') format('truetype'),
-         url('fonts/Ubuntu-R-webfont.svg#webfont5QrTZHwg') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
-
-@font-face {
-    font-family: 'UbuntuItalic';
-    src: url('fonts/Ubuntu-I-webfont.eot');
-    src: url('fonts/Ubuntu-I-webfont.eot?iefix') format('eot'),
-         url('fonts/Ubuntu-I-webfont.woff') format('woff'),
-         url('fonts/Ubuntu-I-webfont.ttf') format('truetype'),
-         url('fonts/Ubuntu-I-webfont.svg#webfontwdgWd3TL') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
-
-@font-face {
-    font-family: 'UbuntuBold';
-    src: url('fonts/Ubuntu-B-webfont.eot');
-    src: url('fonts/Ubuntu-B-webfont.eot?iefix') format('eot'),
-         url('fonts/Ubuntu-B-webfont.woff') format('woff'),
-         url('fonts/Ubuntu-B-webfont.ttf') format('truetype'),
-         url('fonts/Ubuntu-B-webfont.svg#webfontCKhwRblf') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
-
-@font-face {
-    font-family: 'UbuntuBoldItalic';
-    src: url('fonts/Ubuntu-BI-webfont.eot');
-    src: url('fonts/Ubuntu-BI-webfont.eot?iefix') format('eot'),
-         url('fonts/Ubuntu-BI-webfont.woff') format('woff'),
-         url('fonts/Ubuntu-BI-webfont.ttf') format('truetype'),
-         url('fonts/Ubuntu-BI-webfont.svg#webfontLmVyebAO') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
 
 /* Layout -------------------------------------------------- */
 #header, #access, #wrapper, #footer  {
@@ -207,7 +156,7 @@ form {
 #header h2 {
     color: #AAAAAA;
     position: absolute;
-    right: 0;
+    right: 10px;
     top: 50px;
     font-weight:normal;
 }
@@ -278,9 +227,17 @@ form {
 }
 
 
-.menu-header li:hover > a {
-    background: #88AA00;
+.menu-header li a:hover {
+    background-color: #EF9200;
     color: #1F1B1B;
+}
+
+.menu-header li.selected a {
+	background-color:#61553F;
+}
+
+.menu-header li.selected a:hover {
+	color:#fff;
 }
 
 /* Search bar -------------------------------------------------- */
@@ -298,30 +255,6 @@ form {
 
 .searchform span ul {
 	margin:0;
-}
-
-/* Search -------------------------------------------------- */
-
-.search-options
-{
-	/* match the indent of the warning box below */
-	margin: 1em;
-}
-
-.search-options ul
-{
-	padding: 0;
-	list-style-type: none;
-}
-
-.search-options li
-{
-	display: inline;
-}
-
-.submit-row
-{
-	text-align: left;
 }
 
 /* tables -------------------------------------------------- */
@@ -347,7 +280,6 @@ form {
 .ruled > tbody > tr > td
 {
 	border-color: #ddd;
-	background: white;
 }
 
 .ruled > tbody > tr.alt > td
@@ -399,7 +331,47 @@ table.ruled thead tr {border-bottom:4px solid #aaa;}
 
 table .action-checkbox {width:5%;}
 
+/* Search page-------------------------------------------------- */
 
+.warning-message, .success-message, .error-message, .errorlist {
+	margin:1em 0;
+}
+
+.table-container {
+	width:100%;
+}
+
+.table-container table {
+    width:100%;
+  }
+  
+table.paleblue, table.paleblue + ul.pagination {
+	font-size:1em!important;
+}
+
+table.paleblue th {
+	font-size:0.95em!important;
+}
+
+table.paleblue td, table.paleblue th {
+	padding:10px!important;
+}
+
+.table-container table.paleblue thead th:first-child  {
+	width:30%;
+}
+
+.table-container table.paleblue thead th:nth-child(2)   {
+	width:10%;
+}
+
+.table-container table.paleblue thead th:nth-child(3)   {
+	width:10%;
+}
+
+.table-container table.paleblue thead th:nth-child(3)   {
+	width:10%;
+}
 
 /* Content -------------------------------------------------- */
 
@@ -421,7 +393,7 @@ table .action-checkbox {width:5%;}
 .content h3 {
 	clear:both;
 	color:#483737;
-	font-size:1em;
+	font-size:1.3em;
 }
 
 .content h3 a {
@@ -598,7 +570,6 @@ a.addlink, a.changelink, .object-tools li a {
     -webkit-border-radius: 15px;
     color: #fff;
     display: block;
-    font-family: 'UbuntuRegular',Arial,'Helvetica Neue',Helvetica,sans-serif;
     font-size: 1em;
     font-weight: bold;
     height: 20px;
@@ -621,8 +592,48 @@ a.addlink:hover, .object-tools li a:hover {
 
 /* Homepage -------------------------------------------------- */
 
+.home h2.page-title {
+	padding-left:230px;
+	display:none;
+	
+}
+
+#quick_links {
+    float: left;
+    width: 230px;
+    display:block;
+    position:absolute;
+    top:20px;
+}
+
 #quick_links li {
 	clear:both;
+}
+
+.intro-text {
+	width:50%;
+	display:block;
+	float:left;
+	padding-left:230px;
+}
+
+.intro-text h2 {
+	font-weight:normal;
+	font-size:1.8em;
+}
+
+.impact li {
+    color: #483737;
+    font-weight: bold;
+    line-height: 1.9em;
+    list-style-type: none !important;
+    margin-bottom: 0.5em;
+}
+
+.impact li strong {
+    font-size: 1.2em;
+    width: 350px;
+    color:#EF9200;
 }
 
 /* Sidebar two (left side on pages)-------------------------------------------------- */
@@ -676,6 +687,7 @@ a.addlink:hover, .object-tools li a:hover {
     width: 100%;
     padding-top: 10px;
 	margin-top:10px;
+	color:#aaa;
 }
 
 #footer-left {
