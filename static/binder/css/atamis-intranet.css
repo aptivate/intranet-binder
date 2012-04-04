@@ -1,12 +1,10 @@
 /*
- Theme Name: Sustainforlife
- Theme URI: http://www.rootinteractive.com
- Description: A custom theme for Sustain For Life by Root Interactive - based on Dojo by Scott Vandehey.
- A minimal, web-standards, SEO-friendly theme with three dynamic sidebars, 3 custom menus
+ Theme Name: ATA-MIS
+ Theme URI: http://www.aptivate.org
+ Description: A custom theme for ATA Ethiopia based on a wordpress theme adapted for Sustain For Life: http://www.sustainforlife.org | theme base - Dojo by Scott Vandehey.
  Version: 1
- Author: Root Interactive
- Author URI: http://www.rootinteractive.com
- Tags: fixed-width, three-columns, right-sidebar, white, theme-options, threaded-comments
+ Author: Jay Alvarez - Aptivate
+ Author URI: http://www.aptivate.org
  
  /* Universal Rules -------------------------------------------------- */
 body {
@@ -229,9 +227,17 @@ form {
 }
 
 
-.menu-header li:hover > a {
-    background: #88AA00;
+.menu-header li a:hover {
+    background-color: #EF9200;
     color: #1F1B1B;
+}
+
+.menu-header li.selected a {
+	background-color:#61553F;
+}
+
+.menu-header li.selected a:hover {
+	color:#fff;
 }
 
 /* Search bar -------------------------------------------------- */
