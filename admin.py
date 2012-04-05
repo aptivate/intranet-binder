@@ -42,6 +42,9 @@ class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
     
     has_readonly_view = True
 
+    def extra_context(self, name, value, attrs):
+        return {}
+
     def render(self, name, value, attrs=None):
         substitutions = {
             'initial_text': self.initial_text,
@@ -77,7 +80,28 @@ class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
             else:
                 template = self.readonly_unset_template
         
+        substitutions.update(self.extra_context(name, value, attrs))
+        
         return mark_safe(template % substitutions)
+
+from easy_thumbnails.files import get_thumbnailer
+
+class AdminImageWidgetWithThumbnail(AdminFileWidgetWithSize):
+    template_with_initial = u'%(thumbnail) %(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
+    readonly_template = u'%(thumbnail) %(link_to_file)s (%(size)s)'
+
+    def extra_context(self, name, value, attrs):
+        context = {}
+        if value:
+            thumbnail = self.square_thumbnail(value)
+        else:
+            thumbnail = ""
+        context['thumbnail'] = thumbnail
+        return context
+    
+    def square_thumbnail(self, source):
+        thumbnail_options = dict(size=(100, 100), crop=True, bw=True)
+        return get_thumbnailer(source).get_thumbnail(thumbnail_options)
 
 class URLFieldWidgetWithLink(admin.widgets.AdminURLFieldWidget):
     def render(self, name, value, attrs=None):
@@ -122,6 +146,7 @@ class AdminWithReadOnly(ModelAdmin):
     formfield_overrides = {
         db_fields.URLField: {'widget': URLFieldWidgetWithLink},
         db_fields.FileField: {'widget': AdminFileWidgetWithSize},
+        db_fields.ImageField: {'widget': AdminImageWidgetWithThumbnail},
     }
     
     def formfield_for_dbfield(self, db_field, **kwargs):
