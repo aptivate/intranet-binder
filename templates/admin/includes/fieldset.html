@@ -25,6 +25,11 @@
 													<p>{{ field.contents }}</p>
 												{% else %}
 													{{ field.field }}
+													{% if field.field.help_text %}
+														<br /><span class="helptext">
+															{{ field.field.help_text }}
+														</span>
+													{% endif %}
 												{% endif %}
 											{% endif %}
 										</td>
