@@ -6,6 +6,7 @@ from django.views.generic.base import TemplateView
 
 from models import IntranetUser
 from password import PasswordChangeMixin
+from admin import AdminImageWidgetWithThumbnail
 
 class FrontPageView(TemplateView):
     template_name = 'front_page.dhtml'
@@ -19,6 +20,7 @@ class UserProfileForm(PasswordChangeMixin, forms.ModelForm):
 
     password1 = forms.CharField(required=False, label="New password")
     password2 = forms.CharField(required=False, label="Confirm new password")
+    # photo = forms.ImageField(widget=AdminImageWidgetWithThumbnail)
         
 class UserProfileView(TemplateView):
     template_name = "user_profile.html"

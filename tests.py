@@ -237,3 +237,24 @@ class BinderTest(AptivateEnhancedTestCase):
         new_ringo = IntranetUser.objects.get(id=self.ringo.id)
         self.assertTrue(new_ringo.check_password('foo'),
             "password should have changed")
+    
+    # disabled until thumbnail support is added
+    """
+    def test_can_create_user_profile_form(self):
+        from views import UserProfileForm
+        
+        # test without any photo, should not crash
+        form = UserProfileForm()
+        self.assertNotEqual("", form.as_table())
+        
+        # test with photo, should generate a thumbnail
+        from django.db.models.fields.files import FieldFile
+        self.assertIsInstance(form['photo'], FieldFile) 
+                import os
+        f = open(os.path.join(os.path.dirname(__file__), 'fixtures',
+            'transparent.gif'))
+        # setattr(f, 'name', 'transparent.gif')
+        
+        response = self.client.post(reverse('user_profile'),
+            self.update_form_values(form, photo=f), follow=True)
+    """
