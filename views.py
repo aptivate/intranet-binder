@@ -20,6 +20,9 @@ class UserProfileForm(PasswordChangeMixin, forms.ModelForm):
 
     password1 = forms.CharField(required=False, label="New password")
     password2 = forms.CharField(required=False, label="Confirm new password")
+    notes = IntranetUser._meta.get_field('notes').formfield(
+        help_text="""e.g. educational background,  professional experience,
+        present job, personal interests, languages spoken etc.""")
     # photo = forms.ImageField(widget=AdminImageWidgetWithThumbnail)
         
 class UserProfileView(TemplateView):

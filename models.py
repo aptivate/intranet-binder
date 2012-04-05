@@ -34,7 +34,7 @@ class IntranetUser(User):
     office_location = db_fields.CharField(max_length=1, choices=OFFICE_LOCATIONS)
     photo = db_fields.ImageField(upload_to='profile_photos', blank=True, null=True)
     date_left = db_fields.DateField(blank=True, null=True)
-    notes = db_fields.TextField(blank=True)
+    notes = db_fields.TextField(blank=True, verbose_name="Bio")
     
     def get_full_name(self):
         return self.full_name
