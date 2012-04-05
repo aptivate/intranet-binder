@@ -108,6 +108,27 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertIsInstance(table, DocumentsAuthoredTable)
         self.assertItemsEqual(self.john.documents_authored.all(), 
             table.data.queryset)
+    
+    def test_profile_picture_shown_in_user_admin_forms(self):
+        self.login()
+        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
+            args=[self.john.id]))
+        field = self.extract_admin_form_field(response, 'photo')
+        
+        from admin import AdminImageWidgetWithThumbnail
+        widget = field.form.fields['photo'].widget
+        self.assertIsInstance(widget, AdminImageWidgetWithThumbnail)
+
+        response = self.client.get(reverse('admin:binder_intranetuser_change',
+            args=[self.john.id]))
+        field = self.extract_admin_form_field(response, 'photo')
+        widget = field.field.field.widget
+        self.assertIsInstance(widget, AdminImageWidgetWithThumbnail)
+        
+        response = self.client.get(reverse('user_profile'))
+        form = self.assertInDict('profile_form', response.context)
+        field = self.assertInDict('photo', form.fields)
+        self.assertIsInstance(field.widget, AdminImageWidgetWithThumbnail)
         
     def test_notes_field_for_user(self):
         self.assertIsInstance(IntranetUser._meta.get_field('notes'),

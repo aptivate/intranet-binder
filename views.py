@@ -23,7 +23,7 @@ class UserProfileForm(PasswordChangeMixin, forms.ModelForm):
     notes = IntranetUser._meta.get_field('notes').formfield(
         help_text="""e.g. educational background,  professional experience,
         present job, personal interests, languages spoken etc.""")
-    # photo = forms.ImageField(widget=AdminImageWidgetWithThumbnail)
+    photo = forms.ImageField(widget=AdminImageWidgetWithThumbnail)
         
 class UserProfileView(TemplateView):
     template_name = "user_profile.html"
