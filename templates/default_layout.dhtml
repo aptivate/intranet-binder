@@ -1,62 +1,46 @@
 {% load menu %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
 	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<title>{{ global.app_title }} | {% block title %}{% endblock %}</title>
-		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/global.css" />
-		<link rel="stylesheet" href="{{ STATIC_URL }}binder/css/colours.css" />
-        <link rel="stylesheet" href="{{ STATIC_URL }}mande/css/youwin-style.css" />
-		<link rel="stylesheet" href="{{ STATIC_URL }}mande/css/youwin-mande.css" />
-		{% block extrahead %}{% endblock %}
+		<link rel="stylesheet" href="{{ STATIC_URL }}css/global.css" />
+		<link rel="stylesheet" href="{{ STATIC_URL }}css/colours.css" />
 		{% block extrastyle %}{% endblock %}
 	</head>
 	<body>
-		<div id="wrapper">
-			<div id="header">
-				<div id="branding">
-					<h1><a href="/">{{ global.app_title }}</a></h1>
-					<h2 class="strapline">Monitoring and <br/> Evaluation</h2>
-				</div>
-				<div id="navigation">
-					<ul class="nav">
-						{% for m in global.main_menu %}
-								{% menu_item m.url_name m.title "li" %}
-						{% endfor %}
-						<li><a href="http://www.youwin.org.ng">YouWin site</a></li>
-					</ul>
-					<div id="user-access">
-						{% if user.username %}
-							Welcome {{ user.username }} | <a class="nopadding" href="{% url logout %}">Log out</a>
-						{% else %}
-							<a href="{% url login %}">Log in</a>
-						{% endif %}
-                    </div><!--end user access -->
-                </div><!--end navigation -->
-                <div class="breadcrumbs">
-                    {% block breadcrumbs %}<a href="{% url front_page %}">Home</a>{% endblock %}
-                </div>
-			</div><!--end Header -->
+		<h1>{{ global.app_title }}</h1>
 		
-								
-			
-					<div id="content" class="main_content">
-						<div class="inner">
-						<h2>{% block heading %}{% endblock %}</h2>
-						{% block body %}
-							Default Body
-						{% endblock %}
-						</div><!--end inner -->
-					</div><!--end content -->
+		<table class="main_menu tabs level1">
+			<tr>
+				{% for m in global.main_menu %}
+					{% menu_item m.url_name m.title %}
+				{% endfor %}
+				
+				{% if user.username %}
+					{% menu_item 'logout' 'Log out' %}
+				{% else %}
+					{% menu_item 'login' 'Log in' %}
+				{% endif %}
+				
+				<td class="padding"></td>
+
+				<td class="search-box">
+					<form method="get" action="{% url search %}">
+						{% comment %}<span class="search-for">Search for:</span>{% endcomment %}
+						<span class="search-models">{{ search.form.models }}</span>
+						<span class="search-input">{{ search.form.q }}</span>
+						{% comment %}<span class="search-models">{{ search.form.models }}</span>{% endcomment %}
+						<span class="search-button"><input type="submit" 
+							value="Search" /></span>
+					</form>
+				</td>
+			</tr>
+		</table>
 		
-            <div id="footer">
-                <div class="copyright"><p>Copyright © YouWiN!, 2011</p></div>
-                    <ul class="footer-nav">
-                        <li><a href="http://www.youwin.org.ng">Main YouWin site</a></li>
-                        <li><a href="http://www.youwin.org.ng/contactus.php">Contact us</a></li>
-                        <li><a href="http://www.youwin.org.ng/forum">Discussion Forum</a></li>
-                    </ul>
-			</div><!--end footer -->
-		</div><!--end wrapper -->	
+		<h2>{% block heading %}{% endblock %}</h2>
+		
+		{% block body %}
+		Default Body
+		{% endblock %}
 	</body>
 </html> 
