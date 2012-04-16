@@ -17,7 +17,7 @@ class Migration(SchemaMigration):
             ('full_name', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('job_title', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('sex', self.gf('django.db.models.fields.CharField')(max_length=1)),
-            ('program', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['documents.Program'], blank=True)),
+            ('program', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['documents.Program'], blank=True, null=True)),
             ('cell_phone', self.gf('django.db.models.fields.CharField')(max_length=30)),
             ('office_location', self.gf('django.db.models.fields.CharField')(max_length=1)),
             ('photo', self.gf('django.db.models.fields.files.ImageField')(max_length=100)),
