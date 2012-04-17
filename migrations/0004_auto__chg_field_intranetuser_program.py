@@ -10,13 +10,13 @@ class Migration(SchemaMigration):
         
         # Changing field 'IntranetUser.program'
         # db.alter_column('binder_intranetuser', 'program_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['documents.Program'], null=True))
-
+	pass
 
     def backwards(self, orm):
         
         # User chose to not deal with backwards NULL issues for 'IntranetUser.program'
         # raise RuntimeError("Cannot reverse this migration. 'IntranetUser.program' and its values cannot be restored.")
-
+	pass
 
     models = {
         'auth.group': {
