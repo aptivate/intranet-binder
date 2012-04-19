@@ -69,9 +69,17 @@ class Command(BaseCommand):
         # import pdb; pdb.set_trace()
         
         for result in results:
-            try:
-                user = auth.create_or_update_user_from_result(dn=result[0],
-                    attrs=result[1], username=result[1]['sAMAccountName'][0])
-                print("Imported user: %s" % user.username)
-            except KeyError as e:
-                print("Failed to import user %s: %s" % (result[0], e))
+            # skip referrals? 
+            # https://sourceforge.net/tracker/?func=detail&aid=3519430&group_id=2072&atid=102072
+            if result[0] is not None:
+                try:
+                    user = auth.create_or_update_user_from_result(dn=result[0],
+                        attrs=result[1], username=result[1]['sAMAccountName'][0])
+                    print("Imported user: %s" % user.username)
+                except KeyError as e:
+                    print("Failed to import user %s: %s" % (result[0], e))
+                """
+                except TypeError as e:
+                    import pdb; pdb.set_trace()
+                    print("Failed to import user %s: %s" % (result[0], e))
+                """

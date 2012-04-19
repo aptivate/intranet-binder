@@ -278,4 +278,17 @@ class BinderTest(AptivateEnhancedTestCase):
         
         response = self.client.post(reverse('user_profile'),
             self.update_form_values(form, photo=f), follow=True)
+    
+    def test_valid_results_returned_from_ldap_database(self):
+        from auth import ActiveDirectoryBackend
+        backend = ActiveDirectoryBackend()
+        conn = backend.get_connection("chris2", "testing")
+        
+        import ldap
+        from django.conf import settings
+        results = conn.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, 
+            "objectClass=user", settings.AD_SEARCH_FIELDS)
+        conn.unbind_s()
+
+        print ("%s" % str(results[244]))
     """
