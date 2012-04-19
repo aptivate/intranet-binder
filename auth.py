@@ -40,6 +40,14 @@ class ActiveDirectoryBackend:
     """
     Copied from http://djangosnippets.org/snippets/501/
     """
+
+    def get_connection(self, username, password):
+        l = ldap.initialize(settings.AD_LDAP_URL)
+        # Disable referrals for AD: http://www.python-ldap.org/faq.shtml
+        l.set_option(ldap.OPT_REFERRALS, 0)
+        binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
+        l.simple_bind_s(binddn, password)
+        return l
     
     def authenticate(self,username=None,password=None):
         if not self.is_valid(username,password):
@@ -47,9 +55,7 @@ class ActiveDirectoryBackend:
         try:
             user = IntranetUser.objects.get(username=username)
         except User.DoesNotExist:
-            l = ldap.initialize(settings.AD_LDAP_URL)
-            binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
-            l.simple_bind_s(binddn, password)
+            l = self.get_connection(username, password)
             result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, 
                 "sAMAccountName=%s" % username,
                 settings.AD_SEARCH_FIELDS)[0][1]
@@ -85,10 +91,8 @@ class ActiveDirectoryBackend:
         ## as per comment: http://www.djangosnippets.org/snippets/501/#c868
         if password == None or password == '':
             return False
-        binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
         try:
-            l = ldap.initialize(settings.AD_LDAP_URL)
-            l.simple_bind_s(binddn,password)
+            l = self.get_connection(username, password)
             l.unbind_s()
             return True
         except ldap.LDAPError:
