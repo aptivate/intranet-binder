@@ -90,8 +90,12 @@ class ActiveDirectoryBackend:
             raise KeyError("Required attribute %s missing from user %s: %s" %
                 (e, dn, attrs))
         
-        user.is_staff = False
-        user.is_superuser = False
+        if user.is_staff is None: 
+            user.is_staff = True
+        
+        if user.is_superuser is None:
+            user.is_superuser = False
+            
         user.set_password(password)
         user.save()
 
