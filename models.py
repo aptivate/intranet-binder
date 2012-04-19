@@ -2,11 +2,17 @@ from django.db import models as db_fields
 from django.contrib.auth.models import User, UserManager
 
 class ProgramType(db_fields.Model):
+    class Meta:
+        ordering = ('name',)
+
     name = db_fields.CharField(max_length=255, unique=True)
     def __unicode__(self):
         return self.name
 
 class Program(db_fields.Model):
+    class Meta:
+        ordering = ('name',)
+
     name = db_fields.CharField(max_length=255, unique=True)
     program_type = db_fields.ForeignKey(ProgramType, null=True)
     def __unicode__(self):
