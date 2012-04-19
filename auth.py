@@ -80,11 +80,15 @@ class ActiveDirectoryBackend:
         
         try:
             user.username  = attrs['sAMAccountName'][0]
-            user.full_name = attrs['displayName'][0]
             user.email     = attrs['mail'][0]
-            if 'mobile' in attrs:
+
+            if user.full_name is None:
+                user.full_name = attrs['displayName'][0]
+            
+            if 'mobile' in attrs and user.cell_phone is None:
                 user.cell_phone = attrs['mobile'][0]
-            if 'title' in attrs:
+            
+            if 'title' in attrs and user.job_title is None:
                 user.job_title = attrs['title'][0]
         except KeyError as e:
             raise KeyError("Required attribute %s missing from user %s: %s" %
