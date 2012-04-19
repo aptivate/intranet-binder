@@ -15,6 +15,9 @@ class Program(db_fields.Model):
 class IntranetUser(User):
     objects = UserManager()
 
+    class Meta:
+        ordering = ('username',)
+        
     SEX_CHOICE = (
         ('M', 'Male'),
         ('F', 'Female'),
