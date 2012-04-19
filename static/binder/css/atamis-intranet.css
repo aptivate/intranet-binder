@@ -336,6 +336,12 @@ table .action-checkbox {width:5%;}
 	text-align: left;
 }
 
+.submit-row input, .submit-row p.deletelink-box
+{
+	float: none;
+	display: button;
+}
+
 /* Search page-------------------------------------------------- */
 
 .warning-message, .success-message, .error-message, .errorlist {
