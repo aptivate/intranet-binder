@@ -79,8 +79,10 @@ class ActiveDirectoryBackend:
             user = IntranetUser()
         
         try:
-            user.username  = attrs['sAMAccountName'][0]
-            user.email     = attrs['mail'][0]
+            user.username = attrs['sAMAccountName'][0]
+
+            if 'mail' in attrs:
+                user.email = attrs['mail'][0]
 
             if user.full_name is None:
                 user.full_name = attrs['displayName'][0]
