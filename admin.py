@@ -447,6 +447,21 @@ class AdminWithReadOnly(ModelAdmin):
             "admin/delete_confirmation.html"
         ], context, context_instance=context_instance)
 
+    def get_fieldsets(self, request, obj=None):
+        """
+        Hook for specifying fieldsets for the add form.
+        
+        Overridden from ModelAdmin because that version tends to
+        duplicate fields listed in readonly_fields. Tested by
+        DocumentsModuleTest.test_document_admin_form_without_duplicate_fields.
+        """
+        
+        if self.declared_fieldsets:
+            return self.declared_fieldsets
+        form = self.get_form(request, obj)
+        fields = set(form.base_fields.keys()) \
+            | set(self.get_readonly_fields(request, obj))
+        return [(None, {'fields': fields})]
 
 class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
     class Meta:
