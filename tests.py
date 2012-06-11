@@ -292,3 +292,9 @@ class BinderTest(AptivateEnhancedTestCase):
 
         print ("%s" % str(results[244]))
     """
+
+    def test_user_profile_form_required_attribute(self):
+        from views import UserProfileForm
+        form = UserProfileForm()
+        self.assertEqual("required", form.required_css_class)
+        

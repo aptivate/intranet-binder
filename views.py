@@ -12,6 +12,8 @@ class FrontPageView(TemplateView):
     template_name = 'front_page.dhtml'
 
 class UserProfileForm(PasswordChangeMixin, forms.ModelForm):
+    required_css_class = 'required'
+
     class Meta:
         model = IntranetUser
         exclude = ('is_staff', 'is_active', 'is_superuser', 'password',
