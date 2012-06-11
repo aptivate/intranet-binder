@@ -459,8 +459,10 @@ class AdminWithReadOnly(ModelAdmin):
         if self.declared_fieldsets:
             return self.declared_fieldsets
         form = self.get_form(request, obj)
-        fields = set(form.base_fields.keys()) \
-            | set(self.get_readonly_fields(request, obj))
+        
+        from ordered_set import OrderedSet
+        fields = OrderedSet(form.base_fields.keys()) \
+            | OrderedSet(self.get_readonly_fields(request, obj))
         return [(None, {'fields': fields})]
 
 class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
