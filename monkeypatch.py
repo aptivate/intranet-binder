@@ -275,8 +275,12 @@ def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs
     try:
         return original_function(self, lookup_view, *args, **kwargs)
     except NoReverseMatch as e:
-        raise NoReverseMatch("%s (%s)" % (str(e),
-            pp.pformat(self.reverse_dict)))
+        if lookup_view in self.reverse_dict:
+            raise NoReverseMatch(str(e) + (" Possible match: %s" %
+                (self.reverse_dict[lookup_view],)))
+        else:
+            raise NoReverseMatch("%s (%s)" % (str(e),
+                pp.pformat(self.reverse_dict)))
 patch(RegexURLResolver, 'reverse', reverse_with_debugging)
 
 from whoosh.searching import Searcher
