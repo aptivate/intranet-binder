@@ -39,19 +39,21 @@ class SuperClient(Client):
         
         # print "session cookie = %s" % (
         # self.cookies[django_settings.SESSION_COOKIE_NAME])
-        response = Client.post(self, path, data, content_type, **extra)
+        response = Client.post(self, path, data, content_type,
+            **extra)
         
         if response is None:
             raise Exception("POST method responded with None!")
         
-        return self.capture_results('post', response, path, data,
-            content_type, **extra)
+        return self.capture_results('post', response, path, data, content_type,
+            **extra)
     
     def capture_results(self, method_name, response, *args, **kwargs):
         # print("%s.%s(%s)" % (self, method_name, args))
         self.last_method = method_name
         self.last_method_args = args
         self.last_method_kwargs = kwargs
+        self.last_response = response
         
         if not response.content:
             return response # without setting the parsed attribute
