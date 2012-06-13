@@ -465,6 +465,49 @@ class AdminWithReadOnly(ModelAdmin):
             | OrderedSet(self.get_readonly_fields(request, obj))
         return [(None, {'fields': fields})]
 
+    def get_form_class(self, request, obj=None, **kwargs):
+        """
+        Hook for changing the form class returned by get_form(), without
+        losing the request-poking behaviour.
+        """
+        
+        return super(AdminWithReadOnly, self).get_form(request, obj,
+            **kwargs)
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Some of our forms needs to know who the current user is, but
+        they doesn't normally have access to the request to find out;
+        or to the object ID for that matter. So we poke both of these
+        into the form instance.
+        
+        Unfortunately, this function doesn't return a form object, but a
+        form class, so we can't just stuff the request into it. But we can
+        return a curried generator function instead, taking advantage of
+        duck typing and how Django constructors work, and ModelAdmin will
+        construct an instance of our form by calling the generator.
+        
+        If you just want to change the class of form returned, you can just
+        override get_form_class() instead.
+        """
+        
+        form_class = self.get_form_class(request, obj, **kwargs)
+        
+        def generator(data=None, files=None, auto_id='id_%s', prefix=None, 
+            initial=None, error_class=ErrorList, label_suffix=':', 
+            empty_permitted=False, instance=None):
+            
+            new_instance = form_class(data, files, auto_id, prefix, initial,
+                error_class, label_suffix, empty_permitted, instance)
+            new_instance.request = request
+            new_instance.object_being_updated = obj
+            return new_instance
+        
+        # to keep ModelAdmin.get_fieldsets() happy:
+        generator.base_fields = form_class.base_fields
+        
+        return generator
+
 class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
     class Meta:
         model = models.IntranetUser
@@ -592,7 +635,7 @@ class IntranetUserAdmin(AdminWithReadOnly):
 
     exclude = ['password', 'first_name', 'last_name', 'user_permissions']
 
-    def get_form(self, request, obj=None, **kwargs):
+    def get_form_class(self, request, obj=None, **kwargs):
         if 'form' not in kwargs:
             if request.is_read_only:
                 form = IntranetUserReadOnlyForm
@@ -600,12 +643,14 @@ class IntranetUserAdmin(AdminWithReadOnly):
                 form = IntranetUserAdminForm
             kwargs['form'] = form
                 
-        result = super(IntranetUserAdmin, self).get_form(request, obj=obj,
+        result = super(IntranetUserAdmin, self).get_form_class(request, obj=obj,
             **kwargs)
         # print 'get_form => %s' % dir(result)
         # print 'declared_fields => %s' % result.declared_fields
         # print 'base_fields => %s' % result.base_fields
         result.base_fields['is_logged_in'] = forms.BooleanField(required=False)
+        # the request will also be poked into the form by our caller,
+        # get_form.
         
         return result
 
