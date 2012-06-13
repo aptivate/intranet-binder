@@ -1,7 +1,6 @@
 # https://code.djangoproject.com/ticket/16929
 
 import django.contrib.admin
-import django.db.models
 import models
 
 from django import forms, template
@@ -13,14 +12,11 @@ from django.core.urlresolvers import reverse
 from django.db import models as db_fields
 from django.db import transaction, router
 from django.forms import ModelForm
-from django.forms.util import flatatt as attributes_to_str
 from django.forms.util import ErrorList
-from django.forms import widgets
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
-from django.template.defaultfilters import filesizeformat
 from django.utils.encoding import force_unicode
-from django.utils.html import escape, conditional_escape
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
@@ -33,114 +29,6 @@ from password import PasswordChangeMixin
 # from django.db import transaction
 # from models import IntranetUser
 
-class AdminFileWidgetWithSize(admin.widgets.AdminFileWidget):
-    template_with_initial = u'%(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
-    readonly_template = u'%(link_to_file)s (%(size)s)'
-    
-    from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
-    readonly_unset_template = EMPTY_CHANGELIST_VALUE
-    
-    has_readonly_view = True
-
-    def extra_context(self, name, value, attrs):
-        return {}
-
-    def render(self, name, value, attrs=None):
-        substitutions = {
-            'initial_text': self.initial_text,
-            'input_text': self.input_text,
-            'clear_template': '',
-            'clear_checkbox_label': self.clear_checkbox_label,
-        }
-        template = u'%(input)s'
-        substitutions['input'] = super(widgets.ClearableFileInput,
-            self).render(name, value, attrs)
-
-        if value and hasattr(value, "url"):
-            template = self.template_with_initial
-            try:
-                substitutions['size'] = filesizeformat(value.size)
-            except OSError as e:
-                substitutions['size'] = "Unknown"
-            substitutions['link_to_file'] = (u'<a href="%s">%s</a>'
-                                        % (escape(value.url),
-                                           escape(force_unicode(value))))
-            if not self.is_required:
-                checkbox_name = self.clear_checkbox_name(name)
-                checkbox_id = self.clear_checkbox_id(checkbox_name)
-                substitutions['clear_checkbox_name'] = conditional_escape(checkbox_name)
-                substitutions['clear_checkbox_id'] = conditional_escape(checkbox_id)
-                substitutions['clear'] = widgets.CheckboxInput().render(checkbox_name,
-                    False, attrs={'id': checkbox_id})
-                substitutions['clear_template'] = self.template_with_clear % substitutions
-        
-        if attrs.get('readonly'):
-            if value and hasattr(value, "url"):
-                template = self.readonly_template
-            else:
-                template = self.readonly_unset_template
-        
-        substitutions.update(self.extra_context(name, value, attrs))
-        
-        return mark_safe(template % substitutions)
-
-from easy_thumbnails.files import get_thumbnailer
-
-class AdminImageWidgetWithThumbnail(AdminFileWidgetWithSize):
-    template_with_initial = u'%(thumbnail)s %(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
-    readonly_template = u'%(thumbnail)s %(link_to_file)s (%(size)s)'
-    thumbnail_template = u'<img class="thumbnail" src="%s" /><br />'
-    thumbnail_options = {
-        'size': (200, 200),
-        'crop': True,
-        'bw': False
-    }
-
-    def __init__(self, read_write_template=None, read_only_template=None,
-        attrs=None):
-        
-        if read_write_template is not None:
-            self.template_with_initial = read_write_template
-            
-        if read_only_template is not None:
-            self.readonly_template = read_only_template
-        
-        if attrs is not None:
-            self.attrs = attrs.copy()
-        else:
-            self.attrs = {}
-
-    def extra_context(self, name, value, attrs):
-        context = {}
-        if value:
-            from django.conf import settings
-            thumbnail_url = "%s%s" % (settings.MEDIA_URL,
-                self.square_thumbnail(value))
-            thumbnail = self.thumbnail_template % thumbnail_url
-        else:
-            thumbnail = ""
-        context['thumbnail'] = thumbnail
-        return context
-    
-    def square_thumbnail(self, source):
-        return get_thumbnailer(source).get_thumbnail(self.thumbnail_options)
-
-class URLFieldWidgetWithLink(admin.widgets.AdminURLFieldWidget):
-    def render(self, name, value, attrs=None):
-        html = admin.widgets.AdminURLFieldWidget.render(self, name, value,
-            attrs=attrs)
-
-        if value is not None:
-            final_attrs = dict(href=value, target='_blank')
-            html += " <a %s>(open)</a>" % attributes_to_str(final_attrs)
-        
-        return mark_safe(html)
-
-from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
-class RelatedFieldWithoutAddLink(RelatedFieldWidgetWrapper):
-    def __init__(self, widget, rel, admin_site, can_add_related=None):
-        RelatedFieldWidgetWrapper.__init__(self, widget, rel, admin_site,
-            can_add_related=False)
 
 from django.contrib.admin.views.main import ChangeList
 class ChangeListWithLinksToReadOnlyView(ChangeList):
@@ -150,25 +38,14 @@ class ChangeListWithLinksToReadOnlyView(ChangeList):
         return reverse('admin:%s_%s_readonly' % info,
             args=[getattr(result, self.pk_attname)])
 
-class AdminYesNoWidget(widgets.CheckboxInput):
-    has_readonly_view = True
-
-    def render(self, name, value, attrs=None):
-        if attrs is not None and attrs.get('readonly'):
-            if value:
-                return "Yes"
-            else:
-                return "No"
-        else:
-            return super(AdminYesNoWidget, self).render(name, value, attrs)
-
 from django.contrib.admin import ModelAdmin
+import widgets
 class AdminWithReadOnly(ModelAdmin):
     # customise the default display of some form fields:
     formfield_overrides = {
-        db_fields.URLField: {'widget': URLFieldWidgetWithLink},
-        db_fields.FileField: {'widget': AdminFileWidgetWithSize},
-        db_fields.ImageField: {'widget': AdminImageWidgetWithThumbnail},
+        db_fields.URLField: {'widget': widgets.URLFieldWidgetWithLink},
+        db_fields.FileField: {'widget': widgets.AdminFileWidgetWithSize},
+        db_fields.ImageField: {'widget': widgets.AdminImageWidgetWithThumbnail},
     }
     
     def formfield_for_dbfield(self, db_field, **kwargs):
@@ -187,8 +64,9 @@ class AdminWithReadOnly(ModelAdmin):
         old_formfield = super(AdminWithReadOnly, self).formfield_for_dbfield(
             db_field, **kwargs)
         if (hasattr(old_formfield, 'widget') and
-            isinstance(old_formfield.widget, RelatedFieldWidgetWrapper)):
+            isinstance(old_formfield.widget, widgets.RelatedFieldWidgetWrapper)):
             old_formfield.widget.can_add_related = False
+        
         return old_formfield
     
     def get_urls(self):
@@ -579,7 +457,8 @@ class DocumentsAuthoredTable(tables.Table):
         attrs = {'class': 'paleblue'}
         sortable = False # doesn't make sense on a form, would lose changes
 
-class DocumentsAuthoredWidget(widgets.Widget):
+from django.forms.widgets import Widget
+class DocumentsAuthoredWidget(Widget):
     """
     A widget that displays documents authored by the user being viewed.
     Actually the data is initialised by

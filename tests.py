@@ -109,13 +109,13 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertItemsEqual(self.john.documents_authored.all(), 
             table.data.queryset)
     
-    def test_profile_picture_shown_in_user_admin_forms(self):
+    def test_profile_picture_shown_in_user_admin_and_profile_forms(self):
         self.login()
         response = self.client.get(reverse('admin:binder_intranetuser_readonly',
             args=[self.john.id]))
         field = self.extract_admin_form_field(response, 'photo')
         
-        from admin import AdminImageWidgetWithThumbnail
+        from widgets import AdminImageWidgetWithThumbnail
         widget = field.form.fields['photo'].widget
         self.assertIsInstance(widget, AdminImageWidgetWithThumbnail)
 

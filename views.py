@@ -6,7 +6,7 @@ from django.views.generic.base import TemplateView
 
 from models import IntranetUser
 from password import PasswordChangeMixin
-from admin import AdminImageWidgetWithThumbnail
+from widgets import AdminImageWidgetWithThumbnail
 
 class FrontPageView(TemplateView):
     template_name = 'front_page.dhtml'
