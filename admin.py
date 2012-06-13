@@ -334,10 +334,7 @@ class AdminWithReadOnly(ModelAdmin):
         # adapted to allow passing in a custom template by making
         # form_template an optional method parameter, defaulting to None
         
-        from django.utils.safestring import mark_safe
         from django.contrib.contenttypes.models import ContentType
-        from django import template
-        from django.shortcuts import render_to_response
 
         ordered_objects = opts.get_ordered_objects()
         context.update({
