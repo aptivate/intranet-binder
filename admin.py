@@ -521,6 +521,30 @@ class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
             error_class=error_class, label_suffix=label_suffix, 
             empty_permitted=empty_permitted, instance=instance)
 
+    def clean_groups(self):
+        """
+        Stop the user from removing themselves from the admins group.
+        """
+        
+        new_groups = self.cleaned_data['groups']
+        new_group_ids = [g.id for g in new_groups]
+        user_being_updated = self.object_being_updated
+        
+        from models import IntranetGroup
+        # import pdb; pdb.set_trace()
+        
+        if user_being_updated.id == self.request.user.pk:
+            old_admin_groups = IntranetGroup.objects.filter(administrators=True,
+                user__pk=user_being_updated.id)
+            
+            for group in old_admin_groups:
+                if group.id not in new_group_ids:
+                    from django.forms import ValidationError
+                    raise ValidationError('You cannot demote yourself ' +
+                        'from the %s group' % group.name)
+                        
+        return new_groups
+
 from django_tables2 import tables
 
 class DocumentsAuthoredTable(tables.Table):
