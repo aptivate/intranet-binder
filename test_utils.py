@@ -266,6 +266,93 @@ class AptivateEnhancedTestCase(TestCase):
         form = self.assertInDict('adminform', response.context)
         fields = dict(self.extract_fields(form))
         return self.assertInDict(field_name, fields)
+    
+    def value_to_datadict(self, widget, name, value, strict=True):
+        """
+        There's a value_from_datadict method in each django.forms.widgets widget,
+        but nothing that goes in the reverse direction, and
+        test_utils.AptivateEnhancedTestCase.update_form_values really wants to
+        convert form instance values (Python data) into a set of parameters
+        suitable for passing to client.post().
+        
+        This needs to be implemented for each subclass of Widget that doesn't
+        just convert its value to a string.
+        """
+        
+        import django.forms.widgets
+        import django.contrib.admin.widgets
+        from django.utils.encoding import force_unicode
+
+        if isinstance(widget, django.forms.widgets.FileInput):
+            # this is a special case: don't convert FieldFile objects to strings,
+            # because the TestClient needs to detect and encode them properly.
+            if bool(value):
+                return {name: value}
+            else:
+                # empty file upload, don't set any parameters
+                return {}
+        
+        elif isinstance(widget, django.forms.widgets.MultiWidget):
+            values = {}
+            for index, subwidget in enumerate(widget.widgets):
+                param_name = "%s_%s" % (name, index)
+                values.update(self.value_to_datadict(subwidget, param_name,
+                    value, strict))
+            return values
+        
+        elif isinstance(widget, django.forms.widgets.CheckboxInput):
+            if widget.check_test(value):
+                return {name: '1'}
+            else:
+                # unchecked checkboxes are not sent in HTML
+                return {}
+
+        elif isinstance(widget, django.forms.widgets.Select):
+            if '__iter__' in dir(value):
+                self.assertTrue(len(value) <= 1,
+                    "Multiple values of %s are not supported yet (%s)" %
+                    (name, value))
+                if len(value) == 0:
+                    value = None
+                elif len(value) == 1:
+                    value = value[0]
+            
+            self.assertNotIn('__iter__', dir(value),
+                "Multiple values of %s are not supported yet (%s)" %
+                (name, value))
+            
+            choices = list(widget.choices)
+            possible_values = [v for v, label in choices]
+            
+            if value in possible_values:
+                return {name: str(value)}
+            elif strict:
+                # Since user agent behavior differs, authors should ensure
+                # that each menu includes a default pre-selected OPTION
+                # (i.e. that a list includes a selected value)
+                raise Exception("List without selected value: " +
+                    "%s = %s (should be one of: %s)" % (name, value, choices))
+            else:
+                # most browsers pre-select the first value
+                return {name: str(choices[0][0])}
+        
+        elif isinstance(widget, django.contrib.admin.widgets.RelatedFieldWidgetWrapper):
+            subwidget = widget.widget
+            subwidget.choices = list(widget.choices)
+            return self.value_to_datadict(subwidget, name, value, strict)
+            
+        elif isinstance(widget, django.forms.widgets.Textarea):
+            return {name: force_unicode(value)}
+                
+        elif getattr(widget, '_format_value', None):
+            value = widget._format_value(value)
+            if value is None:
+                value = ''
+            return {name: value}
+
+        else:
+            raise Exception("Don't know how to convert data to form values " +
+                "for %s" % widget)
 
     def update_form_values(self, form, **new_values):
         """
@@ -275,21 +362,132 @@ class AptivateEnhancedTestCase(TestCase):
         return a values dict suitable for self.client.post().
         """
         
-        values = form.initial
-        values.update(new_values)
+        params = dict()
 
-        # None cannot be sent over HTTP, so this means
-        # "send an empty value back" rather than "send a None value"
-        none_keys = [k for k, v in values.iteritems() if v is None]
-        for k in none_keys:
-            values[k] = ''
+        from django.forms.widgets import MultiWidget
+        for bound_field in form:
+            # fields[k] returns a BoundField, not a django.forms.fields.Field
+            # which is where the widget lives
+            form_field = bound_field.field
+            widget = form_field.widget
+            
+            # defaults to the current value bound into the form: 
+            value = new_values.get(bound_field.name, bound_field.value())
+            
+            # be strict with values passed by tests to this function,
+            # and lax with values that were already in the record/form
+            new_params = self.value_to_datadict(widget, bound_field.name, value,
+                strict=(bound_field.name in new_values))
+            
+            params.update(new_params)
+
+        return params
+
+    def extract_error_message(self, response):
+        error_message = response.parsed.findtext('.//div[@class="error-message"]')
+
+        if error_message is None:
+            error_message = response.parsed.findtext('.//p[@class="errornote"]')
         
-        # FileField generates an error if there's no file associated with it,
-        # so remove it completely from values in this case
-        empty_file_keys = [k for k, v in values.iteritems()
-            if hasattr(v, "name") and not v.name]
-        for k in empty_file_keys:
-            del values[k]
+        if error_message is not None:
+            # extract individual field errors, if any
+            more_error_messages = response.parsed.findtext('.//td[@class="errors-cell"]')
+            if more_error_messages is not None:
+                error_message += more_error_messages
+            
+            # trim and canonicalise whitespace
+            error_message = error_message.strip()
+            import re
+            error_message = re.sub('\\s+', ' ', error_message)
+            
+        # return message or None
+        return error_message
+
+    def assert_changelist_not_admin_form_with_errors(self, response):
+        """
+        Checks that the response (to a POST to an admin change form) contains
+        a changelist, which means that the update was successful; and not
+        an adminform with errors, which would mean that the update was
+        unsuccessful.
         
-        return values
+        If not, the update unexpectedly failed, so we extract and report the
+        error messages from the form in a helpful way.
+        """
         
+        self.assertTrue(hasattr(response, 'context'), "Missing context " +
+            "in response: %s: %s" % (response, dir(response)))
+        from django.http import HttpResponseRedirect 
+        self.assertNotIsInstance(response, HttpResponseRedirect, 
+            "Response is a redirect: did you forget to add follow=True " +
+            "to the request?")
+        self.assertIsNotNone(response.context, "Empty context in response: " +
+            "%s: %s" % (response, dir(response)))
+
+        if 'adminform' in response.context:
+            # if there are global errors, this will fail, and show us all
+            # the errors when it does.
+            self.assertDictEqual({}, response.context['adminform'].form.errors)
+            
+            # if there are field errors, this will fail, and show us the
+            # the field name and the errors
+            for fieldset in response.context['adminform']:
+                for line in fieldset:
+                    # should this be line.errors()?
+                    # as FieldlineWithCustomReadOnlyField.errors
+                    # is a method, not a property:
+                    self.assertIsNone(line.errors,
+                        "should not be any errors on %s" % line)
+                    for field in line:
+                        # similarly django.contrib.admin.helpers.AdminField.errors
+                        # is a method:
+                        self.assertIsNone(field.errors,
+                            "should not be any errors on %s" % field)
+            self.assertIsNone(response.context['adminform'].form.non_field_errors)
+            self.assertIsNone(self.extract_error_message(response))
+
+        self.assertNotIn('adminform', response.context, "Unexpected " +
+            "admin form in response context: %s" % response)
+        self.assertIn('cl', response.context, "Missing changelist " +
+            "in response context: %s" % response)
+
+    def assert_admin_form_with_errors_not_changelist(self, response,
+        expected_field_errors={}, expected_non_field_errors=[]):
+        
+        """
+        Checks that the response (to a POST to an admin change form) contains
+        an adminform with errors, which means that the update was
+        unsuccessful, and not a changelist, which would mean that the update
+        was successful when it should not have been.
+        
+        Also check that the errors on the adminform are exactly what we
+        expected.
+        """
+        
+        from django.http import HttpResponseRedirect 
+        self.assertNotIsInstance(response, HttpResponseRedirect,
+            ('Unexpected redirect to %s: did the POST succeed when it ' +
+            'should have failed? Expected errors were: %s') % 
+            (response.get('location', None), expected_field_errors))
+        
+        self.assertTrue(hasattr(response, 'context'), "Missing context " +
+            "in response: %s: %s" % (response, dir(response)))
+        self.assertIsNotNone(response.context, "Empty context in response: " +
+            "%s: %s" % (response, dir(response)))
+        self.assertIn('adminform', response.context)
+        self.assertDictEqual(expected_field_errors,
+            response.context['adminform'].form.errors)
+        
+        """
+        for fieldset in response.context['adminform']:
+            for line in fieldset:
+                self.assertEqual('', line.errors())
+                for field in line:
+                    self.assertEqual('', field.errors())
+        """
+        
+        self.assertListEqual(expected_non_field_errors,
+            response.context['adminform'].form.non_field_errors())
+        self.assertIsNone(self.extract_error_message(response))
+
+        self.assertNotIn('cl', response.context, "Missing changelist " +
+            "in response context: %s" % response)
