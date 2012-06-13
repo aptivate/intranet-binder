@@ -208,10 +208,11 @@ class BinderTest(AptivateEnhancedTestCase):
         
         response = self.client.get(reverse('user_profile'))
         form = response.context['profile_form']
-
-        response = self.client.post(reverse('user_profile'),
-            self.update_form_values(form, password1=new_password,
-                password2=confirmation), follow=True)
+        new_values = self.update_form_values(form, password1=new_password,
+            password2=confirmation)
+        
+        response = self.client.post(reverse('user_profile'), new_values,
+            follow=True)
         self.assertListEqual([], response.redirect_chain,
             "POST should have failed with a password mismatch.")
         
@@ -297,4 +298,83 @@ class BinderTest(AptivateEnhancedTestCase):
         from views import UserProfileForm
         form = UserProfileForm()
         self.assertEqual("required", form.required_css_class)
+    
+    def test_adding_user_to_administrators_group_sets_superuser_flag(self):
+        from models import IntranetGroup 
+        manager = IntranetGroup.objects.get(name="Manager")
+        user = IntranetGroup.objects.get(name="User")
+        self.assertTrue(manager.administrators, """This test will not work 
+            unless the Manager group's administrators flag is set""")
         
+        self.assertFalse(self.john.is_superuser)
+        self.assertNotIn(manager, self.john.groups.all())
+        
+        self.john.groups = [manager]
+        self.john.save()
+        self.assertTrue(self.john.is_superuser)
+
+        self.john.groups = [manager]
+        self.john.save()
+        self.assertTrue(self.john.is_superuser)
+
+        self.john.groups = [user]
+        self.john.save()
+        self.assertFalse(self.john.is_superuser)
+        
+    def test_admin_form_should_stop_user_demoting_themselves(self):
+        self.login()
+        
+        from models import IntranetGroup 
+        manager = IntranetGroup.objects.get(name="Manager")
+        self.assertTrue(manager.administrators, """This test will not work 
+            unless the Manager group's administrators flag is set""")
+        self.assertTrue(self.current_user.is_superuser)
+        self.assertIn(manager.group, self.current_user.groups.all())
+
+        url = reverse('admin:binder_intranetuser_change',
+            args=[self.current_user.id])
+        response = self.client.get(url)
+
+        # POST without changing anything should be fine
+        form = self.assertInDict('adminform', response.context).form
+        new_values = self.update_form_values(form)
+        response = self.client.post(url, new_values, follow=True)
+        self.assert_changelist_not_admin_form_with_errors(response)
+
+        # but changing the group should result in an error
+        user = IntranetGroup.objects.get(name="User")
+        new_values = self.update_form_values(form, groups=[user.pk])
+        response = self.client.post(url, new_values)
+        self.assert_admin_form_with_errors_not_changelist(response,
+            {'groups': ['You cannot demote yourself from the %s group' %
+                manager.name]})
+
+    def test_admin_form_should_allow_user_to_promote_and_demote_others(self):
+        self.login()
+        
+        from models import IntranetGroup 
+        manager = IntranetGroup.objects.get(name="Manager")
+        self.assertTrue(manager.administrators, """This test will not work 
+            unless the Manager group's administrators flag is set""")
+
+        self.assertIn(manager.group, self.current_user.groups.all())
+        self.assertTrue(self.current_user.is_manager)
+        self.assertTrue(self.current_user.is_superuser)
+        
+        self.assertNotIn(manager.group, self.john.groups.all())
+        self.assertFalse(self.john.is_manager)
+        self.assertFalse(self.john.is_superuser)
+
+        url = reverse('admin:binder_intranetuser_change',
+            args=[self.john.id])
+        response = self.client.get(url)
+
+        form = self.assertInDict('adminform', response.context).form
+        new_values = self.update_form_values(form, groups=[manager.pk])
+        response = self.client.post(url, new_values, follow=True)
+        self.assert_changelist_not_admin_form_with_errors(response)
+
+        user = IntranetGroup.objects.get(name="User")
+        new_values = self.update_form_values(form, groups=[user.pk])
+        response = self.client.post(url, new_values, follow=True)
+        self.assert_changelist_not_admin_form_with_errors(response)
