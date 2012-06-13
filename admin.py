@@ -699,7 +699,12 @@ class ProgramAdmin(admin.ModelAdmin):
     list_display = ('name', 'program_type')
     ordering = ('name',)
 
+from django.contrib.auth.admin import GroupAdmin
+class IntranetGroupAdmin(GroupAdmin):
+    pass
+
 admin.site.register(models.IntranetUser, IntranetUserAdmin)
+admin.site.register(models.IntranetGroup, GroupAdmin)
 admin.site.register(models.ProgramType, admin.ModelAdmin)
 admin.site.register(models.Program, ProgramAdmin)
 
