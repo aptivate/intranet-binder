@@ -1,5 +1,25 @@
 from django.db import models as db_fields
-from django.contrib.auth.models import User, UserManager
+from django.contrib.auth.models import User, UserManager, Group
+
+class IntranetGroup(Group):
+    """
+    We need a custom Group class to identify the Group(s) of Administrators,
+    who get superuser permissions if they are a member of any of these groups.
+    
+    We deliberately don't update the is_superuser flag of all users in this
+    group whenever the administrators flag changes. That would be extremely
+    dangerous: too easy to make all users superusers or wipe out all
+    superusers in one go. So changing this flag only affects whether future
+    changes to a user's group result in them becoming a superuser or not.
+    """
+    administrators = db_fields.BooleanField(help_text="""
+        If enabled, all members of this group automatically become system
+        administrators (super users) regardless of what permissions are
+        assigned to the group""")
+    
+    @property
+    def group(self):
+        return Group.objects.get(pk=self.pk) 
 
 class ProgramType(db_fields.Model):
     class Meta:
