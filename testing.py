@@ -55,20 +55,21 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
         
         from django.db.models import get_app, get_apps
         for app_models_module in get_apps():
+            app_name = app_models_module.__name__.rpartition('.')[0]
+            if app_name == label:
+                from django.test.simple import build_suite
+                tests.append(build_suite(app_models_module))
+
             from django.test.simple import get_tests
             app_tests_module = get_tests(app_models_module)
             
-            for app_module in [m for m in app_models_module, app_tests_module
+            for sub_module in [m for m in app_models_module, app_tests_module
                 if m is not None]:
                 
-                # print "Checking for %s in %s" % (label, app_module)
+                # print "Checking for %s in %s" % (label, sub_module)
     
-                if app_module.__name__ == label:
-                    from django.test.simple import build_suite
-                    tests.append(build_suite(app_module))
-                
-                for name in dir(app_module):
-                    obj = getattr(app_module, name)
+                for name in dir(sub_module):
+                    obj = getattr(sub_module, name)
                     import types
                     if (isinstance(obj, (type, types.ClassType)) and
                         issubclass(obj, unittest.TestCase)):
@@ -79,7 +80,7 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
                             tests.append(loader.loadTestsFromName(label, obj))
     
                 try:
-                    module = app_module
+                    module = sub_module
                     from django.test import _doctest as doctest
                     from django.test.testcases import DocTestRunner
                     doctests = doctest.DocTestSuite(module,
@@ -101,7 +102,8 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
     
         # If no tests were found, then we were given a bad test label.
         if not tests:
-            raise ValueError("Test label '%s' does not refer to a test" % label)
+            raise ValueError(("Test label '%s' does not refer to a " +
+                "test method or app") % label)
     
         # Construct a suite out of the tests that matched.
         return unittest.TestSuite(tests)
