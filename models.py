@@ -1,6 +1,8 @@
-from django.db import models as db_fields
-from django.contrib.auth.models import User, UserManager, Group
+from django.db.models.base import Model
+from django.db.models import fields, related, permalink
+from django.db.models.fields import files
 
+from django.contrib.auth.models import Group
 class IntranetGroup(Group):
     """
     We need a custom Group class to identify the Group(s) of Administrators,
@@ -12,7 +14,7 @@ class IntranetGroup(Group):
     superusers in one go. So changing this flag only affects whether future
     changes to a user's group result in them becoming a superuser or not.
     """
-    administrators = db_fields.BooleanField(help_text="""
+    administrators = fields.BooleanField(help_text="""
         If enabled, all members of this group automatically become system
         administrators (super users) regardless of what permissions are
         assigned to the group""")
@@ -21,22 +23,26 @@ class IntranetGroup(Group):
     def group(self):
         return Group.objects.get(pk=self.pk) 
 
-class ProgramType(db_fields.Model):
+class ProgramType(Model):
     class Meta:
         ordering = ('name',)
 
-    name = db_fields.CharField(max_length=255, unique=True)
+    name = fields.CharField(max_length=255, unique=True)
     def __unicode__(self):
         return self.name
 
-class Program(db_fields.Model):
+class Program(Model):
     class Meta:
         ordering = ('name',)
 
-    name = db_fields.CharField(max_length=255, unique=True)
-    program_type = db_fields.ForeignKey(ProgramType, null=True)
+    name = fields.CharField(max_length=255, unique=True)
+    program_type = related.ForeignKey(ProgramType, null=True)
     def __unicode__(self):
         return self.name
+
+from django.contrib.auth.models import User, UserManager
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 
 class IntranetUser(User):
     objects = UserManager()
@@ -55,15 +61,15 @@ class IntranetUser(User):
         ('9', '9th Floor'),
     )
 
-    full_name = db_fields.CharField(max_length=100)
-    job_title = db_fields.CharField(max_length=100)
-    sex = db_fields.CharField(max_length=1, choices=SEX_CHOICE)
-    program = db_fields.ForeignKey(Program, blank=True, null=True)
-    cell_phone = db_fields.CharField(max_length=30)
-    office_location = db_fields.CharField(max_length=1, choices=OFFICE_LOCATIONS)
-    photo = db_fields.ImageField(upload_to='profile_photos', blank=True, null=True)
-    date_left = db_fields.DateField(blank=True, null=True)
-    notes = db_fields.TextField(blank=True, verbose_name="Bio")
+    full_name = fields.CharField(max_length=100)
+    job_title = fields.CharField(max_length=100)
+    sex = fields.CharField(max_length=1, choices=SEX_CHOICE)
+    program = related.ForeignKey(Program, blank=True, null=True)
+    cell_phone = fields.CharField(max_length=30)
+    office_location = fields.CharField(max_length=1, choices=OFFICE_LOCATIONS)
+    photo = files.ImageField(upload_to='profile_photos', blank=True, null=True)
+    date_left = fields.DateField(blank=True, null=True)
+    notes = fields.TextField(blank=True, verbose_name="Bio")
     
     def get_full_name(self):
         return self.full_name
@@ -101,7 +107,7 @@ class IntranetUser(User):
         # print "sessions for %s = %s" % (self, n)
         return (n > 0)
 
-    @db_fields.permalink
+    @permalink
     def get_absolute_url(self):
         """
         The URL used in search results to link to the "document" found:
@@ -114,29 +120,51 @@ class IntranetUser(User):
         groups = IntranetGroup.objects.filter(administrators=True,
             user__pk=self.id)
         return (self.is_superuser or len(groups) > 0)
-    
+
     def save(self, force_insert=False, force_update=False, using=None):
+        self.is_active = True
+        self.is_staff = True
+        return super(IntranetUser, self).save(force_insert, force_update, using)
+    
+    @staticmethod
+    def groups_changed(sender, **kwargs):
         """
         If the user is in an administrators group, then they should be made
         a superuser, otherwise they should not be a superuser.
+        
+        We can't do this by overriding save(), because the model admin
+        hasn't applied the changes to the groups in the database at that
+        time, so we won't see or know about the user's new group memberships.
         """
         
-        if self.pk: # can't iterate over groups until the user exists
-            self.is_superuser = False
+        # import pdb; pdb.set_trace()
+        
+        new_superuser_value = False
+        user = kwargs['instance']
             
-            for group in self.groups.all():
-                try:
-                    if group.intranetgroup.administrators:
-                        self.is_superuser = True
-                        break
-                except IntranetGroup.DoesNotExist:
-                    # might be a plain group, in which case it can't be a 
-                    # group of administrators
-                    pass
-                 
-        return super(IntranetUser, self).save(force_insert, force_update, using)
+        for group in user.groups.all():
+            try:
+                if group.intranetgroup.administrators:
+                    new_superuser_value = True
+                    break
+            except IntranetGroup.DoesNotExist:
+                # might be a plain group, in which case it can't be a 
+                # group of administrators
+                pass
+        
+        if new_superuser_value != user.is_superuser:
+            user.is_superuser = new_superuser_value
+            user.save()
+    
+    def reload(self):
+        return self.__class__.objects.get(pk=self.pk)
+
+@receiver(m2m_changed, sender=User.groups.through,
+    dispatch_uid="User_groups_changed")
+def User_groups_changed(sender, **kwargs):
+    IntranetUser.groups_changed(sender, **kwargs)
 
 from django.contrib.sessions.models import Session
 
 class SessionWithIntranetUser(Session):
-    user = db_fields.ForeignKey(User, blank=True, null=True)
+    user = related.ForeignKey(User, blank=True, null=True)

@@ -137,7 +137,7 @@ class BinderTest(AptivateEnhancedTestCase):
     def test_ordinary_user_cannot_change_self_to_superuser(self):
         self.login(self.john)
         response = self.client.get(reverse('user_profile'))
-        self.assertIn('profile_form', response.context, "Where's my form?" +
+        self.assertIn('profile_form', response.context, "Where's my form? " +
             "Am I really logged in?\n" + response.content)
 
         form = response.context['profile_form']
@@ -164,10 +164,6 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertFalse(new_john.is_superuser)
         self.assertEqual("Wheee", new_john.full_name)
     
-    def test_add_user_page(self):
-        self.login(self.ringo)
-        self.client.get(reverse('admin:binder_intranetuser_add'))
-        
     def assert_redirect_not_form_error(self, response):
         if not response.redirect_chain:
             # this probably means that the form was not saved properly, and 
@@ -373,12 +369,60 @@ class BinderTest(AptivateEnhancedTestCase):
         new_values = self.update_form_values(form, groups=[manager.pk])
         response = self.client.post(url, new_values, follow=True)
         self.assert_changelist_not_admin_form_with_errors(response)
+        self.assertTrue(self.john.reload().is_superuser)
 
         user = IntranetGroup.objects.get(name="User")
         new_values = self.update_form_values(form, groups=[user.pk])
         response = self.client.post(url, new_values, follow=True)
         self.assert_changelist_not_admin_form_with_errors(response)
+        self.assertFalse(self.john.reload().is_superuser)
 
     def test_can_create_users(self):
         u = IntranetUser(username="max")
         u.save()
+
+        self.login()
+        
+        from models import IntranetGroup 
+        manager = IntranetGroup.objects.get(name="Manager")
+        self.assertTrue(manager.administrators, """This test will not work 
+            unless the Manager group's administrators flag is set""")
+
+        self.assertIn(manager.group, self.current_user.groups.all())
+        self.assertTrue(self.current_user.is_manager)
+        self.assertTrue(self.current_user.is_superuser)
+        
+        url = reverse('admin:binder_intranetuser_add')
+        response = self.client.get(url)
+
+        form = self.assertInDict('adminform', response.context).form
+        # import pdb; pdb.set_trace()
+        self.assertNotIn('is_active', form.fields)
+        self.assertNotIn('is_staff', form.fields)
+        self.assertNotIn('is_superuser', form.fields)
+        
+        values = dict(username="stevie", groups=[manager.pk])
+        # enter some random value for all required fields
+        for field in form:
+            if field.field.required and field.name not in values:
+                # import pdb; pdb.set_trace()
+                from django.forms.fields import ChoiceField
+                
+                db_field = form._meta.model._meta.get_field(field.name)
+                from django.db.models.fields import DateTimeField
+                
+                if isinstance(field.field, ChoiceField): 
+                    values[field.name] = field.field.choices[1][0]
+                elif isinstance(db_field, DateTimeField):
+                    from datetime import datetime
+                    values[field.name] = datetime.now()
+                else:
+                    values[field.name] = "blarg"
+        
+        params = self.update_form_values(form, **values)
+        response = self.client.post(url, params, follow=True)
+        self.assert_changelist_not_admin_form_with_errors(response)
+        stevie = IntranetUser.objects.get(username="stevie")
+        self.assertTrue(stevie.is_active)
+        self.assertTrue(stevie.is_staff)
+        self.assertTrue(stevie.is_superuser)

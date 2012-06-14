@@ -621,3 +621,25 @@ def before_update_command_handle(self, *items, **options):
             return e
     from documents.search_indexes import DocumentIndex
     patch(DocumentIndex, 'prepare_text', replacement_prepare_text)
+
+# Until a patch for 6707 lands: https://code.djangoproject.com/ticket/6707
+"""
+from django.db.models.fields.related import ReverseManyRelatedObjectsDescriptor
+def related_objects_set_without_clear(original_function, self, instance,
+    new_values):
+    
+    if instance is None:
+        raise AttributeError("Manager must be accessed via instance")
+
+    if not self.field.rel.through._meta.auto_created:
+        opts = self.field.rel.through._meta
+        raise AttributeError("Cannot set values on a ManyToManyField which specifies an intermediary model.  Use %s.%s's Manager instead." % (opts.app_label, opts.object_name))
+
+    manager = self.__get__(instance)
+    old_values = manager.all()
+    values_to_remove = [v for v in old_values 
+        if v not in new_values]
+    manager.remove(*values_to_remove)
+patch(ReverseManyRelatedObjectsDescriptor, '__set__',
+    related_objects_set_without_clear)
+"""

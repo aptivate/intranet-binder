@@ -393,6 +393,7 @@ class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, 
         initial=None, error_class=ErrorList, label_suffix=':', 
         empty_permitted=False, instance=None):
+        
         # print "IntranetUserForm.__init__: data = %s, initial = %s" % (data, initial)
         super(IntranetUserAdminForm, self).__init__(data=data, files=files,
             auto_id=auto_id, prefix=prefix, initial=initial,
@@ -411,7 +412,7 @@ class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
         from models import IntranetGroup
         # import pdb; pdb.set_trace()
         
-        if user_being_updated.id == self.request.user.pk:
+        if user_being_updated and user_being_updated.id == self.request.user.pk:
             old_admin_groups = IntranetGroup.objects.filter(administrators=True,
                 user__pk=user_being_updated.id)
             
@@ -533,7 +534,8 @@ class IntranetUserAdmin(AdminWithReadOnly):
     list_display = ('username', 'full_name', 'job_title', 'program',
         models.IntranetUser.get_userlevel)
 
-    exclude = ['password', 'first_name', 'last_name', 'user_permissions']
+    exclude = ['password', 'first_name', 'last_name', 'user_permissions',
+        'is_active', 'is_staff', 'is_superuser']
 
     def get_form_class(self, request, obj=None, **kwargs):
         if 'form' not in kwargs:
