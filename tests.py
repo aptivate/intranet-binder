@@ -378,3 +378,7 @@ class BinderTest(AptivateEnhancedTestCase):
         new_values = self.update_form_values(form, groups=[user.pk])
         response = self.client.post(url, new_values, follow=True)
         self.assert_changelist_not_admin_form_with_errors(response)
+
+    def test_can_create_users(self):
+        u = IntranetUser(username="max")
+        u.save()

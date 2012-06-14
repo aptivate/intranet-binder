@@ -120,17 +120,19 @@ class IntranetUser(User):
         If the user is in an administrators group, then they should be made
         a superuser, otherwise they should not be a superuser.
         """
-        self.is_superuser = False
         
-        for group in self.groups.all():
-            try:
-                if group.intranetgroup.administrators:
-                    self.is_superuser = True
-                    break
-            except IntranetGroup.DoesNotExist:
-                # might be a plain group, in which case it can't be a 
-                # group of administrators
-                pass
+        if self.pk: # can't iterate over groups until the user exists
+            self.is_superuser = False
+            
+            for group in self.groups.all():
+                try:
+                    if group.intranetgroup.administrators:
+                        self.is_superuser = True
+                        break
+                except IntranetGroup.DoesNotExist:
+                    # might be a plain group, in which case it can't be a 
+                    # group of administrators
+                    pass
                  
         return super(IntranetUser, self).save(force_insert, force_update, using)
 
