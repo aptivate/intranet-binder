@@ -1,3 +1,18 @@
+"""
+This test runner searches for test functions matching the supplied names in
+all INSTALLED_APPS, so you can launch tests like this:
+
+    ./manage.py test test_can_create_users
+    
+instead of this:
+
+    ./manage.py test binder.BinderTest.test_can_create_users
+
+Install it by adding the following line to your settings.py:
+
+    TEST_RUNNER = 'binder.testing.SmartTestSuiteRunner'
+"""
+
 import unittest
 
 from django.test.simple import DjangoTestSuiteRunner
