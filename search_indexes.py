@@ -1,6 +1,6 @@
 from haystack import indexes, fields
 
-from models import IntranetUser
+import configurable
 
 class UserIndex(indexes.RealTimeSearchIndex, indexes.Indexable):
     text = fields.CharField(model_attr='full_name', document=True)
@@ -11,7 +11,7 @@ class UserIndex(indexes.RealTimeSearchIndex, indexes.Indexable):
     notes = fields.CharField(model_attr='notes', null=True)
     
     def get_model(self):
-        return IntranetUser
+        return configurable.UserModel
     
     def prepare_programs(self, user):
         if user.program is None:
