@@ -14,6 +14,11 @@ class Menu:
     
     def append(self, title, url_name):
         self.generators.append(Generator(url_name, title))
+        
+    def replace(self, title, url_name):
+        for i, g in enumerate(self.generators):
+            if g.title == title:
+                self.generators[i] = Generator(url_name, title)
 
 class MainMenu(Menu):
     def __init__(self, request):
