@@ -1,10 +1,11 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
-from models import IntranetUser
 
-class IntranetUserBackend(ModelBackend):
+import configurable
+
+class ConfigurableUserBackend(ModelBackend):
     """
-    Authenticates against binder.models.IntranetUser
+    Authenticates against configurable.UserModel
     """
     supports_object_permissions = False
     supports_anonymous_user = True
@@ -14,8 +15,8 @@ class IntranetUserBackend(ModelBackend):
     # configurable.
     def authenticate(self, username=None, password=None):
         try:
-            user = IntranetUser.objects.get(username=username)
-        except IntranetUser.DoesNotExist:
+            user = configurable.UserModel.objects.get(username=username)
+        except configurable.UserModel.DoesNotExist:
             try:
                 user = User.objects.get(username=username)
             except User.DoesNotExist:
@@ -26,8 +27,8 @@ class IntranetUserBackend(ModelBackend):
 
     def get_user(self, user_id):
         try:
-            return IntranetUser.objects.get(pk=user_id)
-        except IntranetUser.DoesNotExist:
+            return configurable.UserModel.objects.get(pk=user_id)
+        except configurable.UserModel.DoesNotExist:
             try:
                 return User.objects.get(pk=user_id)
             except User.DoesNotExist:
