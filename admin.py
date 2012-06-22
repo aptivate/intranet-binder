@@ -63,9 +63,17 @@ class AdminWithReadOnly(ModelAdmin):
 
         old_formfield = super(AdminWithReadOnly, self).formfield_for_dbfield(
             db_field, **kwargs)
+        
         if (hasattr(old_formfield, 'widget') and
             isinstance(old_formfield.widget, widgets.RelatedFieldWidgetWrapper)):
-            old_formfield.widget.can_add_related = False
+
+            related_widget = old_formfield.widget
+            wrapped_widget = old_formfield.widget.widget
+            
+            related_widget.can_add_related = False
+            
+            if hasattr(wrapped_widget, 'has_readonly_view'):
+                related_widget.has_readonly_view = wrapped_widget.has_readonly_view
         
         return old_formfield
     
