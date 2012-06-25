@@ -303,7 +303,8 @@ class BinderTest(AptivateEnhancedTestCase):
             unless the Manager group's administrators flag is set""")
         
         self.assertFalse(self.john.is_superuser)
-        self.assertNotIn(manager, self.john.groups.all())
+        self.assertNotIn(manager, self.john.groups.all(),
+            "This test will not work if john is in the Manager group")
         
         self.john.groups = [manager]
         self.john.save()
