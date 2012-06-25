@@ -59,11 +59,11 @@ class SuperClient(Client):
             return response # without setting the parsed attribute
         
         # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
-        x = """<?xml version="1.0" encoding="utf-8"?>\n""" + response.content
-        p = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
+        xml = """<?xml version="1.0" encoding="utf-8"?>\n""" + response.content
+        parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
         
         try:
-            r = etree.fromstring(x, p)
+            root = etree.fromstring(xml, parser)
         except SyntaxError as e:
             import re
             match = re.match('Opening and ending tag mismatch: ' +
@@ -78,18 +78,18 @@ class SuperClient(Client):
             if not match:            
                 lineno = e.lineno
                 
-            lines = x.splitlines(True)
+            lines = xml.splitlines(True)
             if lineno is not None:
                 first_line = max(lineno - 5, 1)
                 last_line = min(lineno + 5, len(lines))
-                print x
+                print xml
                 print "Context (line %s):\n%s" % (lineno,
                     "".join(lines[first_line:last_line]))
             else:
                 print repr(e)
             raise e  
         
-        setattr(response, 'parsed', r)
+        response.parsed = root
         return response
         
     def retry(self):
@@ -491,3 +491,17 @@ class AptivateEnhancedTestCase(TestCase):
 
         self.assertNotIn('cl', response.context, "Missing changelist " +
             "in response context: %s" % response)
+    
+    XHTML_NS = "{http://www.w3.org/1999/xhtml}"
+    
+    def xhtml(self, name):
+        return "%s%s" % (self.XHTML_NS, name) 
+
+    def get_page_element(self, xpath, required=True):
+        self.assertTrue(self.client.last_response.content,
+            "Last response was empty or not parsed: %s" % 
+            self.client.last_response)
+        element = self.client.last_response.parsed.find(xpath)
+        self.assertIsNotNone(element, "Failed to find %s in page: %s" %
+            (xpath, self.client.last_response.content))
+        return element
