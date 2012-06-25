@@ -283,18 +283,6 @@ def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs
                 pp.pformat(self.reverse_dict)))
 patch(RegexURLResolver, 'reverse', reverse_with_debugging)
 
-from whoosh.searching import Searcher
-def search_without_optimisation(original_function, self, q, limit=10,
-    sortedby=None, reverse=False, groupedby=None, optimize=True, filter=None,
-    mask=None, terms=False, maptype=None):
-    """
-    Disable search optimisation until Whoosh issue 221 is resolved:
-    https://bitbucket.org/mchaput/whoosh/issue/221
-    """
-    return original_function(self, q, limit, sortedby, reverse, groupedby,
-        False, filter, mask, terms, maptype)
-patch(Searcher, 'search', search_without_optimisation)
-
 from django.contrib.admin.helpers import Fieldline, AdminField, mark_safe
 from binder.admin import CustomAdminReadOnlyField
 class FieldlineWithCustomReadOnlyField(object):
