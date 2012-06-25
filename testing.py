@@ -32,6 +32,7 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
         else:
             from django.db.models import get_apps
             for app in get_apps():
+                from django.test.simple import build_suite
                 suite.addTest(build_suite(app))
 
         if extra_tests:
