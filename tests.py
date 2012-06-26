@@ -140,12 +140,12 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertIn('profile_form', response.context, "Where's my form? " +
             "Am I really logged in?\n" + response.content)
 
-        form = response.context['profile_form']
-        # self.assertTrue(form.is_valid(), str(form.errors))
-        data = dict(form.initial)
+        form = self.assertInDict('profile_form', response.context)
+        data = self.update_form_values(form)
         data['full_name'] = "Wheee"
         data['is_superuser'] = True
-        del data['photo']
+        
+        # import pdb; pdb.set_trace()
         
         response = self.client.post(reverse('user_profile'), data=data,
             follow=True)
