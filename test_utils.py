@@ -221,7 +221,8 @@ class AptivateEnhancedTestCase(TestCase):
         Returns the member if the assertion passes.
         
         Makes sense that if you're asserting that a dictionary has a
-        member, you might want to use that member! Just saying.
+        member, you might want to use that member! Just saying. If not,
+        you can always throw it away.
         """
         
         self.assertIn(member, container, msg=msg)
@@ -384,14 +385,17 @@ class AptivateEnhancedTestCase(TestCase):
         return params
 
     def extract_error_message(self, response):
-        error_message = response.parsed.findtext('.//div[@class="error-message"]')
+        error_message = response.parsed.findtext('.//' +
+            self.xhtml('div') + '[@class="error-message"]')
 
         if error_message is None:
-            error_message = response.parsed.findtext('.//p[@class="errornote"]')
+            error_message = response.parsed.findtext('.//' +
+                self.xhtml('p') + '[@class="errornote"]')
         
         if error_message is not None:
             # extract individual field errors, if any
-            more_error_messages = response.parsed.findtext('.//td[@class="errors-cell"]')
+            more_error_messages = response.parsed.findtext('.//' +
+                self.xhtml('td') + '[@class="errors-cell"]')
             if more_error_messages is not None:
                 error_message += more_error_messages
             
