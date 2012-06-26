@@ -491,9 +491,9 @@ class AptivateEnhancedTestCase(TestCase):
         
         self.assertListEqual(expected_non_field_errors,
             response.context['adminform'].form.non_field_errors())
-        self.assertIsNone(self.extract_error_message(response))
-
-        self.assertNotIn('cl', response.context, "Missing changelist " +
+        self.assertEqual('Please correct the error below.',
+            self.extract_error_message(response))
+        self.assertNotIn('cl', response.context, "Unexpected changelist " +
             "in response context: %s" % response)
     
     XHTML_NS = "{http://www.w3.org/1999/xhtml}"
