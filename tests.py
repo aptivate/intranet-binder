@@ -81,11 +81,6 @@ class BinderTest(AptivateEnhancedTestCase):
         response = self.client.get(reverse('admin:binder_intranetuser_change',
             args=[self.ringo.id]))
 
-        self.assertTrue(hasattr(response, 'context'), "Missing context " +
-            "in response: %s: %s" % (response, dir(response)))
-        self.assertIsNotNone(response.context, "Empty context in response: " +
-            "%s: %s" % (response, dir(response)))
-        
         self.assertEqual("True", self.extract_admin_form_field(response, 
             'is_logged_in').contents())
 
