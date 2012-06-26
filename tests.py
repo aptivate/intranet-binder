@@ -427,3 +427,24 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertTrue(stevie.is_active)
         self.assertTrue(stevie.is_staff)
         self.assertTrue(stevie.is_superuser)
+    
+    def test_date_joined_field_is_separated_from_the_django_one(self):
+        date_joined_nondjango = IntranetUser._meta.get_field('date_joined_nondjango')
+        import django.db.models.fields
+        self.assertIsInstance(date_joined_nondjango,
+            django.db.models.fields.DateField)
+        self.assertTrue(date_joined_nondjango.blank)
+        self.assertTrue(date_joined_nondjango.null)
+        
+        from admin import IntranetUserAdmin
+        self.assertIn('date_joined', IntranetUserAdmin.exclude)
+        
+        from views import UserProfileForm
+        self.assertIn('date_joined', UserProfileForm._meta.exclude)
+        self.assertNotIn('date_joined', UserProfileForm.base_fields)
+        self.assertIn('date_joined_nondjango', UserProfileForm.base_fields)
+        
+        from django.contrib.admin.widgets import AdminDateWidget
+        self.assertIsInstance(
+            UserProfileForm.base_fields['date_joined_nondjango'].widget,
+            AdminDateWidget, "Date Joined widget should be a calendar control")

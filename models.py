@@ -68,6 +68,8 @@ class IntranetUser(User):
     cell_phone = fields.CharField(max_length=30)
     office_location = fields.CharField(max_length=1, choices=OFFICE_LOCATIONS)
     photo = files.ImageField(upload_to='profile_photos', blank=True, null=True)
+    date_joined_nondjango = fields.DateField(blank=True, null=True,
+        verbose_name="Date joined")
     date_left = fields.DateField(blank=True, null=True)
     notes = fields.TextField(blank=True, verbose_name="Bio")
     

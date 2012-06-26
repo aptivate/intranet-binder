@@ -4,21 +4,18 @@
 
 {% block style %}
 	<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+
+	<script type="text/javascript" src="{% admin_media_prefix %}js/core.js"></script>
+	<script type="text/javascript" src="{% admin_media_prefix %}js/getElementsBySelector.js"></script>
+	
+	<!-- http://groups.google.com/group/django-users/browse_thread/thread/2f529966472c479d -->
+	<script type="text/javascript" src="/admin/js/i18n.js"></script>
+
+	{{ profile_form.media }}	
+	
+	<script type="foo"></script>
+	
 	{{ block.super }}
-	{% comment %}
-	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery-1.7.1.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery.multiSelect.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}binder/js/jquery.bgiframe.min.js"></script>
-	<link rel="stylesheet" href="{{ STATIC_URL }}binder/js/jquery.multiSelect.css" />
-	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
-	<script type="text/javascript">
-		jQuery(document).ready(function()
-		{
-			opts = { selectAll: false, selectNone: true };
-			$(".multiselect-jquery").multiSelect(opts);
-		});
-	</script>
-	{% endcomment %}
 {% endblock %}
 
 {% block title %}

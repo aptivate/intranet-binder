@@ -6,6 +6,7 @@ from django.views.generic.base import TemplateView
 
 from password import PasswordChangeMixin
 from widgets import AdminImageWidgetWithThumbnail
+from django.contrib.admin.widgets import AdminDateWidget
 
 import configurable
 
@@ -27,6 +28,8 @@ class UserProfileForm(PasswordChangeMixin, forms.ModelForm):
         help_text="""e.g. educational background,  professional experience,
         present job, personal interests, languages spoken etc.""")
     photo = forms.ImageField(required=False, widget=AdminImageWidgetWithThumbnail)
+    date_joined_nondjango = forms.DateField(required=False,
+        label="Date joined", widget=AdminDateWidget)
         
 class UserProfileView(TemplateView):
     template_name = "user_profile.html"

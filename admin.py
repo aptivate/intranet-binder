@@ -543,7 +543,7 @@ class IntranetUserAdmin(AdminWithReadOnly):
         models.IntranetUser.get_userlevel)
 
     exclude = ['password', 'first_name', 'last_name', 'user_permissions',
-        'is_active', 'is_staff', 'is_superuser']
+        'is_active', 'is_staff', 'is_superuser', 'date_joined']
 
     def get_form_class(self, request, obj=None, **kwargs):
         if 'form' not in kwargs:

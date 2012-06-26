@@ -15,4 +15,6 @@ urlpatterns = patterns('',
         name="logout"),
     url(r'^profile$', views.UserProfileView.as_view(),
         name="user_profile"),
+    # http://groups.google.com/group/django-users/browse_thread/thread/2f529966472c479d
+    url(r'^admin/js/i18n.js', 'django.views.i18n.javascript_catalog'),
 )
