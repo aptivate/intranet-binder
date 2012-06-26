@@ -8,7 +8,7 @@ class UserIndex(indexes.RealTimeSearchIndex, indexes.Indexable):
     job_title = fields.CharField(model_attr='job_title')
     programs = fields.MultiValueField()
     program = fields.CharField(model_attr='program', null=True)
-    notes = fields.CharField(model_attr='notes', null=True)
+    notes = fields.CharField(model_attr='notes')
     
     def get_model(self):
         return configurable.UserModel
