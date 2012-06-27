@@ -128,11 +128,9 @@ class SuperClient(Client):
                 request.session = self.session
             else:
                 request.session = engine.SessionStore()
-
-            class FakeRequest(object):
-                def __init__(self, user):
-                    self.user = user
-            request.session.request = FakeRequest(user)
+            
+            request.user = None
+            self.fake_login_request = request
 
             login(request, user)
 
@@ -151,9 +149,9 @@ class SuperClient(Client):
             }
             self.cookies[session_cookie].update(cookie_data)
 
-            return True
+            return request
         else:
-            return False
+            return None
 
 class AptivateEnhancedTestCase(TestCase):
     def _pre_setup(self):
@@ -212,8 +210,9 @@ class AptivateEnhancedTestCase(TestCase):
         filefield.save(fixture_file_name, df, save=False) 
 
     def login(self, user):
-        self.assertTrue(self.client.login(username=user.username,
-            password='johnpassword'), "Login failed")
+        self.fake_login_request = self.client.login(username=user.username,
+            password='johnpassword')
+        self.assertTrue(self.fake_login_request, "Login failed")
         self.current_user = user
     
     def assertInDict(self, member, container, msg=None):
