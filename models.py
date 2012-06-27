@@ -49,6 +49,8 @@ class IntranetUser(User):
 
     class Meta:
         ordering = ('username',)
+        verbose_name = "person"
+        verbose_name_plural = "people"
         
     SEX_CHOICE = (
         ('M', 'Male'),
