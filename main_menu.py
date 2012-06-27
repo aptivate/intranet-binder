@@ -28,6 +28,9 @@ class MainMenu(Menu):
         if request.user.is_authenticated():
             self.append("Documents", 'document_list')
         
-            if request.user.is_manager: 
-                self.append("Users", 'admin:binder_intranetuser_changelist')
+            if request.user.is_manager:
+                from configurable import UserModel
+                user_changelist = ('admin:%s_%s_changelist' %
+                    (UserModel._meta.app_label, UserModel._meta.module_name))
+                self.append(UserModel._meta.verbose_name_plural, user_changelist)
                 self.append("Admin", 'admin:index')

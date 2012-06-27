@@ -443,3 +443,27 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertIsInstance(
             UserProfileForm.base_fields['date_joined_nondjango'].widget,
             AdminDateWidget, "Date Joined widget should be a calendar control")
+
+    def test_menu_contains_correct_user_model(self):
+        """
+        Even if the administrator has replaced the main menu with a custom
+        one in their application, the default main menu (from the binder app)
+        should still contain a link to the user manager for whatever the
+        configured user model is.
+        """
+        
+        self.login()
+        self.assertTrue(self.current_user.is_manager)
+        
+        from binder.main_menu import MainMenu
+        menu = MainMenu(self.fake_login_request)
+        
+        from configurable import UserModel
+        user_changelist = ('admin:%s_%s_changelist' %
+            (UserModel._meta.app_label, UserModel._meta.module_name))
+        
+        user_menu_item = [i for i in menu.generators 
+            if i.url_name == user_changelist][0]
+        self.assertEqual(UserModel._meta.verbose_name_plural, 
+            user_menu_item.title,
+            "Wrong title in menu item %s" % (user_menu_item,))
