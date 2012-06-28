@@ -505,7 +505,21 @@ class DocumentsAuthoredField(forms.Field):
     """
     widget = DocumentsAuthoredWidget
 
-class IntranetUserReadOnlyForm(ModelForm):
+from django.forms.forms import BoundField
+class BoundFieldWithReadOnly(BoundField):
+    def as_readonly_widget(self):
+        return self.as_widget(attrs={'readonly': True})
+
+class ModelFormWithReadOnly(ModelForm):
+    def __getitem__(self, name):
+        "Returns a ReadOnlyBoundField with the given name."
+        try:
+            field = self.fields[name]
+        except KeyError:
+            raise KeyError('Key %r not found in Form' % name)
+        return BoundFieldWithReadOnly(self, field, name)
+
+class IntranetUserReadOnlyForm(ModelFormWithReadOnly):
     """
     Some ugly stuff to add fields to an admin form:
     http://groups.google.com/group/django-developers/browse_thread/thread/2bfa60a122016d6d
@@ -534,6 +548,8 @@ class IntranetUserReadOnlyForm(ModelForm):
         super(IntranetUserReadOnlyForm, self).__init__(data, files,
             auto_id, prefix, initial, error_class, label_suffix,
             empty_permitted, instance)
+        
+        self["photo"].field.widget.readonly_template = u'%(thumbnail)s'
         
     def get_documents_authored(self, instance):
         # print "get_documents_authored(%s)" % instance

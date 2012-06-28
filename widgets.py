@@ -73,17 +73,13 @@ class AdminImageWidgetWithThumbnail(AdminFileWidgetWithSize):
 
     def __init__(self, read_write_template=None, read_only_template=None,
         attrs=None):
+        super(AdminFileWidgetWithSize, self).__init__(attrs)
         
         if read_write_template is not None:
             self.template_with_initial = read_write_template
             
         if read_only_template is not None:
             self.readonly_template = read_only_template
-        
-        if attrs is not None:
-            self.attrs = attrs.copy()
-        else:
-            self.attrs = {}
 
     def extra_context(self, name, value, attrs):
         context = {}

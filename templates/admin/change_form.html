@@ -51,9 +51,11 @@ binder/templatetags/submit_buttons.py for details.
     {{ adminform.form.non_field_errors }}
 {% endif %}
 
-{% for fieldset in adminform %}
-  {% include "admin/includes/fieldset.html" %}
-{% endfor %}
+{% block form %}
+	{% for fieldset in adminform %}
+	  {% include "admin/includes/fieldset.html" %}
+	{% endfor %}
+{% endblock %}
 
 {% block after_field_sets %}{% endblock %}
 

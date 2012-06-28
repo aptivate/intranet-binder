@@ -1,0 +1,20 @@
+{% extends "admin/view_form.html" %}
+
+{% block main_form %}
+
+<pre>
+user name: {{ adminform.form.username.value }}
+email:     {{ adminform.form.email.value }}
+full name: {{ adminform.form.full_name.value }} 
+job_title: {{ adminform.form.job_title.value }}
+sex:       {{ adminform.form.sex.value }}
+program:   {{ adminform.form.program.value }}
+cell_phone: {{ adminform.form.cell_phone.value }}
+office_location: {{ adminform.form.office_location.value }}
+photo: {{ adminform.form.photo.as_readonly_widget }}
+date_joined: {{ adminform.form.date_joined_nondjango.value }}
+date_left: {{ adminform.form.date_left.value }}
+notes: {{ adminform.form.notes.value }}
+</pre>
+
+{% endblock %}
