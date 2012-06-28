@@ -507,8 +507,29 @@ class DocumentsAuthoredField(forms.Field):
 
 from django.forms.forms import BoundField
 class BoundFieldWithReadOnly(BoundField):
-    def as_readonly_widget(self):
-        return self.as_widget(attrs={'readonly': True})
+    def readonly(self):
+        from django.forms.fields import ChoiceField
+        from django.forms.models import ModelChoiceField
+        
+        value = self.value()
+        
+        if hasattr(self.field.widget, 'has_readonly_view'):
+            return self.as_widget(attrs={'readonly': True})
+        elif isinstance(self.field, ModelChoiceField):
+            try:
+                return self.field.queryset.get(pk=value)
+            except self.field.queryset.model.DoesNotExist as e:
+                return "Unknown value %s" % value
+        elif isinstance(self.field, ChoiceField):
+            try:
+                return [choice[1] for choice in self.field.choices
+                    if choice[0] == value][0]
+            except Exception as e:
+                return "Unknown value %s" % value
+        else:
+            return value
+        #    
+        #    return super(CustomAdminReadOnlyField, self).contents()
 
 class ModelFormWithReadOnly(ModelForm):
     def __getitem__(self, name):

@@ -4,12 +4,12 @@
 				<div class="user-profile">
 					<div class="col person-info">
 						<div class="row key-info">
-							<div class="profile-photo">{{ adminform.form.photo.as_readonly_widget }}</div>
+							<div class="profile-photo">{{ adminform.form.photo.readonly }}</div>
 							<h2 class="page-title">{{ adminform.form.full_name.value }}</h2>
 							
 								<h3>{{ adminform.form.job_title.value }}</h3>
-								<p class="program-name"><strong>Program: </strong>{{ adminform.form.program.value }}</p>
-								<p class="location"><strong>location: </strong>{{ adminform.form.office_location.value }}</p>
+								<p class="program-name"><strong>Program: </strong>{{ adminform.form.program.readonly }}</p>
+								<p class="location"><strong>location: </strong>{{ adminform.form.office_location.readonly }}</p>
 								<p class="email"><strong>email: </strong>{{ adminform.form.email.value }}</p>
 								<p class="tel"><strong>phone: </strong>{{ adminform.form.cell_phone.value }}</p>
 							
