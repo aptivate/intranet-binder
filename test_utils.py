@@ -495,8 +495,10 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertIsNotNone(response.context, "Empty context in response: " +
             "%s: %s" % (response, dir(response)))
         self.assertIn('adminform', response.context)
-        self.assertDictEqual(expected_field_errors,
-            response.context['adminform'].form.errors)
+
+        if expected_field_errors:
+            self.assertEqual(expected_field_errors,
+                response.context['adminform'].form.errors)
         
         """
         for fieldset in response.context['adminform']:
@@ -508,8 +510,11 @@ class AptivateEnhancedTestCase(TestCase):
         
         self.assertListEqual(expected_non_field_errors,
             response.context['adminform'].form.non_field_errors())
-        self.assertEqual('Please correct the error below.',
-            self.extract_error_message(response))
+        top_error = self.extract_error_message(response)
+        import re
+        self.assertTrue(re.match('Please correct the error(s)? below.',
+            top_error), "Unexpected error message at top of form: %s" %
+            top_error)
         self.assertNotIn('cl', response.context, "Unexpected changelist " +
             "in response context: %s" % response)
     
