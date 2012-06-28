@@ -631,3 +631,15 @@ def related_objects_set_without_clear(original_function, self, instance,
 patch(ReverseManyRelatedObjectsDescriptor, '__set__',
     related_objects_set_without_clear)
 """
+
+from django.db.models.fields import AutoField
+def AutoField_to_python_with_improved_debugging(original_function, self, value):
+    try:
+        return original_function(self, value)
+    except (TypeError, ValueError):
+        raise exceptions.ValidationError(self.error_messages['invalid'] +
+            ": %s.%s is not allowed to have value '%s'" % 
+            (self.model, self.name, value))
+# print "before patch: IntranetUser.id.to_python = %s" % IntranetUser.id.to_python
+patch(AutoField, 'to_python', AutoField_to_python_with_improved_debugging)
+# print "after patch: IntranetUser.id.to_python = %s" % IntranetUser.id.to_python
