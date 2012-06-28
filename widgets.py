@@ -94,7 +94,14 @@ class AdminImageWidgetWithThumbnail(AdminFileWidgetWithSize):
         return context
     
     def square_thumbnail(self, source):
-        return get_thumbnailer(source).get_thumbnail(self.thumbnail_options)
+        from django.db.models.fields.files import FieldFile
+        if isinstance(source, FieldFile):
+            nailer = get_thumbnailer(source) # caches the thumbnail
+        else:
+            # should be a File-like object at least. No caching.
+            nailer = get_thumbnailer(source, relative_name=source.name)
+            
+        return nailer.get_thumbnail(self.thumbnail_options)
 
 from django.contrib.admin.widgets import AdminURLFieldWidget
 class URLFieldWidgetWithLink(AdminURLFieldWidget):
