@@ -41,8 +41,6 @@ class Program(Model):
         return self.name
 
 from django.contrib.auth.models import User, UserManager
-from django.db.models.signals import m2m_changed
-from django.dispatch import receiver
 
 class IntranetUser(User):
     objects = UserManager()
@@ -163,6 +161,8 @@ class IntranetUser(User):
     def reload(self):
         return self.__class__.objects.get(pk=self.pk)
 
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 @receiver(m2m_changed, sender=User.groups.through,
     dispatch_uid="User_groups_changed")
 def User_groups_changed(sender, **kwargs):
