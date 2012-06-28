@@ -1,20 +1,35 @@
 {% extends "admin/view_form.html" %}
 
 {% block main_form %}
-
-<pre>
-user name: {{ adminform.form.username.value }}
-email:     {{ adminform.form.email.value }}
-full name: {{ adminform.form.full_name.value }} 
-job_title: {{ adminform.form.job_title.value }}
-sex:       {{ adminform.form.sex.value }}
-program:   {{ adminform.form.program.value }}
-cell_phone: {{ adminform.form.cell_phone.value }}
-office_location: {{ adminform.form.office_location.value }}
-photo: {{ adminform.form.photo.as_readonly_widget }}
-date_joined: {{ adminform.form.date_joined_nondjango.value }}
-date_left: {{ adminform.form.date_left.value }}
-notes: {{ adminform.form.notes.value }}
-</pre>
+				<div class="user-profile">
+					<div class="col person-info">
+						<div class="row key-info">
+							<div class="profile-photo">{{ adminform.form.photo.as_readonly_widget }}</div>
+							<h2 class="page-title">{{ adminform.form.full_name.value }}</h2>
+							
+								<h3>{{ adminform.form.job_title.value }}</h3>
+								<p class="program-name"><strong>Program: </strong>{{ adminform.form.program.value }}</p>
+								<p class="location"><strong>location: </strong>{{ adminform.form.office_location.value }}</p>
+								<p class="email"><strong>email: </strong>{{ adminform.form.email.value }}</p>
+								<p class="tel"><strong>phone: </strong>{{ adminform.form.cell_phone.value }}</p>
+							
+						</div>
+						<div class="row bio">
+							<h2>Bio</h2>
+							<p class="bio">{{ adminform.form.notes.value }}</p>
+						</div>
+						<div class="row other-info">
+							<h2>Other Info</h2>
+							<p class="sex"><strong>sex: </strong>{{ adminform.form.sex.value }}</p>
+							<p class="joined"><strong>joined: </strong>{{ adminform.form.date_joined_nondjango.value }}</p>
+						</div>
+					</div>
+					<div class="col documents">
+						<div class="row">
+							<h2>Documents</h2>
+							{{ adminform.form.documents_authored }}
+						</div>
+					</div>
+				</div>
 
 {% endblock %}
