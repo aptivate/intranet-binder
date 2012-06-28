@@ -423,6 +423,23 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertTrue(stevie.is_staff)
         self.assertTrue(stevie.is_superuser)
     
+    def test_create_user_with_photo_and_missing_required_fields(self):
+        self.login()
+        url = reverse('admin:binder_intranetuser_add')
+        response = self.client.get(url)
+
+        form = self.assertInDict('adminform', response.context).form
+        # import pdb; pdb.set_trace()
+        
+        import os
+        f = open(os.path.join(os.path.dirname(__file__), 'fixtures',
+            'transparent.gif'))
+        # setattr(f, 'name', 'transparent.gif')
+        
+        params = self.update_form_values(form, photo=f)
+        response = self.client.post(url, params, follow=True)
+        self.assert_admin_form_with_errors_not_changelist(response)
+    
     def test_date_joined_field_is_separated_from_the_django_one(self):
         date_joined_nondjango = IntranetUser._meta.get_field('date_joined_nondjango')
         import django.db.models.fields
