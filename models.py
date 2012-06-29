@@ -19,9 +19,17 @@ class IntranetGroup(Group):
         administrators (super users) regardless of what permissions are
         assigned to the group""")
     
+    inactive = fields.BooleanField(help_text="""
+        If enabled, all members of this group automatically become inactive
+        (unable to log in).""")
+    
     @property
     def group(self):
-        return Group.objects.get(pk=self.pk) 
+        return Group.objects.get(pk=self.pk)
+    
+    @staticmethod
+    def for_old_group(old_group):
+        return IntranetGroup.objects.get(pk=old_group.pk)
 
 class ProgramType(Model):
     class Meta:

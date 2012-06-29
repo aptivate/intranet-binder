@@ -428,10 +428,10 @@ class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
         new_group_ids = [g.id for g in new_groups]
         user_being_updated = self.object_being_updated
         
-        from models import IntranetGroup
         # import pdb; pdb.set_trace()
         
         if user_being_updated and user_being_updated.id == self.request.user.pk:
+            from models import IntranetGroup
             old_admin_groups = IntranetGroup.objects.filter(administrators=True,
                 user__pk=user_being_updated.id)
             
@@ -440,6 +440,24 @@ class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
                     from django.forms import ValidationError
                     raise ValidationError('You cannot demote yourself ' +
                         'from the %s group' % group.name)
+
+            # are any of the new groups administrators groups?            
+            will_be_admin = \
+                IntranetGroup.objects.filter(administrators=True).in_bulk(new_group_ids)
+            # treat a dict as a boolean: empty dict is False, non-empty is True  
+            if user_being_updated.is_superuser and not will_be_admin:
+                from django.forms import ValidationError
+                raise ValidationError('You cannot demote yourself from ' +
+                    'being a superuser. You must put yourself in one of ' +
+                    'the Administrators groups: %s' % 
+                    IntranetGroup.objects.filter(administrators=True))
+                
+            will_be_inactive = IntranetGroup.objects.filter(inactive=True,
+                id__in=new_group_ids)
+            if will_be_inactive:
+                from django.forms import ValidationError
+                raise ValidationError('You cannot place yourself ' +
+                    'in the %s group' % will_be_inactive[0].name)
                         
         return new_groups
 

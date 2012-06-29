@@ -276,6 +276,7 @@
         "model": "binder.intranetgroup",
         "fields": {
             "administrators": false,
+            "inactive": true,
             "permissions": []
         }
     }

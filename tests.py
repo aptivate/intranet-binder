@@ -340,7 +340,40 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assert_admin_form_with_errors_not_changelist(response,
             {'groups': ['You cannot demote yourself from the %s group' %
                 manager.name]})
-
+        
+        # shouldn't be allowed to do anything that removes our superuser flag
+        # remove us from manager group, but keep superuser flag.
+        # temporarily disable the signal listener so that it doesn't
+        # automatically demote us from superuser
+        from django.db.models.signals import m2m_changed
+        from django.dispatch import receiver
+        m2m_changed.disconnect(sender=User.groups.through,
+            receiver=IntranetUser.groups_changed, dispatch_uid="User_groups_changed")
+        self.current_user.groups = [user]
+        m2m_changed.connect(sender=User.groups.through,
+            receiver=IntranetUser.groups_changed, dispatch_uid="User_groups_changed")
+        
+        self.current_user = self.current_user.reload()
+        self.assertItemsEqual([user.group], self.current_user.groups.all())
+        self.assertTrue(self.current_user.is_superuser)
+        # now we're not removing ourselves from any groups, but saving
+        # would still demote us automatically from being a superuser.
+        response = self.client.post(url, new_values)
+        self.assert_admin_form_with_errors_not_changelist(response,
+            {'groups': ['You cannot demote yourself from being a superuser. ' +
+                'You must put yourself in one of the Administrators groups: ' +
+                '%s' % IntranetGroup.objects.filter(administrators=True)]})
+        
+        # we shouldn't be allowed to delete ourselves either
+        deleted = IntranetGroup.objects.get(name="Deleted")
+        user = IntranetGroup.objects.get(name="User")
+        new_values = self.update_form_values(form, groups=[manager.pk, deleted.pk])
+        # import pdb; pdb.set_trace()
+        response = self.client.post(url, new_values)
+        self.assert_admin_form_with_errors_not_changelist(response,
+            {'groups': ['You cannot place yourself in the %s group' %
+                deleted.name]})
+        
     def test_admin_form_should_allow_user_to_promote_and_demote_others(self):
         self.login()
         
