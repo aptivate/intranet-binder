@@ -132,7 +132,6 @@ class IntranetUser(User):
         return (self.is_superuser or len(groups) > 0)
 
     def save(self, force_insert=False, force_update=False, using=None):
-        self.is_active = True
         self.is_staff = True
         return super(IntranetUser, self).save(force_insert, force_update, using)
     
@@ -150,6 +149,7 @@ class IntranetUser(User):
         # import pdb; pdb.set_trace()
         
         new_superuser_value = False
+        new_active_value = True
         user = kwargs['instance']
             
         for group in user.groups.all():
@@ -157,6 +157,8 @@ class IntranetUser(User):
                 if group.intranetgroup.administrators:
                     new_superuser_value = True
                     break
+                if group.intranetgroup.inactive:
+                    new_active_value = False
             except IntranetGroup.DoesNotExist:
                 # might be a plain group, in which case it can't be a 
                 # group of administrators
@@ -164,6 +166,10 @@ class IntranetUser(User):
         
         if new_superuser_value != user.is_superuser:
             user.is_superuser = new_superuser_value
+            user.save()
+
+        if new_active_value != user.is_active:
+            user.is_active = new_active_value
             user.save()
     
     def reload(self):

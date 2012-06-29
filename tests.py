@@ -406,6 +406,15 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assert_changelist_not_admin_form_with_errors(response)
         self.assertFalse(self.john.reload().is_superuser)
 
+        # import pdb; pdb.set_trace()
+        self.assertTrue(self.john.reload().is_active,
+            "test precondition failed")
+        deleted = IntranetGroup.objects.get(inactive=True)
+        new_values = self.update_form_values(form, groups=[deleted.pk])
+        response = self.client.post(url, new_values, follow=True)
+        self.assert_changelist_not_admin_form_with_errors(response)
+        self.assertFalse(self.john.reload().is_active)
+
     def test_can_create_users(self):
         u = IntranetUser(username="max")
         u.save()
