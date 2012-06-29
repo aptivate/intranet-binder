@@ -537,3 +537,27 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertIsNotNone(element, "Failed to find %s in page: %s" %
             (xpath, self.client.last_response.content))
         return element
+
+    def assert_search_results_table_get_queryset(self, response):
+        try:
+            table = response.context['results_table']
+        except KeyError as e:
+            self.fail("No table in response context: %s" %
+                response.context.keys())
+
+        import django_tables2 as tables
+        self.assertIsInstance(table, tables.Table)
+
+        columns = table.base_columns.items()
+        self.assertNotIn('score', [c[0] for c in columns],
+            "Score column is disabled on request")
+        
+        data = table.data
+        from django_tables2.tables import TableData
+        self.assertIsInstance(data, TableData)
+        
+        queryset = data.queryset
+        from haystack.query import SearchQuerySet
+        self.assertIsInstance(queryset, SearchQuerySet)
+        
+        return table, queryset
