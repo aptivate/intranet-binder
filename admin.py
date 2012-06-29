@@ -122,6 +122,17 @@ class AdminWithReadOnly(ModelAdmin):
                 name='%s_%s_readonly' % info)]
 
         return urlpatterns
+
+    def get_view_permission(self):
+        return 'view_%s' % self.opts.object_name.lower()
+    
+    def has_view_permission(self, request, obj=None):
+        """
+        Returns True if the given request has permission to view an object.
+        Can be overriden by the user in subclasses.
+        """
+        opts = self.opts
+        return request.user.has_perm(opts.app_label + '.' + self.get_view_permission())
     
     def has_change_permission(self, request, obj=None):
         """
@@ -131,9 +142,11 @@ class AdminWithReadOnly(ModelAdmin):
         the access is read-only.
         """
         
-        if request.user.is_authenticated() and \
-        getattr(request, 'is_read_only', False) and \
-        request.method == 'GET':
+        if (request.user.is_authenticated() and
+            getattr(request, 'is_read_only', False) and
+            request.method == 'GET' and
+            self.has_view_permission(request, obj)):
+            
             return True
 
         return super(AdminWithReadOnly, self).has_change_permission(request,
