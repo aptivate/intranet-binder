@@ -124,7 +124,7 @@
                     "document"
                 ],
                 [
-                    "change_document",
+                    "view_document",
                     "documents",
                     "document"
                 ]
@@ -264,7 +264,7 @@
                     "document"
                 ],
                 [
-                    "change_document",
+                    "view_document",
                     "documents",
                     "document"
                 ]
