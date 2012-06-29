@@ -327,29 +327,29 @@ class AptivateEnhancedTestCase(TestCase):
 
         elif isinstance(widget, django.forms.widgets.Select):
             if '__iter__' in dir(value):
-                self.assertTrue(len(value) <= 1,
-                    "Multiple values of %s are not supported yet (%s)" %
-                    (name, value))
-                if len(value) == 0:
-                    value = None
-                elif len(value) == 1:
-                    value = value[0]
-            
-            self.assertNotIn('__iter__', dir(value),
-                "Multiple values of %s are not supported yet (%s)" %
-                (name, value))
+                values = list(value)
+            else:
+                values = [value]
             
             choices = list(widget.choices)
             possible_values = [v for v, label in choices]
+            found_values = []
             
-            if value in possible_values:
-                return {name: str(value)}
-            elif strict:
-                # Since user agent behavior differs, authors should ensure
-                # that each menu includes a default pre-selected OPTION
-                # (i.e. that a list includes a selected value)
-                raise Exception("List without selected value: " +
-                    "%s = %s (should be one of: %s)" % (name, value, choices))
+            for v in values:
+                if v in possible_values:
+                    found_values.append(str(v))
+                elif strict:
+                    # Since user agent behavior differs, authors should ensure
+                    # that each menu includes a default pre-selected OPTION
+                    # (i.e. that a list includes a selected value)
+                    raise Exception("List without selected value: " +
+                        "%s = %s (should be one of: %s)" % (name, value, choices))
+                else:
+                    # don't add anything to the list right now
+                    pass
+            
+            if found_values:
+                return {name: found_values}
             else:
                 # most browsers pre-select the first value
                 return {name: str(choices[0][0])}
