@@ -75,7 +75,10 @@ class SessionStore(SessionBase):
             expire_date = self.get_expiry_date(),
         )
         
-        if hasattr(self.request, 'user') and self.request.user.is_authenticated():
+        if (hasattr(self.request, 'user') and
+            hasattr(self.request.user, 'is_authenticated') and
+            self.request.user.is_authenticated()):
+            
             obj.user = self.request.user
         else:
             obj.user = None

@@ -130,6 +130,12 @@ class SuperClient(Client):
                 request.session = engine.SessionStore()
             
             request.user = None
+            # login() doesn't give our session store a chance to
+            # initialise itself for the current request, and django
+            # never calls login() during real operation? so it's OK
+            # to work around this limitation by poking the request
+            # into the session for test purposes?
+            request.session.request = request
             self.fake_login_request = request
 
             login(request, user)
