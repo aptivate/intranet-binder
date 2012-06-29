@@ -523,6 +523,7 @@ class BinderTest(AptivateEnhancedTestCase):
         
         user_menu_item = [i for i in menu.generators 
             if i.url_name == user_changelist][0]
-        self.assertEqual(UserModel._meta.verbose_name_plural, 
+        from django.utils.text import capfirst
+        self.assertEqual(capfirst(UserModel._meta.verbose_name_plural), 
             user_menu_item.title,
             "Wrong title in menu item %s" % (user_menu_item,))

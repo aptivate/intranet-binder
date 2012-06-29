@@ -32,5 +32,7 @@ class MainMenu(Menu):
                 from configurable import UserModel
                 user_changelist = ('admin:%s_%s_changelist' %
                     (UserModel._meta.app_label, UserModel._meta.module_name))
-                self.append(UserModel._meta.verbose_name_plural, user_changelist)
+                from django.utils.text import capfirst
+                self.append(capfirst(UserModel._meta.verbose_name_plural),
+                    user_changelist)
                 self.append("Admin", 'admin:index')
