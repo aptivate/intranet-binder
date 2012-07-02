@@ -548,6 +548,8 @@ class BoundFieldWithReadOnly(BoundField):
         if hasattr(self.field.widget, 'has_readonly_view'):
             return self.as_widget(attrs={'readonly': True})
         elif isinstance(self.field, ModelChoiceField):
+            if value is None:
+                return None
             try:
                 return self.field.queryset.get(pk=value)
             except self.field.queryset.model.DoesNotExist as e:
