@@ -12,6 +12,7 @@ from django.core.urlresolvers import reverse
 from django.db import models as db_fields
 from django.db import transaction, router
 from django.forms import ModelForm
+from django.forms import fields as form_fields
 from django.forms.util import ErrorList
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -578,6 +579,7 @@ class IntranetUserReadOnlyForm(ModelFormWithReadOnly):
     """
 
     documents_authored = DocumentsAuthoredField()
+    is_logged_in = form_fields.BooleanField()
     
     class Meta:
         model = models.IntranetUser
@@ -593,8 +595,8 @@ class IntranetUserReadOnlyForm(ModelFormWithReadOnly):
         
         if initial is None:
             initial = {}
-        from django.utils.functional import curry
-        initial['documents_authored'] = curry(self.get_documents_authored, instance)
+        initial['documents_authored'] = lambda: instance.documents_authored.all()
+        initial['is_logged_in'] = lambda: instance.is_logged_in()
         
         # print "IntranetUserReadOnlyForm.__init__: data = %s, initial = %s" % (data, initial)
         super(IntranetUserReadOnlyForm, self).__init__(data, files,
@@ -602,10 +604,6 @@ class IntranetUserReadOnlyForm(ModelFormWithReadOnly):
             empty_permitted, instance)
         
         self["photo"].field.widget.readonly_template = u'%(thumbnail)s'
-        
-    def get_documents_authored(self, instance):
-        # print "get_documents_authored(%s)" % instance
-        return instance.documents_authored.all()
 
 class IntranetUserAdmin(AdminWithReadOnly):
     """

@@ -84,13 +84,23 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertEqual("True", self.extract_admin_form_field(response, 
             'is_logged_in').contents())
 
-    def test_logged_in_status_is_false_for_not_logged_in_user(self):
-        self.login()
+        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
+            args=[self.ringo.id]))
+
+        self.assertEqual(True, 
+            self.extract_admin_form(response).form['is_logged_in'].readonly())
+
         response = self.client.get(reverse('admin:binder_intranetuser_change',
             args=[self.john.id]))
 
         self.assertEqual("False", self.extract_admin_form_field(response, 
             'is_logged_in').contents())
+
+        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
+            args=[self.john.id]))
+
+        self.assertEqual(False, 
+            self.extract_admin_form(response).form['is_logged_in'].readonly())
 
     def test_documents_shown_in_readonly_admin_form(self):
         self.login()
