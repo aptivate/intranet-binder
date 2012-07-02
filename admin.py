@@ -579,7 +579,6 @@ class IntranetUserReadOnlyForm(ModelFormWithReadOnly):
     """
 
     documents_authored = DocumentsAuthoredField()
-    is_logged_in = form_fields.BooleanField()
     
     class Meta:
         model = models.IntranetUser

@@ -75,32 +75,33 @@ class BinderTest(AptivateEnhancedTestCase):
             session_key=self.client.session.session_key)
         self.assertEqual(User.objects.get(id=self.ringo.id), session_record.user)
         self.assertNotEqual(old_date, session_record.expire_date)
-        
+
+    def assert_logged_in_status_field(self, user, expected_value):
+        response = self.client.get(reverse('admin:binder_intranetuser_change',
+            args=[user.id]))
+
+        self.assertEqual(str(expected_value),
+            self.extract_admin_form_field(response,  'is_logged_in').contents())
+
+        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
+            args=[user.id]))
+
+        self.assertEqual(expected_value, 
+            self.extract_admin_form(response).form['is_logged_in'].readonly())
+                
     def test_logged_in_status_shown_in_admin_form(self):
         self.login()
-        response = self.client.get(reverse('admin:binder_intranetuser_change',
-            args=[self.ringo.id]))
+        self.assertTrue(self.current_user.is_logged_in())
+        self.assert_logged_in_status_field(self.current_user, True)
 
-        self.assertEqual("True", self.extract_admin_form_field(response, 
-            'is_logged_in').contents())
-
-        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
-            args=[self.ringo.id]))
-
-        self.assertEqual(True, 
-            self.extract_admin_form(response).form['is_logged_in'].readonly())
-
-        response = self.client.get(reverse('admin:binder_intranetuser_change',
-            args=[self.john.id]))
-
-        self.assertEqual("False", self.extract_admin_form_field(response, 
-            'is_logged_in').contents())
-
-        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
-            args=[self.john.id]))
-
-        self.assertEqual(False, 
-            self.extract_admin_form(response).form['is_logged_in'].readonly())
+        self.assertNotEqual(self.john, self.current_user)
+        self.assert_logged_in_status_field(self.john, False)
+        
+        previous_user = self.current_user
+        response = self.client.get(reverse('logout'))
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('Logged out', response.context['title'])
+        self.assertFalse(previous_user.is_logged_in())
 
     def test_documents_shown_in_readonly_admin_form(self):
         self.login()

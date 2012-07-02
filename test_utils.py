@@ -104,6 +104,35 @@ class SuperClient(Client):
         return super(SuperClient, self).request(**request)
     """
     
+    def additional_login(self, user):
+        """
+        Simulate another user logging in, without changing our current
+        credentials or cookies.
+        """
+        engine = import_module(settings.SESSION_ENGINE)
+
+        # Create a fake request to store login details.
+        request = HttpRequest()
+        if self.session:
+            request.session = self.session
+        else:
+            request.session = engine.SessionStore()
+        
+        request.user = None
+        # login() doesn't give our session store a chance to
+        # initialise itself for the current request, and django
+        # never calls login() during real operation? so it's OK
+        # to work around this limitation by poking the request
+        # into the session for test purposes?
+        request.session.request = request
+        self.fake_login_request = request
+
+        login(request, user)
+
+        # Save the session values.
+        request.session.save()
+        return request
+        
     def login(self, **credentials):
         """
         Sets the Factory to appear as if it has successfully logged into a site.
@@ -120,28 +149,7 @@ class SuperClient(Client):
         user = authenticate(**credentials)
         if user and user.is_active \
                 and 'django.contrib.sessions' in settings.INSTALLED_APPS:
-            engine = import_module(settings.SESSION_ENGINE)
-
-            # Create a fake request to store login details.
-            request = HttpRequest()
-            if self.session:
-                request.session = self.session
-            else:
-                request.session = engine.SessionStore()
-            
-            request.user = None
-            # login() doesn't give our session store a chance to
-            # initialise itself for the current request, and django
-            # never calls login() during real operation? so it's OK
-            # to work around this limitation by poking the request
-            # into the session for test purposes?
-            request.session.request = request
-            self.fake_login_request = request
-
-            login(request, user)
-
-            # Save the session values.
-            request.session.save()
+            request = self.additional_login(user)
 
             # Set the cookie to represent the session.
             session_cookie = settings.SESSION_COOKIE_NAME
