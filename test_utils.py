@@ -1,3 +1,6 @@
+import difflib
+import pprint
+
 from lxml import etree
 
 from django.conf import settings
