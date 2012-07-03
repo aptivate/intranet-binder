@@ -568,3 +568,37 @@ class BinderTest(AptivateEnhancedTestCase):
             fake_object = {'full_name': 'whee'}         
             self.assertEqual("{&#39;full_name&#39;: &#39;whee&#39;}", 
                 field.label_from_instance(fake_object))
+
+    def test_lists_templatetags_format_items(self):
+        from templatetags.lists import format_items
+        
+        from django.contrib.auth.models import User, Group
+        
+        self.assertEquals([m._meta.verbose_name_plural.title() for m in []],
+            format_items([], "item._meta.verbose_name_plural.title"))
+        self.assertEquals([m._meta.verbose_name_plural.title() for m in [User]],
+            format_items([User], "item._meta.verbose_name_plural.title"))
+        self.assertEquals([m._meta.verbose_name_plural.title() for m in [User, Group]],
+            format_items([User, Group], "item._meta.verbose_name_plural.title"))
+
+    def test_lists_templatetags_join_last_two(self):
+        from templatetags.lists import join_last_two
+        
+        self.assertEquals([],
+            join_last_two([], " whee "))
+        self.assertEquals(["a"],
+            join_last_two(["a"], " whee "))
+        self.assertEquals(["a whee b"],
+            join_last_two(["a", "b"], " whee "))
+        self.assertEquals(["a", "b whee c"],
+            join_last_two(["a", "b", "c"], " whee "))
+
+    def test_lists_templatetags_if_empty_list(self):
+        from templatetags.lists import if_empty_list
+        
+        self.assertEquals(["nada"],
+            if_empty_list([], "nada"))
+        self.assertEquals(["a"],
+            if_empty_list(["a"], "nada"))
+        self.assertEquals(["a", "b"],
+            if_empty_list(["a", "b"], "nada"))
