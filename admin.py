@@ -30,7 +30,6 @@ from password import PasswordChangeMixin
 # from django.db import transaction
 # from models import IntranetUser
 
-
 from django.contrib.admin.views.main import ChangeList
 class ChangeListWithLinksToReadOnlyView(ChangeList):
     def url_for_result(self, result):
@@ -38,6 +37,44 @@ class ChangeListWithLinksToReadOnlyView(ChangeList):
         info = opts.app_label, opts.module_name
         return reverse('admin:%s_%s_readonly' % info,
             args=[getattr(result, self.pk_attname)])
+
+class TemplateChoiceMixin(object):
+    """
+    Mixin for ModelChoiceField to allow changing the format of the field's
+    rendered text without creating a custom subclass, by passing a
+    "template" parameter.
+    """
+     
+    template = u'{{ obj }}'
+    context = {} 
+    
+    def __init__(self, template=None, context=None, *args, **kwargs):
+        from django.template import Template
+        self.template = Template(template if template else self.template)
+        self.context = context if context else self.context
+        super(TemplateChoiceMixin, self).__init__(*args, **kwargs)
+        
+    def label_from_instance(self, obj):
+        """
+        This method is used to convert objects into strings; it's used to
+        generate the labels for the choices presented by this object.
+        
+        TemplatedModelChoiceField renders the template provided in the
+        "template" kwarg to the constructor, passing "obj" (the current list item)
+        and "context" (self.context) as the dictionary to interpolate with,
+        so you can use "{{ obj.blah }} and {{ context.whee }}" as the template.
+        """
+        from django.template import Context
+        return self.template.render(Context({
+            'obj': obj, 'field': self, 'context': self.context
+            }))
+
+from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
+class TemplatedModelChoiceField(TemplateChoiceMixin, ModelChoiceField):
+    pass
+class TemplatedModelMultipleChoiceField(TemplateChoiceMixin,
+    ModelMultipleChoiceField):
+    pass
 
 from django.contrib.admin import ModelAdmin
 import widgets
@@ -47,6 +84,8 @@ class AdminWithReadOnly(ModelAdmin):
         db_fields.URLField: {'widget': widgets.URLFieldWidgetWithLink},
         db_fields.FileField: {'widget': widgets.AdminFileWidgetWithSize},
         db_fields.ImageField: {'widget': widgets.AdminImageWidgetWithThumbnail},
+        db_fields.ForeignKey: {'form_class': TemplatedModelChoiceField,
+            'template': 'foo %(obj)s bar'},
     }
     
     def formfield_for_dbfield(self, db_field, **kwargs):

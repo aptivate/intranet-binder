@@ -538,3 +538,33 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertEqual(capfirst(UserModel._meta.verbose_name_plural), 
             user_menu_item.title,
             "Wrong title in menu item %s" % (user_menu_item,))
+
+    def test_TemplatedModelChoiceField_renders_template_correctly(self):
+        from configurable import UserModel
+        from admin import (TemplatedModelChoiceField,
+            TemplatedModelMultipleChoiceField)
+        
+        class MockQueryset(object):
+            pass
+        
+        for field_class in (TemplatedModelChoiceField,
+            TemplatedModelMultipleChoiceField):
+            
+            field = field_class(queryset=MockQueryset(),
+                template='{{ obj.full_name }},{{ field.context.bonk }},{{context.bonk}}',
+                context={'bonk': 'Bonk!'})
+    
+            fake_object = {'full_name': 'whee'}         
+            self.assertEqual('whee,Bonk!,Bonk!', 
+                field.label_from_instance(fake_object))
+
+            # check that the default template is sensible
+            field = field_class(queryset=MockQueryset(),
+                context={'bonk': 'Bonk!'})
+
+            from django.template import Template
+            self.assertEqual(Template('{{ obj }}'), field.template)
+    
+            fake_object = {'full_name': 'whee'}         
+            self.assertEqual("{&#39;full_name&#39;: &#39;whee&#39;}", 
+                field.label_from_instance(fake_object))
