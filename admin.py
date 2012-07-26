@@ -88,6 +88,61 @@ class AdminWithReadOnly(ModelAdmin):
             'template': 'foo %(obj)s bar'},
     }
     
+    def __init__(self, model, admin_site):
+        """
+        Every model that uses an AdminWithReadOnly needs a view_ permission
+        as well. Rather than forcing users to hard-code this, I hope we
+        can create it here. As the Admin class is instantiated when it's
+        registered, and that usually happens when the file that registers
+        it is read, this should be early enough that we can create fixtures
+        for group permissions, trusting that the permission records already
+        exist by that point.
+        """
+
+        # Copied from django/contrib/management/__init__.py, which
+        # is unfortunately not reusable.
+                 
+        # This will hold the permissions we're looking for as
+        # (content_type, (codename, name))
+    
+        # The codenames and ctypes that should exist.
+        from django.contrib.contenttypes.models import ContentType
+        ctype = ContentType.objects.get_for_model(model)
+        ctypes = set((ctype,))
+
+        from django.contrib.auth.management import _get_permission_codename
+        view_perm = (_get_permission_codename('view', model._meta),
+            u'Can %s %s' % ('view', model._meta.verbose_name_raw))
+        expected_perms = ((ctype, view_perm),)
+
+        # Find all the Permissions that have a context_type for a model we're
+        # looking for.  We don't need to check for codenames since we already have
+        # a list of the ones we're going to create.
+        from django.contrib.auth import models as auth_app
+        found_perms = set(auth_app.Permission.objects.filter(
+            content_type__in=ctypes,
+        ).values_list(
+            "content_type", "codename"
+        ))
+        
+        objs = [
+            auth_app.Permission(codename=codename, name=name, content_type=ctype)
+            for ctype, (codename, name) in expected_perms
+            if (ctype.pk, codename) not in found_perms
+        ]
+        
+        for ctype, (codename, name) in expected_perms:
+            # If the permissions exists, move on.
+            if (ctype.pk, codename) in found_perms:
+                continue
+            p = auth_app.Permission.objects.create(
+                codename=codename,
+                name=name,
+                content_type=ctype
+            )
+
+        super(AdminWithReadOnly, self).__init__(model, admin_site)
+    
     def formfield_for_dbfield(self, db_field, **kwargs):
         """
         Disable the "add related" option on ForeignKey fields, as
