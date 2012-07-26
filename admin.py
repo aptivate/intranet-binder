@@ -84,8 +84,6 @@ class AdminWithReadOnly(ModelAdmin):
         db_fields.URLField: {'widget': widgets.URLFieldWidgetWithLink},
         db_fields.FileField: {'widget': widgets.AdminFileWidgetWithSize},
         db_fields.ImageField: {'widget': widgets.AdminImageWidgetWithThumbnail},
-        db_fields.ForeignKey: {'form_class': TemplatedModelChoiceField,
-            'template': 'foo %(obj)s bar'},
     }
     
     def __init__(self, model, admin_site):
