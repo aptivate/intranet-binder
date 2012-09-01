@@ -76,6 +76,31 @@ class TemplatedModelMultipleChoiceField(TemplateChoiceMixin,
     ModelMultipleChoiceField):
     pass
 
+def defer_save_signal(original_function):
+    from django.db.models import signals
+
+    def wrapper(*args, **kwargs):
+        old_receivers = signals.post_save.receivers
+        signals.post_save.receivers = []
+        
+        captured = []
+        def capture_args_receiver(signal, sender, **named):
+            captured.append({
+                'sender': sender,
+                'kwargs': named
+                })
+        signals.post_save.connect(capture_args_receiver, sender=None)
+        
+        try:
+            return original_function(*args, **kwargs)
+        finally:
+            signals.post_save.receivers = old_receivers
+            for capture in captured:
+                signals.post_save.send(sender=capture['sender'],
+                    **capture['kwargs'])
+    
+    return wrapper
+
 from django.contrib.admin import ModelAdmin
 import widgets
 class AdminWithReadOnly(ModelAdmin):
@@ -248,7 +273,8 @@ class AdminWithReadOnly(ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         request.is_read_only = True
         return super(AdminWithReadOnly, self).changelist_view(request, extra_context)
-
+    
+    @defer_save_signal
     def add_view(self, request, form_url='', extra_context=None):
         """
         In order for get_form() to know whether this is a read-only form,
@@ -260,6 +286,7 @@ class AdminWithReadOnly(ModelAdmin):
         return super(AdminWithReadOnly, self).add_view(request, form_url,
             extra_context)
     
+    @defer_save_signal
     def change_view(self, request, object_id, extra_context=None):
         """
         In order for get_form() to know whether this is a read-only form,
