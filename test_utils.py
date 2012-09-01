@@ -189,7 +189,8 @@ class AptivateEnhancedTestCase(TestCase):
         self.search_conn = connections[DEFAULT_ALIAS]
         # self.search_conn.get_backend().use_file_storage = False
         # self.search_conn.get_backend().setup()
-        self.search_conn.get_backend().delete_index()
+        self.backend = self.search_conn.get_backend()
+        self.backend.delete_index()
         
         settings.MEDIA_ROOT = '/dev/shm/test_uploads'
         import os
