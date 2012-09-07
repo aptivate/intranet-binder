@@ -180,18 +180,8 @@ class AptivateEnhancedTestCase(TestCase):
         This is an internal interface and its use is not recommended.
         """
 
-        from haystack.constants import DEFAULT_ALIAS
-        settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['PATH'] = '/dev/shm/whoosh'
-        settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['SILENTLY_FAIL'] = False
-        # settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['STORAGE'] = 'ram'
+        super(AptivateEnhancedTestCase, self)._pre_setup()
 
-        from haystack import connections
-        self.search_conn = connections[DEFAULT_ALIAS]
-        # self.search_conn.get_backend().use_file_storage = False
-        # self.search_conn.get_backend().setup()
-        self.backend = self.search_conn.get_backend()
-        self.backend.delete_index()
-        
         settings.MEDIA_ROOT = '/dev/shm/test_uploads'
         import os
         if os.path.exists(settings.MEDIA_ROOT):
@@ -199,12 +189,9 @@ class AptivateEnhancedTestCase(TestCase):
             shutil.rmtree(settings.MEDIA_ROOT)
         os.mkdir(settings.MEDIA_ROOT)
         
-        TestCase._pre_setup(self)
-        
     def setUp(self):
         TestCase.setUp(self)
 
-        self.unified_index = self.search_conn.get_unified_index()
         self.client = SuperClient()
         
         settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
@@ -711,3 +698,18 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertIsInstance(queryset, SearchQuerySet)
         
         return table, queryset
+
+    def assertFollowedRedirect(self, response, expected_url,
+        expected_code=200):
+        
+        self.assertFalse(response.status_code == 301 or
+            response.status_code == 302, "redirect was not followed: " +
+            "did you forget to pass follow=True to client.get()? " +
+            "%s" % response.content)
+        expected_uri = response.real_request.build_absolute_uri(expected_url)
+        self.assertSequenceEqual([(expected_uri, 302)],
+            response.redirect_chain,
+            "response should have been a redirect: %s" % response.content)
+        self.assertEquals(expected_code, response.status_code,
+            "final response, after following, should have been a " +
+            "%s, not this: %s" % (expected_code, response.content))
