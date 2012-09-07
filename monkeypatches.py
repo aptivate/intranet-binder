@@ -221,7 +221,7 @@ def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs
 patch(RegexURLResolver, 'reverse', reverse_with_debugging)
 
 from django.contrib.admin.helpers import Fieldline, AdminField, mark_safe
-from binder.admin import CustomAdminReadOnlyField
+from admin import CustomAdminReadOnlyField
 class FieldlineWithCustomReadOnlyField(object):
     """
     Custom replacement for Fieldline that allows fields in the Admin
