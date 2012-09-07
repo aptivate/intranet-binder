@@ -110,7 +110,7 @@ class BinderTest(AptivateEnhancedTestCase):
         table = self.extract_admin_form_field(response, 
             'documents_authored').contents(return_table=True)
         
-        from admin import DocumentsAuthoredTable
+        from widgets import DocumentsAuthoredTable
         self.assertIsInstance(table, DocumentsAuthoredTable)
         self.assertItemsEqual(self.john.documents_authored.all(), 
             table.data.queryset)
