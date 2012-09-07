@@ -10,7 +10,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.db import IntegrityError, transaction, router, models
 from django.utils.encoding import force_unicode
 
-from binder.models import SessionWithIntranetUser
+from models import SessionWithIntranetUser
 
 class SessionMiddlewareWithIntranetUser(SessionMiddleware):
     def process_request(self, request):
