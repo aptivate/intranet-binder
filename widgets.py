@@ -60,7 +60,6 @@ class AdminFileWidgetWithSize(AdminFileWidget):
         from django.utils.safestring import mark_safe
         return mark_safe(template % substitutions)
 
-from easy_thumbnails.files import get_thumbnailer
 class AdminImageWidgetWithThumbnail(AdminFileWidgetWithSize):
     template_with_initial = u'%(thumbnail)s %(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
     readonly_template = u'%(thumbnail)s %(link_to_file)s (%(size)s)'
@@ -95,6 +94,8 @@ class AdminImageWidgetWithThumbnail(AdminFileWidgetWithSize):
     
     def square_thumbnail(self, source):
         from django.db.models.fields.files import FieldFile
+        from easy_thumbnails.files import get_thumbnailer
+        
         if isinstance(source, FieldFile):
             nailer = get_thumbnailer(source) # caches the thumbnail
         else:
