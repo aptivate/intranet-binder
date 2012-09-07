@@ -106,18 +106,11 @@ def queryset_get_with_exception_detail(original_function, self, *args, **kwargs)
     if it fails to find any results.
     """
     
-    clone = self.filter(*args, **kwargs)
-    if self.query.can_filter():
-        clone = clone.order_by()
-    num = len(clone)
-    if num == 1:
-        return clone._result_cache[0]
-    if not num:
-        raise self.model.DoesNotExist(("%s matching query does not exist " +
-            "(query was: %s, %s)") % (self.model._meta.object_name,
-                args, kwargs))
-    raise self.model.MultipleObjectsReturned("get() returned more than one %s -- it returned %s! Lookup parameters were %s"
-            % (self.model._meta.object_name, num, kwargs))
+    try:
+        return original_function(self, *args, **kwargs)
+    except self.model.DoesNotExist as e:
+        raise self.model.DoesNotExist("%s (query was: %s, %s)" %
+            (e, args, kwargs))
 patch(QuerySet, 'get', queryset_get_with_exception_detail)
 
 from django.test.client import RequestFactory, MULTIPART_CONTENT, urlparse, \
