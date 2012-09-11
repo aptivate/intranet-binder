@@ -708,15 +708,15 @@ class AptivateEnhancedTestCase(TestCase):
 
     def assertFollowedRedirect(self, response, expected_url,
         expected_code=200):
-        
-        self.assertFalse(response.status_code == 301 or
-            response.status_code == 302, "redirect was not followed: " +
-            "did you forget to pass follow=True to client.get()? " +
-            "%s" % response.content)
+    	
         expected_uri = response.real_request.build_absolute_uri(expected_url)
         self.assertSequenceEqual([(expected_uri, 302)],
             response.redirect_chain,
-            "response should have been a redirect: %s" % response.content)
+            "there should be a redirect chain: " +
+            ("did you forget to pass follow=True to client.get()? "
+            if response.status_code in (301, 302) else "") +
+            "%s" % response.content)
         self.assertEquals(expected_code, response.status_code,
             "final response, after following, should have been a " +
             "%s, not this: %s" % (expected_code, response.content))
+
