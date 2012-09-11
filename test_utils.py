@@ -171,6 +171,8 @@ class SuperClient(Client):
             return None
 
 class AptivateEnhancedTestCase(TestCase):
+    longMessage = True
+	
     def _pre_setup(self):
         """
         We need to change the Haystack configuration before fixtures are
