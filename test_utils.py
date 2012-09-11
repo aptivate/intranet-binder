@@ -215,6 +215,11 @@ class AptivateEnhancedTestCase(TestCase):
         self.addTypeEqualityFunc(FilterExpression,
             self.assertFilterExpressionEqual)
         
+        import warnings
+        warnings.filterwarnings('error',
+            r"DateTimeField received a naive datetime",
+            RuntimeWarning, r'django\.db\.models\.fields')
+        
     def assertTemplateEqual(self, first, second, msg=None):
         self.assertListEqual(first.nodelist, second.nodelist, msg)
 
