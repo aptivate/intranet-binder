@@ -178,9 +178,13 @@ patch(BaseModelForm, '_post_clean', post_clean_with_simpler_validation)
 from django.forms import BaseForm
 def clean_form_with_field_errors(original_function, self):
     """
-    Allow BaseForm._clean_form to report errors on individual fields
-    as well as the whole form. The standard version only works on the
-    whole form.
+    Allow BaseForm._clean_form to report errors on individual fields,
+    instead of the whole form, like this:
+    
+    raise ValidationError({'password': 'Incorrect password'})
+    
+    The standard version only works on the whole form:
+    https://code.djangoproject.com/ticket/16423
     """
     
     try:
