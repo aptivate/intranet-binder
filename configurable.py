@@ -13,4 +13,8 @@ def import_class(path):
     module = import_module(module_name)
     return getattr(module, class_name)
 
-UserModel = import_class(settings.USER_MODEL)
+try:
+    UserModel = import_class(settings.USER_MODEL)
+except AttributeError:
+    from django.contrib.auth.models import User
+    UserModel = User

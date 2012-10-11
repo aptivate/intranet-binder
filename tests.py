@@ -1,6 +1,6 @@
 import django.db.models
 
-import binder.templatetags.menu as menu_tag
+import templatetags.menu as menu_tag
 
 from django.contrib.auth.models import User, Group
 from django.conf import settings
@@ -11,7 +11,7 @@ from models import IntranetUser, SessionWithIntranetUser
 from session import SessionStore
 from test_utils import AptivateEnhancedTestCase
 
-from binder.views import FrontPageView
+from views import FrontPageView
 
 class BinderTest(AptivateEnhancedTestCase):
     fixtures = ['test_programs', 'test_permissions', 'test_users']

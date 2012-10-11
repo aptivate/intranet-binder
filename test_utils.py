@@ -171,6 +171,8 @@ class SuperClient(Client):
             return None
 
 class AptivateEnhancedTestCase(TestCase):
+    longMessage = True
+	
     def _pre_setup(self):
         """
         We need to change the Haystack configuration before fixtures are
@@ -180,18 +182,8 @@ class AptivateEnhancedTestCase(TestCase):
         This is an internal interface and its use is not recommended.
         """
 
-        from haystack.constants import DEFAULT_ALIAS
-        settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['PATH'] = '/dev/shm/whoosh'
-        settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['SILENTLY_FAIL'] = False
-        # settings.HAYSTACK_CONNECTIONS[DEFAULT_ALIAS]['STORAGE'] = 'ram'
+        super(AptivateEnhancedTestCase, self)._pre_setup()
 
-        from haystack import connections
-        self.search_conn = connections[DEFAULT_ALIAS]
-        # self.search_conn.get_backend().use_file_storage = False
-        # self.search_conn.get_backend().setup()
-        self.backend = self.search_conn.get_backend()
-        self.backend.delete_index()
-        
         settings.MEDIA_ROOT = '/dev/shm/test_uploads'
         import os
         if os.path.exists(settings.MEDIA_ROOT):
@@ -199,12 +191,9 @@ class AptivateEnhancedTestCase(TestCase):
             shutil.rmtree(settings.MEDIA_ROOT)
         os.mkdir(settings.MEDIA_ROOT)
         
-        TestCase._pre_setup(self)
-        
     def setUp(self):
         TestCase.setUp(self)
 
-        self.unified_index = self.search_conn.get_unified_index()
         self.client = SuperClient()
         
         settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
@@ -225,6 +214,11 @@ class AptivateEnhancedTestCase(TestCase):
             self.assertVariableNodeEqual)
         self.addTypeEqualityFunc(FilterExpression,
             self.assertFilterExpressionEqual)
+        
+        import warnings
+        warnings.filterwarnings('error',
+            r"DateTimeField received a naive datetime",
+            RuntimeWarning, r'django\.db\.models\.fields')
         
     def assertTemplateEqual(self, first, second, msg=None):
         self.assertListEqual(first.nodelist, second.nodelist, msg)
@@ -711,3 +705,18 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertIsInstance(queryset, SearchQuerySet)
         
         return table, queryset
+
+    def assertFollowedRedirect(self, response, expected_url,
+        expected_code=200):
+    	
+        expected_uri = response.real_request.build_absolute_uri(expected_url)
+        self.assertSequenceEqual([(expected_uri, 302)],
+            response.redirect_chain,
+            "there should be a redirect chain: " +
+            ("did you forget to pass follow=True to client.get()? "
+            if response.status_code in (301, 302) else "") +
+            "%s" % response.content)
+        self.assertEquals(expected_code, response.status_code,
+            "final response, after following, should have been a " +
+            "%s, not this: %s" % (expected_code, response.content))
+
