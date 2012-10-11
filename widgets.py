@@ -152,6 +152,7 @@ class DocumentsAuthoredTable(tables.Table):
     
     def render_title(self, value, record):
         # print "record = %s (%s)" % (record, dir(record))
+        from django.utils.safestring import mark_safe
         return mark_safe("<a href='%s'>%s</a>" % (record.get_absolute_url(),
             value))
 
