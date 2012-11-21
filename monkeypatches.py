@@ -209,13 +209,34 @@ def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs
     try:
         return original_function(self, lookup_view, *args, **kwargs)
     except NoReverseMatch as e:
+    	# if the function is a callable, it might be a wrapper
+    	# function which isn't identical (comparable) to another
+    	# wrapping of the same function
+    	# import pdb; pdb.set_trace()
+    	
         if lookup_view in self.reverse_dict:
             raise NoReverseMatch(str(e) + (" Possible match: %s" %
                 (self.reverse_dict[lookup_view],)))
         else:
-            raise NoReverseMatch("%s (%s)" % (str(e),
-                pp.pformat(self.reverse_dict)))
+            raise NoReverseMatch(str(e) + "\n" +
+            	("No such key %s in %s\n" % (lookup_view, self.reverse_dict.keys())) +
+            	("Complete reverse map: %s\n" % pp.pformat(self.reverse_dict)))
 patch(RegexURLResolver, 'reverse', reverse_with_debugging)
+if '_reverse_with_prefix' in dir(RegexURLResolver):
+    # support for Django 1.4:
+    patch(RegexURLResolver, '_reverse_with_prefix', reverse_with_debugging)
+
+@after(RegexURLResolver, '_populate')
+def populate_reverse_dict_with_module_function_names(self):
+	from django.utils.translation import get_language
+	language_code = get_language()
+	reverse_dict = self._reverse_dict[language_code]
+	for pattern in reversed(self.url_patterns):
+		if not isinstance(pattern, RegexURLResolver):
+			values = reverse_dict.getlist(pattern.callback)
+			function_name = "%s.%s" % (pattern.callback.__module__,
+				pattern.callback.__name__)
+			reverse_dict.appendlist(function_name, values)
 
 from django.contrib.admin.helpers import Fieldline, AdminField, mark_safe
 class FieldlineWithCustomReadOnlyField(object):
