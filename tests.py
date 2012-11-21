@@ -103,18 +103,7 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertEqual('Logged out', response.context['title'])
         self.assertFalse(previous_user.is_logged_in())
 
-    def test_documents_shown_in_readonly_admin_form(self):
-        self.login()
-        response = self.client.get(reverse('admin:binder_intranetuser_readonly',
-            args=[self.john.id]))
-        table = self.extract_admin_form_field(response, 
-            'documents_authored').contents(return_table=True)
-        
-        from widgets import DocumentsAuthoredTable
-        self.assertIsInstance(table, DocumentsAuthoredTable)
-        self.assertItemsEqual(self.john.documents_authored.all(), 
-            table.data.queryset)
-    
+   
     def test_profile_picture_shown_in_user_admin_and_profile_forms(self):
         self.login()
         response = self.client.get(reverse('admin:binder_intranetuser_readonly',

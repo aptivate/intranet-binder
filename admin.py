@@ -21,8 +21,6 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
-from password import PasswordChangeMixin
-
 # from django.utils.decorators import method_decorator
 # from django.views.decorators.csrf import csrf_protect
 
@@ -535,65 +533,6 @@ class AdminWithReadOnly(ModelAdmin):
         
         return generator
 
-class IntranetUserAdminForm(PasswordChangeMixin, ModelForm):
-    class Meta:
-        model = models.IntranetUser
-
-    password1 = forms.CharField(required=False, label="New password")
-    password2 = forms.CharField(required=False, label="Confirm new password")
-    
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, 
-        initial=None, error_class=ErrorList, label_suffix=':', 
-        empty_permitted=False, instance=None):
-        
-        # print "IntranetUserForm.__init__: data = %s, initial = %s" % (data, initial)
-        super(IntranetUserAdminForm, self).__init__(data=data, files=files,
-            auto_id=auto_id, prefix=prefix, initial=initial,
-            error_class=error_class, label_suffix=label_suffix, 
-            empty_permitted=empty_permitted, instance=instance)
-
-    def clean_groups(self):
-        """
-        Stop the user from removing themselves from the admins group.
-        """
-        
-        new_groups = self.cleaned_data['groups']
-        new_group_ids = [g.id for g in new_groups]
-        user_being_updated = self.object_being_updated
-        
-        # import pdb; pdb.set_trace()
-        
-        if user_being_updated and user_being_updated.id == self.request.user.pk:
-            from models import IntranetGroup
-            old_admin_groups = IntranetGroup.objects.filter(administrators=True,
-                user__pk=user_being_updated.id)
-            
-            for group in old_admin_groups:
-                if group.id not in new_group_ids:
-                    from django.forms import ValidationError
-                    raise ValidationError('You cannot demote yourself ' +
-                        'from the %s group' % group.name)
-
-            # are any of the new groups administrators groups?            
-            will_be_admin = \
-                IntranetGroup.objects.filter(administrators=True).in_bulk(new_group_ids)
-            # treat a dict as a boolean: empty dict is False, non-empty is True  
-            if user_being_updated.is_superuser and not will_be_admin:
-                from django.forms import ValidationError
-                raise ValidationError('You cannot demote yourself from ' +
-                    'being a superuser. You must put yourself in one of ' +
-                    'the Administrators groups: %s' % 
-                    IntranetGroup.objects.filter(administrators=True))
-                
-            will_be_inactive = IntranetGroup.objects.filter(inactive=True,
-                id__in=new_group_ids)
-            if will_be_inactive:
-                from django.forms import ValidationError
-                raise ValidationError('You cannot place yourself ' +
-                    'in the %s group' % will_be_inactive[0].name)
-                        
-        return new_groups
-
 from django.forms.forms import BoundField
 class BoundFieldWithReadOnly(BoundField):
     def readonly(self):
@@ -630,107 +569,6 @@ class ModelFormWithReadOnly(ModelForm):
         except KeyError:
             raise KeyError('Key %r not found in Form' % name)
         return BoundFieldWithReadOnly(self, field, name)
-
-class IntranetUserReadOnlyForm(ModelFormWithReadOnly):
-    """
-    Some ugly stuff to add fields to an admin form:
-    http://groups.google.com/group/django-developers/browse_thread/thread/2bfa60a122016d6d
-    """
-
-    documents_authored = widgets.DocumentsAuthoredField()
-    
-    class Meta:
-        model = models.IntranetUser
-
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, 
-        initial=None, error_class=ErrorList, label_suffix=':', 
-        empty_permitted=False, instance=None):
-        
-        """
-        Add a "method" to the initial data which is used to lookup the
-        value of documents_authored by BoundField.
-        """
-        
-        if initial is None:
-            initial = {}
-        initial['documents_authored'] = lambda: instance.documents_authored.all()
-        initial['is_logged_in'] = lambda: instance.is_logged_in()
-        
-        # print "IntranetUserReadOnlyForm.__init__: data = %s, initial = %s" % (data, initial)
-        super(IntranetUserReadOnlyForm, self).__init__(data, files,
-            auto_id, prefix, initial, error_class, label_suffix,
-            empty_permitted, instance)
-        
-        self["photo"].field.widget.readonly_template = u'%(thumbnail)s'
-
-class IntranetUserAdmin(AdminWithReadOnly):
-    """
-    Some ugly stuff to add fields to an admin form:
-    http://groups.google.com/group/django-developers/browse_thread/thread/2bfa60a122016d6d
-    """
-    
-    # inlines = [AdminDocumentsInline]
-     
-    def __init__(self, model, admin_site):
-        super(IntranetUserAdmin, self).__init__(model, admin_site)
-        
-    list_display = ('username', 'full_name', 'job_title', 'program',
-        models.IntranetUser.get_userlevel)
-
-    exclude = ['password', 'first_name', 'last_name', 'user_permissions',
-        'is_active', 'is_staff', 'is_superuser', 'date_joined']
-
-    def get_form_class(self, request, obj=None, **kwargs):
-        if 'form' not in kwargs:
-            if request.is_read_only:
-                form = IntranetUserReadOnlyForm
-            else:
-                form = IntranetUserAdminForm
-            kwargs['form'] = form
-                
-        result = super(IntranetUserAdmin, self).get_form_class(request, obj=obj,
-            **kwargs)
-        # print 'get_form => %s' % dir(result)
-        # print 'declared_fields => %s' % result.declared_fields
-        # print 'base_fields => %s' % result.base_fields
-        result.base_fields['is_logged_in'] = forms.BooleanField(required=False)
-        # the request will also be poked into the form by our caller,
-        # get_form.
-        
-        return result
-
-    def render_change_form(self, request, context, add=False, change=False,
-        form_url='', obj=None):
-        """
-        This is called right at the end of change_view. It seems like the
-        best place to set fields to read-only.  
-        """
-        
-        adminForm = context['adminform']
-        adminForm.readonly_fields = ('is_logged_in',)
-
-        return super(IntranetUserAdmin, self).render_change_form(request,
-            context, add=add, change=change, form_url=form_url, obj=obj)
-       
-    documents_authored = None
-     
-    """
-    def documents_authored(self):
-        return "bar"
-    """
-
-class ProgramAdmin(admin.ModelAdmin):
-    list_display = ('name', 'program_type')
-    ordering = ('name',)
-
-from django.contrib.auth.admin import GroupAdmin
-class IntranetGroupAdmin(GroupAdmin):
-    pass
-
-admin.site.register(models.IntranetUser, IntranetUserAdmin)
-admin.site.register(models.IntranetGroup, GroupAdmin)
-admin.site.register(models.ProgramType, admin.ModelAdmin)
-admin.site.register(models.Program, ProgramAdmin)
 
 from django.contrib.admin.helpers import AdminReadonlyField
 class CustomAdminReadOnlyField(AdminReadonlyField):
