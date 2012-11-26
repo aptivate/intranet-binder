@@ -77,9 +77,8 @@ class SuperClient(Client):
                 match = re.match('.*, line (\d+), column (\d+)', str(e))
                 if match:
                     lineno = int(match.group(1))
-
-            if not match:            
-                lineno = e.lineno
+                else:
+                    lineno = e.lineno
                 
             lines = xml.splitlines(True)
             if lineno is not None:
@@ -719,4 +718,12 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertEquals(expected_code, response.status_code,
             "final response, after following, should have been a " +
             "%s, not this: %s" % (expected_code, response.content))
+
+    def admin_change_url(self, instance):
+        # Return the URL needed to call the admin change form
+        # for the given instance
+        from django.core.urlresolvers import reverse
+        return reverse('admin:%s_%s_change' %
+            (instance._meta.app_label, instance._meta.module_name),
+            args=[instance.pk])
 
