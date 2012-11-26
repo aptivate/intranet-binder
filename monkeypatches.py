@@ -233,10 +233,11 @@ def populate_reverse_dict_with_module_function_names(self):
 	reverse_dict = self._reverse_dict[language_code]
 	for pattern in reversed(self.url_patterns):
 		if not isinstance(pattern, RegexURLResolver):
-			values = reverse_dict.getlist(pattern.callback)
-			function_name = "%s.%s" % (pattern.callback.__module__,
-				pattern.callback.__name__)
-			reverse_dict.appendlist(function_name, values)
+			# import pdb; pdb.set_trace()
+			for reverse_item in reverse_dict.getlist(pattern.callback):
+				function_name = "%s.%s" % (pattern.callback.__module__,
+					pattern.callback.__name__)
+				reverse_dict.appendlist(function_name, reverse_item)
 
 from django.contrib.admin.helpers import Fieldline, AdminField, mark_safe
 class FieldlineWithCustomReadOnlyField(object):
@@ -428,3 +429,5 @@ def AutoField_to_python_with_improved_debugging(original_function, self, value):
 # print "before patch: IntranetUser.id.to_python = %s" % IntranetUser.id.to_python
 patch(AutoField, 'to_python', AutoField_to_python_with_improved_debugging)
 # print "after patch: IntranetUser.id.to_python = %s" % IntranetUser.id.to_python
+
+
