@@ -86,3 +86,8 @@ class ManyToManyField(related.ManyToManyField):
         # ReverseManyRelatedObjectsDescriptor
         setattr(cls, self.name, PatchedReverseManyRelatedObjectsDescriptor(self))
 
+from django.conf import settings
+if 'south' in settings.INSTALLED_APPS:
+    from south.modelsinspector import add_introspection_rules
+    import re
+    add_introspection_rules([], ["^%s\.ManyToManyField$" % re.escape(ManyToManyField.__module__)])
