@@ -80,6 +80,15 @@ class CustomQuerySet(QuerySet):
         return super(CustomQuerySet, self).values_list(*fields, **kwargs)
 
 class ManyToManyField(related.ManyToManyField):
+    def __init__(self, to, **kwargs):
+    	"""
+    	Undo the annoying non-optional help text added by parent class:
+    	'Hold down "Control", or "Command" on a Mac, to select more than one.'
+    	"""
+    	old_help_text = kwargs.get('help_text', '')
+    	super(ManyToManyField, self).__init__(to, **kwargs)
+    	self.help_text = old_help_text
+
     def contribute_to_class(self, cls, name):
     	super(ManyToManyField, self).contribute_to_class(cls, name)
         # Add the descriptor for the m2m relation, using our patched
