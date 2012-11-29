@@ -101,12 +101,14 @@ def defer_save_signal(original_function):
 
 class AllowOverrideAdminFormFieldByNameMixin(object):
     """
-    Mix this class into your ModelAdmin, BEFORE the ModelAdmin
-    base class, to disable the "add related" option on ForeignKey
-    fields. There appears to be no other way to disable it.
-    
-    This mixin also allows overriding form field settings by
-    field name as well as by class.
+    Allows overriding form field settings by field name instead of
+    by class. For example:
+
+    class MyModelAdmin(ModelAdmin):    
+        formfield_overrides = {
+            'photo': {'widget': widgets.AdminImageWidgetWithThumbnail}
+            db_fields.URLField: {'widget': widgets.URLFieldWidgetWithLink},
+        }
     """
 
     def formfield_for_dbfield(self, db_field, **kwargs):
