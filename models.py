@@ -135,8 +135,7 @@ class IntranetUser(User):
         self.is_staff = True
         return super(IntranetUser, self).save(force_insert, force_update, using)
     
-    @staticmethod
-    def groups_changed(sender, **kwargs):
+    def groups_changed(self):
         """
         If the user is in an administrators group, then they should be made
         a superuser, otherwise they should not be a superuser.
@@ -150,9 +149,8 @@ class IntranetUser(User):
         
         new_superuser_value = False
         new_active_value = True
-        user = kwargs['instance']
             
-        for group in user.groups.all():
+        for group in self.groups.all():
             try:
                 if group.intranetgroup.administrators:
                     new_superuser_value = True
@@ -164,13 +162,13 @@ class IntranetUser(User):
                 # group of administrators
                 pass
         
-        if new_superuser_value != user.is_superuser:
-            user.is_superuser = new_superuser_value
-            user.save()
+        if new_superuser_value != self.is_superuser:
+            self.is_superuser = new_superuser_value
+            self.save()
 
-        if new_active_value != user.is_active:
-            user.is_active = new_active_value
-            user.save()
+        if new_active_value != self.is_active:
+            self.is_active = new_active_value
+            self.save()
     
     def reload(self):
         return self.__class__.objects.get(pk=self.pk)
@@ -180,7 +178,10 @@ from django.dispatch import receiver
 @receiver(m2m_changed, sender=User.groups.through,
     dispatch_uid="User_groups_changed")
 def User_groups_changed(sender, **kwargs):
-    IntranetUser.groups_changed(sender, **kwargs)
+    groups_changed_method = getattr(kwargs['instance'],
+        'groups_changed', None)
+    if groups_changed_method:
+        groups_changed_method()
 
 from django.contrib.sessions.models import Session
 
