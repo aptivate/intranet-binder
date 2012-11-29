@@ -75,7 +75,7 @@ class CustomQuerySet(QuerySet):
 
             from django.db.models.sql.query import Query
             self.query = Query(self.field.rel.through)
-            fields = [self.field.m2m_reverse_target_field_name()]
+            fields = [self.field.m2m_reverse_field_name()]
 
         return super(CustomQuerySet, self).values_list(*fields, **kwargs)
 
