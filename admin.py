@@ -99,9 +99,52 @@ def defer_save_signal(original_function):
     
     return wrapper
 
+class AllowOverrideAdminFormFieldByNameMixin(object):
+    """
+    Mix this class into your ModelAdmin, BEFORE the ModelAdmin
+    base class, to disable the "add related" option on ForeignKey
+    fields. There appears to be no other way to disable it.
+    
+    This mixin also allows overriding form field settings by
+    field name as well as by class.
+    """
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name in self.formfield_overrides:
+            kwargs = dict(self.formfield_overrides[db_field.name], **kwargs)
+
+        return super(AllowOverrideAdminFormFieldByNameMixin,
+            self).formfield_for_dbfield(db_field, **kwargs)
+
+class DisableAddRelatedMixin(object):
+    """
+    Mix this class into your ModelAdmin, BEFORE the ModelAdmin
+    base class, to disable the "add related" option on ForeignKey
+    fields. There appears to be no other way to disable it.
+    """
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        old_formfield = super(DisableAddRelatedMixin,
+            self).formfield_for_dbfield(db_field, **kwargs)
+        
+        if (hasattr(old_formfield, 'widget') and
+            isinstance(old_formfield.widget, widgets.RelatedFieldWidgetWrapper)):
+
+            related_widget = old_formfield.widget
+            wrapped_widget = old_formfield.widget.widget
+            
+            related_widget.can_add_related = False
+            
+            if hasattr(wrapped_widget, 'has_readonly_view'):
+                related_widget.has_readonly_view = wrapped_widget.has_readonly_view
+        
+        return old_formfield
+
 from django.contrib.admin import ModelAdmin
 import widgets
-class AdminWithReadOnly(ModelAdmin):
+class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
+    DisableAddRelatedMixin, ModelAdmin):
+	
     # customise the default display of some form fields:
     formfield_overrides = {
         db_fields.URLField: {'widget': widgets.URLFieldWidgetWithLink},
@@ -163,35 +206,6 @@ class AdminWithReadOnly(ModelAdmin):
             )
 
         super(AdminWithReadOnly, self).__init__(model, admin_site)
-    
-    def formfield_for_dbfield(self, db_field, **kwargs):
-        """
-        Disable the "add related" option on ForeignKey fields, as
-        it will cause difficulties for users if they start adding Programs
-        and DocumentTypes!
-        
-        Allow overriding form field settings by field name as well as
-        by class.
-        """
-
-        if db_field.name in self.formfield_overrides:
-            kwargs = dict(self.formfield_overrides[db_field.name], **kwargs)
-
-        old_formfield = super(AdminWithReadOnly, self).formfield_for_dbfield(
-            db_field, **kwargs)
-        
-        if (hasattr(old_formfield, 'widget') and
-            isinstance(old_formfield.widget, widgets.RelatedFieldWidgetWrapper)):
-
-            related_widget = old_formfield.widget
-            wrapped_widget = old_formfield.widget.widget
-            
-            related_widget.can_add_related = False
-            
-            if hasattr(wrapped_widget, 'has_readonly_view'):
-                related_widget.has_readonly_view = wrapped_widget.has_readonly_view
-        
-        return old_formfield
     
     def get_urls(self):
         """
