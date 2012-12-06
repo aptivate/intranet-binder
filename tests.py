@@ -7,8 +7,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.template import Context
 
-from models import IntranetUser, SessionWithIntranetUser
-from session import SessionStore
+from models import IntranetUser
 from test_utils import AptivateEnhancedTestCase
 
 from views import FrontPageView
@@ -53,28 +52,6 @@ class BinderTest(AptivateEnhancedTestCase):
         if user is None:
             user = self.ringo
         super(BinderTest, self).login(user)
-
-    def test_session_updated_by_access(self):
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(self.client.session, SessionStore)
-        
-        session_record = SessionWithIntranetUser.objects.get(
-            session_key=self.client.session.session_key)
-        self.assertIsNone(session_record.user)
-        old_date = session_record.expire_date
-        
-        # from binder.monkeypatch import before, breakpoint
-        # before(SessionStore, 'save')(breakpoint)
-        
-        from time import sleep
-        sleep(1) # change the current time
-        
-        self.login()
-        session_record = SessionWithIntranetUser.objects.get(
-            session_key=self.client.session.session_key)
-        self.assertEqual(User.objects.get(id=self.ringo.id), session_record.user)
-        self.assertNotEqual(old_date, session_record.expire_date)
 
     def assert_logged_in_status_field(self, user, expected_value):
         response = self.client.get(reverse('admin:binder_intranetuser_change',

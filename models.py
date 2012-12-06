@@ -183,7 +183,3 @@ def User_groups_changed(sender, **kwargs):
     if groups_changed_method:
         groups_changed_method()
 
-from django.contrib.sessions.models import Session
-
-class SessionWithIntranetUser(Session):
-    user = related.ForeignKey(User, blank=True, null=True)

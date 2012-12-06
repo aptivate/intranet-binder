@@ -137,4 +137,132 @@ class AdminYesNoWidget(CheckboxInput):
         else:
             return super(AdminYesNoWidget, self).render(name, value, attrs)
 
+class CheckboxInputWithEmptyValueSupport(CheckboxInput):
+    """
+    Allow writing an empty value attribute, so that our javascript can
+    recognise the All Items checkbox by its value.
+    """
+    
+    def render(self, name, value, attrs=None):
+        final_attrs = self.build_attrs(attrs, type='checkbox', name=name)
+        
+        if self.check_test(value):
+            final_attrs['checked'] = 'checked'
+        
+        if not (value is True or value is False or value is None):
+            # Only add the 'value' attribute if a value is non-empty.
+            from django.utils.encoding import force_text
+            final_attrs['value'] = force_text(value)
+
+        from django.utils.html import format_html
+        from django.forms.util import flatatt
+        return format_html('<input{0} />', flatatt(final_attrs))
+
+from django.forms.widgets import CheckboxSelectMultiple
+class ConfigurableCheckboxSelectMultiple(CheckboxSelectMultiple):
+    """
+    Configurable version of forms.widgets.CheckboxSelectMultiple.
+    
+    You can add HTML attributes for Javascript hooks, or extra choices
+    to the list (that could be used by your Javascript) using the
+    widgets override in ModelForm's Meta class, like this:
+    
+    class OrderForm(forms.ModelForm):
+        class Meta:
+            widgets = {
+                'grades': CheckboxSelectMultipleWithOptions({
+                    'checkbox_attrs': {
+                        'onchange': 'return checkboxes_changed();',
+                    },
+                    'extra_choices': [('', 'All Grades')],
+                })
+            }
+    """
+    
+    checkbox_class = CheckboxInputWithEmptyValueSupport
+
+    def __init__(self, **kwargs):
+        self.checkbox_attrs = kwargs.pop('checkbox_attrs', {})
+        self.extra_choices = kwargs.pop('extra_choices', ())
+        super(ConfigurableCheckboxSelectMultiple, self).__init__(**kwargs)
+        
+    def render_checkbox(self, name, option_value, attrs,
+        str_values):
+        
+        final_attrs = dict(attrs)
+        final_attrs['check_test'] = lambda value: value in str_values
+        final_attrs.update(self.checkbox_attrs)
+        # Allow checkbox_attrs to override check_test
+        check_test = final_attrs.pop('check_test')
+        
+        cb = self.checkbox_class(final_attrs, check_test)
+        
+        from django.utils.encoding import force_text
+        option_value = force_text(option_value)
+        return cb.render(name, option_value)
+
+    list_item_template = ('<li>' +
+        '<label %(label_for)s id="%(checkbox_id)s_label">' +
+        '%(rendered_cb)s %(option_label)s</label></li>')
+        
+    def render_list_item(self, list_item_context):
+        from django.utils.html import format_html
+        return format_html(self.list_item_template % list_item_context)
+        
+    def render_item(self, index, name, option_value, option_label,
+        attrs, str_values):
+
+        from django.utils.html import format_html
+
+        # If an ID attribute was given, add a numeric index as a suffix,
+        # so that the checkboxes don't all have the same ID attribute.
+        has_id = attrs and 'id' in attrs
+        if has_id:
+            attrs = dict(attrs, id='%s_%s' % (attrs['id'], index))
+            label_for = format_html(' for="{0}"', attrs['id'])
+        else:
+            label_for = ''
+        
+        rendered_cb = self.render_checkbox(name, option_value,
+            attrs, str_values)
+
+        from django.utils.encoding import force_text
+        option_label = force_text(option_label)
+        
+        list_item_context = {
+            'checkbox_id': attrs.get('id', None),
+            'label_for': label_for,
+            'rendered_cb': rendered_cb,
+            'name': name,
+            'option_value': option_value,
+            'option_label': option_label,
+        }
+        
+        return self.render_list_item(list_item_context)
+        
+    def render(self, name, value, attrs=None, choices=()):
+        """
+        Copied and pasted from CheckboxSelectMultiple to change one
+        line, adding ability to override attributes for each checkbox.
+        """
+        
+        if value is None: value = []
+
+        final_attrs = self.build_attrs(attrs, name=name)
+        output = ['<ul>']
+        # Normalize to strings
+        from django.utils.encoding import force_text
+        str_values = set([force_text(v) for v in value])
+        
+        from itertools import chain
+        for i, (option_value, option_label) in enumerate(
+            chain(self.extra_choices, self.choices, choices)):
+            
+            output.append(self.render_item(i, name, option_value,
+                option_label, final_attrs, str_values))
+
+        output.append('</ul>')
+
+        from django.utils.safestring import mark_safe
+        return mark_safe('\n'.join(output))
 
