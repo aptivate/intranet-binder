@@ -58,10 +58,19 @@ def after(target_class_or_module, target_method_name):
 
 from django.utils.functional import curry
 
-def patch(class_or_instance, method_name, replacement_function):
-    original_function = getattr(class_or_instance, method_name)
-    setattr(class_or_instance, method_name, 
-        curry(replacement_function, original_function))
+def patch(class_or_instance, method_name, replacement_function=None):
+    if replacement_function is None:
+        # being used as an (unbound) decorator, so we return a function
+        # (the bound decorator) that takes the replacement function as
+        # its only argument, and replaces the original with it.
+        def bound_decorator(replacement_function):
+            patch(class_or_instance, method_name, replacement_function)
+            return replacement_function
+        return bound_decorator
+    else:
+        original_function = getattr(class_or_instance, method_name)
+        setattr(class_or_instance, method_name, 
+            curry(replacement_function, original_function))
 
 def breakpoint(*args, **kwargs):
     import pdb; pdb.set_trace()
