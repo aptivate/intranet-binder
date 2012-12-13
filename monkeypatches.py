@@ -430,4 +430,13 @@ def AutoField_to_python_with_improved_debugging(original_function, self, value):
 patch(AutoField, 'to_python', AutoField_to_python_with_improved_debugging)
 # print "after patch: IntranetUser.id.to_python = %s" % IntranetUser.id.to_python
 
-
+# Show the filename that contained the template error
+import django.template.loader
+@patch(django.template.loader, 'render_to_string')
+def template_loader_render_to_string(original_function, template_name,
+    dictionary=None, context_instance=None):
+    try:
+        return original_function(template_name, dictionary, context_instance)
+    except Exception as e:
+        raise Exception("Failed to render template: %s: %s" %
+            (template_name, e))
