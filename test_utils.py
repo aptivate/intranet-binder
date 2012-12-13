@@ -723,6 +723,11 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertSequenceEqual([],
             getattr(response, 'redirect_chain', []), message)
 
+    def assert_followed_redirect(self, response, expected_url,
+        expected_code=200):
+        return self.assertFollowedRedirect(response, expected_url,
+            expected_code)
+
     def assertFollowedRedirect(self, response, expected_url,
         expected_code=200):
 
