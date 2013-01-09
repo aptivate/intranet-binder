@@ -606,6 +606,12 @@ class AptivateEnhancedTestCase(TestCase):
         """
         
         params = dict()
+        
+        field_names = [bound_field.name for bound_field in form]
+        for name in new_values:
+            if name not in field_names:
+                self.fail("Tried to change value for unknown field %s. Valid "
+                    "field names are: %s" % (name, field_names))
 
         from django.forms.widgets import MultiWidget
         for bound_field in form:
