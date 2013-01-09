@@ -449,17 +449,24 @@ class AptivateEnhancedTestCase(TestCase):
                     else:
                         yield field.field['name'], field
 
-    def extract_form(self, response):
+    def extract_form(self, response, message=None):
         """
         Extract the form inserted into the context by generic
         class-based views. Quite trivial, but makes tests more
         readable.
         """
-        self.assertIn('context', dir(response), "Missing context " +
+        
+        if message is None:
+            prefix = ''
+        else:
+            prefix = '%s: ' % message
+        
+        self.assertIn('context', dir(response), prefix + "Missing context " +
             "in response: %s: %s" % (response, dir(response)))
-        self.assertIsNotNone(response.context, "Empty context in response: " +
-            "%s: %s" % (response, dir(response)))
-        return self.assertInDict('form', response.context)
+        self.assertIsNotNone(response.context, prefix + "Empty context in " +
+            "response: %s: %s" % (response, dir(response)))
+        return self.assertInDict('form', response.context, prefix + 
+            "Missing form in response context")
 
     def extract_admin_form(self, response):
         """
