@@ -822,12 +822,17 @@ class AptivateEnhancedTestCase(TestCase):
                     % error_message_path)
         """
          
-    	attrs = self.assertInDict('redirect_chain', dir(response),
+        message += "The complete response (status %s) was: %s" % \
+            (response.status_code, response.content)
+         
+        redirect_chain = self.assertInDict('redirect_chain', response.__dict__,
     	    message)
-    	
+        
+        self.assert_no_form_with_errors(response)
+        
         expected_uri = response.real_request.build_absolute_uri(expected_url)
         self.assertSequenceEqual([(expected_uri, 302)],
-            response.redirect_chain, message)
+            redirect_chain, message)
         self.assertEquals(expected_code, response.status_code,
             "final response, after following, should have been a " +
             "%s, not this: %s" % (expected_code, response.content))
