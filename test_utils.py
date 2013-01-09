@@ -804,6 +804,10 @@ class AptivateEnhancedTestCase(TestCase):
 
         expected_uri = response.real_request.build_absolute_uri(expected_url)
 
+        self.assertNotIn(int(response.status_code), (301, 302), 
+            "Response was a redirect, but was not followed. " +
+            "Please add follow=True to the request call")
+
         message = "Response was not a redirect to %s: " % expected_uri
         message += "(there should be a redirect chain)\n\n"
         
