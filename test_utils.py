@@ -547,18 +547,34 @@ class AptivateEnhancedTestCase(TestCase):
             for v in values:
                 if v in possible_values:
                     found_values.append(str(v))
+                elif v == '' and isinstance(widget, django.forms.widgets.RadioSelect):
+                    # It's possible not to select any option in a RadioSelect
+                    # widget, although this will probably generate an error
+                    # as the field is probably required, but we need to be
+                    # able to test that behaviour, by passing an empty string.
+                    #
+                    # In that case, we don't add anything to the POST data,
+                    # because a user agent wouldn't either if the user hasn't
+                    # selected any of the radio buttons
+                    pass
                 elif strict:
-                    # Since user agent behavior differs, authors should ensure
+                    # Since user agent behaviour differs, authors should ensure
                     # that each menu includes a default pre-selected OPTION
                     # (i.e. that a list includes a selected value)
-                    raise Exception("List without selected value: " +
-                        "%s = %s (should be one of: %s)" % (name, value, choices))
+                    raise Exception("List without selected value: "
+                        "%s = %s (should be one of: %s)" % 
+                        (name, value, [label for label, value in choices]))
                 else:
                     # don't add anything to the list right now
                     pass
             
             if found_values:
                 return {name: found_values}
+            elif isinstance(widget, django.forms.widgets.RadioSelect):
+                # As above, it's possible not to select any option in a
+                # RadioSelect widget. In that case, we don't add anything
+                # to the POST data.
+                return {}
             else:
                 # most browsers pre-select the first value
                 return {name: str(choices[0][0])}
