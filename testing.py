@@ -25,6 +25,7 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
         if test_labels:
             for label in test_labels:
                 if '.' in label:
+                    from django.test.simple import build_test
                     suite.addTest(build_test(label))
                 else:
                     sub_suite = self.find_tests_and_apps(label)
