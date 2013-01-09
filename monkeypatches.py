@@ -1,9 +1,25 @@
+from django.conf import LazySettings, global_settings
+from django.contrib.admin.helpers import Fieldline, AdminField, mark_safe
+from django.contrib.admin.views.main import ChangeList
+from django.contrib.auth import models as auth_models
+from django.core.urlresolvers import RegexURLResolver, NoReverseMatch
+from django.db.models.fields import AutoField
+from django.db.models.query import QuerySet
+from django.forms import BaseForm
+from django.forms.models import BaseModelForm, InlineForeignKeyField, \
+    construct_instance, NON_FIELD_ERRORS
+from django.template.response import TemplateResponse
+from django.test.client import ClientHandler, RequestFactory, MULTIPART_CONTENT, \
+    urlparse, FakePayload
+from django.test.utils import ContextList
 from monkeypatch import before, after, patch
+from pprint import PrettyPrinter
+import django.template.loader
 
 # import os
 # os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-from django.test.client import ClientHandler
+@patch(ClientHandler, 'get_response') 
 def get_response_with_exception_passthru(original_function, self, request):
     """
     Returns an HttpResponse object for the given HttpRequest. Unlike
@@ -74,7 +90,15 @@ def get_response_with_exception_passthru(original_function, self, request):
     if hasattr(response, 'render') and callable(response.render):
         for middleware_method in self._template_response_middleware:
             response = middleware_method(request, response)
-        response.render()
+        
+        """
+        try:
+            response.render()
+        except Exception as e:
+            if isinstance(response, TemplateResponse):
+                raise Exception("Failed to render template: %s: %s" %
+                    (response.template_name, e))
+        """
 
     # Reset URLconf for this thread on the way out for complete
     # isolation of request.urlconf
@@ -86,7 +110,6 @@ def get_response_with_exception_passthru(original_function, self, request):
     response = self.apply_response_fixes(request, response)
 
     return response
-patch(ClientHandler, 'get_response', get_response_with_exception_passthru) 
 
 def dont_apply_response_fixes(original_function, self, request, response):
     """
