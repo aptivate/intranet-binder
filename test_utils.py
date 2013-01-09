@@ -795,21 +795,28 @@ class AptivateEnhancedTestCase(TestCase):
             getattr(response, 'redirect_chain', []), message)
 
     def assert_followed_redirect(self, response, expected_url,
-        expected_code=200):
+        expected_code=200, error_message_path=None):
         return self.assertFollowedRedirect(response, expected_url,
-            expected_code)
+            expected_code, error_message_path)
 
     def assertFollowedRedirect(self, response, expected_url,
-        expected_code=200):
+        expected_code=200, error_message_path=None):
 
         expected_uri = response.real_request.build_absolute_uri(expected_url)
 
         message = "Response was not a redirect to %s: " % expected_uri
-        message += "(there should be a redirect chain"
-        if response.status_code in (301, 302):
-            message += ": did you forget to pass follow=True to " + \
-                "client.get()?"
-        message += ") " + response.content
+        message += "(there should be a redirect chain)\n\n"
+        
+        """
+        elif error_message_path:
+            error_message_path = './/' + error_message_path
+            error_message = response.parsed.findtext(error_message_path)
+            if error_message:
+                message += ": " + error_message
+            else:
+                message += (", and failed to find an error message matching %s"
+                    % error_message_path)
+        """
          
     	attrs = self.assertInDict('redirect_chain', dir(response),
     	    message)
