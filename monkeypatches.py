@@ -235,10 +235,16 @@ def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs
             raise NoReverseMatch(str(e) + (" Possible match: %s" %
                 (self.reverse_dict[lookup_view],)))
         else:
-            raise NoReverseMatch(str(e) + "\n" +
-            	("No such key %s in %s\n" % (lookup_view, self.reverse_dict.keys())) +
-            	("Complete reverse map: %s\n" % pp.pformat(self.reverse_dict)))
-patch(RegexURLResolver, 'reverse', reverse_with_debugging)
+            if callable(lookup_view):
+                raise NoReverseMatch(str(e) + "\n" +
+                    ("No such key %s in %s\n\n" % (lookup_view,
+                        [k for k in self.reverse_dict.keys() if callable(k)])) +
+                    ("Complete reverse map: %s\n" % pp.pformat(self.reverse_dict)))
+            else:
+                raise NoReverseMatch(str(e) + "\n" +
+                	("No such key %s in %s\n" % (lookup_view,
+                        [k for k in self.reverse_dict.keys() if not callable(k)])) +
+                	("Complete reverse map: %s\n" % pp.pformat(self.reverse_dict)))
 if '_reverse_with_prefix' in dir(RegexURLResolver):
     # support for Django 1.4:
     patch(RegexURLResolver, '_reverse_with_prefix', reverse_with_debugging)
