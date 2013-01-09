@@ -59,6 +59,55 @@ def after(target_class_or_module, target_method_name):
 from django.utils.functional import curry
 
 def patch(class_or_instance, method_name, replacement_function=None):
+    """
+    Replaces one method (or module-level function) with another.
+    The replacement does not have the same spec as the method it replaces:
+    it is passed one additional argument, the original (replaced)
+    function/method, as its first argument. This allows you to easily
+    call the replaced method surrounded by extra code.
+    
+    Example:
+    
+    Use as a simple function:
+    
+    def replacement_foo(original_function, bar, baz):
+        try:
+            return original_function(bar, baz)
+        except Exception as e:
+            frob(e)
+    import my.module.name
+    patch(my.module.name, 'foo', replacement_foo)
+    
+    Use as a decorator:
+    
+    import my.module.name
+    @patch(my.module.name, 'foo')
+    def replacement_foo(original_function, bar, baz):
+        try:
+            return original_function(bar, baz)
+        except Exception as e:
+            frob(e)
+            
+    Replacing methods works exactly the same as functions. Note that the
+    "self" argument comes second in the replacement:
+    
+    from my.module.name import MyClass
+    @patch(MyClass, 'frob')
+    def replacement_frob(original_function, self, bar, baz):
+        try:
+            return original_function(self, bar, baz) + 1
+        except Exception as e:
+            frob(e)
+            
+    The name of the replacement function/method doesn't matter much,
+    but it will appear in stack traces, so you may want to use the name
+    to describe what your replacement adds to the original, or removes
+    from it:
+    
+    * foo_with_exception_handling
+    * bar_without_call_for_last_orders
+    """
+    
     if replacement_function is None:
         # being used as an (unbound) decorator, so we return a function
         # (the bound decorator) that takes the replacement function as
