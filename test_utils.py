@@ -406,17 +406,29 @@ class AptivateEnhancedTestCase(TestCase):
             raise TypeError(("%s (is the second argument really a " +
                 "dictionary? %s)") % (e, container))
     
-    def absolute_url(self, relative_url):
+    def absolute_url_for_site(self, relative_url):
         """
         Convert a relative URL to an absolute URL, using the name of the
-        current site, which is hackish but doesn't require a request object,
-        makes the canonical name configurable, and matches what the absurl
+        current site, which is hackish but doesn't require a request object
+        (so it can be generated in an email, for example), makes the
+        canonical name configurable, and matches what the absurl
         templatetag does.
         """
         
         from django.contrib.sites.models import Site
         return "http://%s%s" % (Site.objects.get_current().domain,
             relative_url)
+
+    def absolute_url_for_request(self, relative_url):
+        """
+        Convert a relative URL to an absolute URL, using the server name
+        hard-coded in django.test.client.RequestFactory, which matches the
+        value used by HttpRequest.build_absolute_uri when called by
+        the test client.
+        """
+        
+        from django.contrib.sites.models import Site
+        return "http://%s%s" % ('testserver', relative_url)
 
     def extract_fields(self, form):
         """
