@@ -185,6 +185,7 @@ def post_clean_with_simpler_validation(original_function, self):
         if isinstance(field, InlineForeignKeyField):
             exclude.append(f_name)
 
+    from django.core.exceptions import ValidationError
     # Clean the model instance's fields.
     try:
         self.instance.full_clean(exclude)
@@ -203,6 +204,7 @@ def clean_form_with_field_errors(original_function, self):
     https://code.djangoproject.com/ticket/16423
     """
     
+    from django.core.exceptions import ValidationError
     try:
         self.cleaned_data = self.clean()
     except ValidationError, e:
@@ -426,12 +428,12 @@ patch(ReverseManyRelatedObjectsDescriptor, '__set__',
     related_objects_set_without_clear)
 """
 
-from django.db.models.fields import AutoField
 def AutoField_to_python_with_improved_debugging(original_function, self, value):
     try:
         return original_function(self, value)
     except (TypeError, ValueError):
-        raise exceptions.ValidationError(self.error_messages['invalid'] +
+        from django.core.exceptions import ValidationError
+        raise ValidationError(self.error_messages['invalid'] +
             ": %s.%s is not allowed to have value '%s'" % 
             (self.model, self.name, value))
 # print "before patch: IntranetUser.id.to_python = %s" % IntranetUser.id.to_python
