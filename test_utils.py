@@ -231,6 +231,10 @@ class AptivateEnhancedTestCase(TestCase):
             r"DateTimeField received a naive datetime",
             RuntimeWarning, r'django\.db\.models\.fields')
         
+        from django.contrib.auth.hashers import make_password
+        self.test_password = 'testpass'
+        self.test_password_encrypted = make_password(self.test_password)
+        
     def assertTemplateEqual(self, first, second, msg=None):
         self.assertListEqual(first.nodelist, second.nodelist, msg)
 
@@ -371,8 +375,18 @@ class AptivateEnhancedTestCase(TestCase):
         filefield.save(fixture_file_name, df, save=False) 
 
     def login(self, user):
-        self.fake_login_request = self.client.login(username=user.username,
-            password='johnpassword')
+        credentials = dict(username=user.username,
+            password=self.test_password)
+        self.assertIn('django.contrib.sessions', settings.INSTALLED_APPS,
+            "This method currently doesn't work if the " +
+            "django.contrib.sessions app is not enabled")
+        user_authenticated = authenticate(**credentials)
+        self.assertIsNotNone(user_authenticated, "authentication failed " +
+            "for %s" % credentials)
+        self.assertTrue(user_authenticated.is_active, "cannot log in as " +
+            "inactive user %s" % user)
+
+        self.fake_login_request = self.client.login(**credentials)
         self.assertTrue(self.fake_login_request, "Login failed")
         self.current_user = user
     
