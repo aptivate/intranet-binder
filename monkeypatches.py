@@ -452,12 +452,106 @@ patch(AutoField, 'to_python', AutoField_to_python_with_improved_debugging)
 # print "after patch: IntranetUser.id.to_python = %s" % IntranetUser.id.to_python
 
 # Show the filename that contained the template error
-import django.template.loader
+"""
 @patch(django.template.loader, 'render_to_string')
-def template_loader_render_to_string(original_function, template_name,
-    dictionary=None, context_instance=None):
+def template_loader_render_to_string_with_debugging(original_function,
+    template_name, dictionary=None, context_instance=None):
+    
     try:
         return original_function(template_name, dictionary, context_instance)
     except Exception as e:
-        raise Exception("Failed to render template: %s: %s" %
-            (template_name, e))
+        import sys
+        raise Exception, "Failed to render template: %s: %s" % \
+            (template_name, e), sys.exc_info()[2]
+"""
+
+# Show the filename that contained the template error
+@patch(django.template.base.Template, 'render')
+def template_render_with_debugging(original_function, self, context):
+    try:
+        return original_function(self, context)
+    except Exception as e:
+        import sys
+        raise Exception, "Failed to render template: %s: %s" % \
+            (self.name, e), sys.exc_info()[2]
+
+@patch(django.template.defaulttags.URLNode, 'render')
+def urlnode_render_with_debugging(original_function, self, context):
+    if not self.view_name.resolve(context):
+        raise Exception(("Failed to resolve %s in context: did you " +
+            "forget to enclose view name in quotes? Context is: %s") %
+            (self.view_name, context))
+        
+    try:
+        return original_function(self, context)
+    except NoReverseMatch as e:
+        raise Exception(("Failed to reverse %s in context %s (did you " +
+            "forget to enclose view name in quotes?): the exception was: %s") %
+            (self.view_name, context, e))
+
+from django.db.models.fields import DateTimeField
+@before(DateTimeField, 'get_prep_value')
+def DateTimeField_get_prep_value_check_for_naive_datetime(self, value):
+    value = self.to_python(value)
+    from django.conf import settings
+    from django.utils import timezone
+    if value is not None and settings.USE_TZ and timezone.is_naive(value):
+        raise ValueError(("DateTimeField %s.%s received a " +
+            "naive datetime (%s) while time zone support is " +
+            "active.") % (self.model.__name__, self.name, value))
+
+from django.template.base import Variable
+@patch(Variable, '__init__')
+def Variable_init_with_underscores_allowed(original_function, self, var):
+    from django.conf import settings
+    # for security reasons, production deployments are not allowed to
+    # render variable names containing underscores anyway.
+    if not settings.DEBUG:
+        return original_function(self, var)
+    
+    self.var = var
+    self.literal = None
+    self.lookups = None
+    self.translate = False
+    self.message_context = None
+
+    try:
+        # First try to treat this variable as a number.
+        #
+        # Note that this could cause an OverflowError here that we're not
+        # catching. Since this should only happen at compile time, that's
+        # probably OK.
+        self.literal = float(var)
+
+        # So it's a float... is it an int? If the original value contained a
+        # dot or an "e" then it was a float, not an int.
+        if '.' not in var and 'e' not in var.lower():
+            self.literal = int(self.literal)
+
+        # "2." is invalid
+        if var.endswith('.'):
+            raise ValueError
+
+    except ValueError:
+        # A ValueError means that the variable isn't a number.
+        if var.startswith('_(') and var.endswith(')'):
+            # The result of the lookup should be translated at rendering
+            # time.
+            self.translate = True
+            var = var[2:-1]
+        # If it's wrapped with quotes (single or double), then
+        # we're also dealing with a literal.
+        try:
+            from django.utils.text import unescape_string_literal
+            self.literal = mark_safe(unescape_string_literal(var))
+        except ValueError:
+            # Otherwise we'll set self.lookups so that resolve() knows we're
+            # dealing with a bonafide variable
+            """
+            if var.find(VARIABLE_ATTRIBUTE_SEPARATOR + '_') > -1 or var[0] == '_':
+                raise TemplateSyntaxError("Variables and attributes may "
+                                          "not begin with underscores: '%s'" %
+                                          var)
+            """
+            from django.template.base import VARIABLE_ATTRIBUTE_SEPARATOR
+            self.lookups = tuple(var.split(VARIABLE_ATTRIBUTE_SEPARATOR))
