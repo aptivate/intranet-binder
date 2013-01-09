@@ -121,7 +121,7 @@ def dont_apply_response_fixes(original_function, self, request, response):
     return response
 # patch(ClientHandler, 'apply_response_fixes', dont_apply_response_fixes)
 
-from django.db.models.query import QuerySet
+@patch(QuerySet, 'get')
 def queryset_get_with_exception_detail(original_function, self, *args, **kwargs):
     """
     Performs the query and returns a single object matching the given
@@ -134,10 +134,8 @@ def queryset_get_with_exception_detail(original_function, self, *args, **kwargs)
     except self.model.DoesNotExist as e:
         raise self.model.DoesNotExist("%s (query was: %s, %s)" %
             (e, args, kwargs))
-patch(QuerySet, 'get', queryset_get_with_exception_detail)
 
-from django.test.client import RequestFactory, MULTIPART_CONTENT, urlparse, \
-    FakePayload
+@patch(RequestFactory, 'post')
 def post_with_string_data_support(original_function, self, path, data={},
     content_type=MULTIPART_CONTENT, **extra):
     """If the data doesn't have an items() method, then it's probably already
@@ -158,13 +156,9 @@ def post_with_string_data_support(original_function, self, path, data={},
         return self.request(**r)
     else:
         return original_function(self, path, data, content_type, **extra)
-patch(RequestFactory, 'post', post_with_string_data_support)
 
-from django.forms.models import BaseModelForm, InlineForeignKeyField, \
-    construct_instance, NON_FIELD_ERRORS
-    
-from django.core.exceptions import ValidationError
 
+@patch(BaseModelForm, '_post_clean')
 def post_clean_with_simpler_validation(original_function, self):
     """
     Until https://code.djangoproject.com/ticket/16423#comment:3 is implemented,
@@ -196,9 +190,8 @@ def post_clean_with_simpler_validation(original_function, self):
         self.instance.full_clean(exclude)
     except ValidationError, e:
         self._update_errors(e.update_error_dict(None))
-patch(BaseModelForm, '_post_clean', post_clean_with_simpler_validation)
 
-from django.forms import BaseForm
+@patch(BaseForm, '_clean_form')
 def clean_form_with_field_errors(original_function, self):
     """
     Allow BaseForm._clean_form to report errors on individual fields,
@@ -218,11 +211,10 @@ def clean_form_with_field_errors(original_function, self):
                 self._errors[field] = self.error_class(error_strings)
         else:
             self._errors[NON_FIELD_ERRORS] = self.error_class(e.messages)
-patch(BaseForm, '_clean_form', clean_form_with_field_errors)
 
-from django.core.urlresolvers import RegexURLResolver, NoReverseMatch
-from pprint import PrettyPrinter
 pp = PrettyPrinter()
+
+@patch(RegexURLResolver, 'reverse')
 def reverse_with_debugging(original_function, self, lookup_view, *args, **kwargs):
     """
     Show all the patterns in the reverse_dict if a reverse lookup fails,
@@ -262,7 +254,6 @@ def populate_reverse_dict_with_module_function_names(self):
 					pattern.callback.__name__)
 				reverse_dict.appendlist(function_name, reverse_item)
 
-from django.contrib.admin.helpers import Fieldline, AdminField, mark_safe
 class FieldlineWithCustomReadOnlyField(object):
     """
     Custom replacement for Fieldline that allows fields in the Admin
@@ -318,7 +309,6 @@ if not hasattr(auth_models.Group, 'natural_key'):
         return (self.name,)
     auth_models.Group.natural_key = group_natural_key
 
-import django.core.serializers.python
 def Deserializer_with_debugging(original_function, object_list, **options):
     from django.core.serializers.python import _get_model
     from django.db import DEFAULT_DB_ALIAS
@@ -375,14 +365,12 @@ def Deserializer_with_debugging(original_function, object_list, **options):
 # patch(django.core.serializers.python, 'Deserializer',
 #     Deserializer_with_debugging)
 
-import django.core.serializers.base
 def save_with_debugging(original_function, self, save_m2m=True, using=None):
     print "%s.save(save_m2m=%s, using=%s)" % (self, save_m2m, using)
     original_function(self, save_m2m, using)
 # patch(django.core.serializers.base.DeserializedObject, 'save',
 #     save_with_debugging)
 
-from django.test.utils import ContextList
 def ContextList_keys(self):
     keys = set()
     for subcontext in self:
@@ -391,8 +379,6 @@ def ContextList_keys(self):
     return keys
 ContextList.keys = ContextList_keys
 
-from django.conf import LazySettings
-from django.conf import global_settings
 def configure_with_debugging(original_function, self,
     default_settings=global_settings, **options):
     print "LazySettings configured: %s, %s" % (default_settings, options)
@@ -408,7 +394,6 @@ def setup_with_debugging(original_function, self):
     return original_function(self)
 # patch(LazySettings, '_setup', setup_with_debugging)
 
-from django.contrib.admin.views.main import ChangeList
 # before(ChangeList, 'get_results')(breakpoint)
 # @before(ChangeList, 'get_results')
 """
