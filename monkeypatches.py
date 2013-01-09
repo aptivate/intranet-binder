@@ -290,7 +290,6 @@ class FieldlineWithCustomReadOnlyField(object):
 
     def errors(self):
         return mark_safe(u'\n'.join([self.form[f].errors.as_ul() for f in self.fields if f not in self.readonly_fields]).strip('\n'))
-import django.contrib.admin.helpers
 django.contrib.admin.helpers.Fieldline = FieldlineWithCustomReadOnlyField
 
 from django.db.backends.creation import BaseDatabaseCreation
@@ -299,7 +298,6 @@ def destroy_test_db_disabled(original_function, self, test_database_name,
     pass
 # patch(BaseDatabaseCreation, 'destroy_test_db', destroy_test_db_disabled)
 
-from django.contrib.auth import models as auth_models
 if not hasattr(auth_models.Group, 'natural_key'):
     """
     Allow group lookups by name in fixtures, until
