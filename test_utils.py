@@ -58,7 +58,18 @@ class SuperClient(Client):
         self.last_method_kwargs = kwargs
         self.last_response = response
         
+        from django.template.response import SimpleTemplateResponse
+        if isinstance(response, SimpleTemplateResponse):
+            response.render()
+            
+        if getattr(response, 'context', None) is None and \
+            getattr(response, 'context_data', None) is not None:
+            response.context = response.context_data
+        
         if not response.content:
+            return response # without setting the parsed attribute
+
+        if response['Content-Type'] != "text/html":
             return response # without setting the parsed attribute
         
         # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
@@ -149,6 +160,7 @@ class SuperClient(Client):
         the current user.
         """
         user = authenticate(**credentials)
+        
         if user and user.is_active \
                 and 'django.contrib.sessions' in settings.INSTALLED_APPS:
             request = self.additional_login(user)
