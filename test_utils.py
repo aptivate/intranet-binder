@@ -400,7 +400,11 @@ class AptivateEnhancedTestCase(TestCase):
         """
         
         self.assertIn(member, container, msg=msg)
-        return container[member]
+        try:
+            return container[member]
+        except TypeError as e:
+            raise TypeError(("%s (is the second argument really a " +
+                "dictionary? %s)") % (e, container))
     
     def absolute_url(self, relative_url):
         """
