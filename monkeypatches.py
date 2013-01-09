@@ -293,10 +293,17 @@ class FieldlineWithCustomReadOnlyField(object):
 django.contrib.admin.helpers.Fieldline = FieldlineWithCustomReadOnlyField
 
 from django.db.backends.creation import BaseDatabaseCreation
+# @patch(BaseDatabaseCreation, 'destroy_test_db')
 def destroy_test_db_disabled(original_function, self, test_database_name,
     verbosity):
-    pass
-# patch(BaseDatabaseCreation, 'destroy_test_db', destroy_test_db_disabled)
+    """
+    Temporarily disable the deletion of a test database, for post-mortem
+    examination.
+    """
+    test_database_name = self.connection.settings_dict['NAME']
+    if verbosity >= 1:
+        print("Not destroying test database for alias '%s' (%s)..." % (
+            self.connection.alias, test_database_name))
 
 if not hasattr(auth_models.Group, 'natural_key'):
     """
