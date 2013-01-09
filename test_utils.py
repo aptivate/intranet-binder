@@ -831,6 +831,15 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertEquals(expected_code, response.status_code,
             "final response, after following, should have been a " +
             "%s, not this: %s" % (expected_code, response.content))
+    
+    def assert_no_form_with_errors(self, response, form_name='form'):
+        if response.status_code == 200:
+            # most likely this was a form validation error, so see if
+            # we can find it and report it.
+            if form_name in response.context:
+                form = response.context[form_name]
+                self.assertDictEqual({}, form.errors, "Found an unexpected "
+                    "validation error in response to form submission")
 
     def admin_change_url(self, instance):
         # Return the URL needed to call the admin change form
