@@ -555,3 +555,29 @@ def Variable_init_with_underscores_allowed(original_function, self, var):
             """
             from django.template.base import VARIABLE_ATTRIBUTE_SEPARATOR
             self.lookups = tuple(var.split(VARIABLE_ATTRIBUTE_SEPARATOR))
+
+# temporary patch for https://code.djangoproject.com/ticket/16955
+from django.db.models.sql.query import Query
+@before(Query, 'add_filter')
+def add_filter_add_value_capture(self, filter_expr, *args, **kwargs):
+    arg, value = filter_expr
+    self._captured_value_for_monkeypatch = value
+@after(Query, 'add_filter')
+def add_filter_remove_value_capture(self, value, *args, **kwargs):
+    delattr(self, '_captured_value_for_monkeypatch')
+@patch(Query, 'setup_joins')
+def setup_joins_with_value_type_check(original_function, self, *args, **kwargs):
+    results = original_function(self, *args, **kwargs)
+    value = getattr(self, '_captured_value_for_monkeypatch', None)
+    from users.models import Price
+    # if results[0].model == Price:
+    #     import pdb; pdb.set_trace()
+    if value:
+        field = results[0]
+        target = results[1]
+        from django.db.models.fields.related import RelatedField
+        from django.db.models import Model
+        if (isinstance(field, RelatedField) and isinstance(value, Model) and 
+            not isinstance(value, target.model)): 
+            raise TypeError, "'%s' instance expected" % target.model._meta.object_name
+    return results         
