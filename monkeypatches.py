@@ -581,3 +581,12 @@ def setup_joins_with_value_type_check(original_function, self, *args, **kwargs):
             not isinstance(value, target.model)): 
             raise TypeError, "'%s' instance expected" % target.model._meta.object_name
     return results         
+
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
+@patch(ReadOnlyPasswordHashField, 'bound_data')
+def bound_data_with_bug_19611_patch(original_function, self, data, initial):
+    """
+    This widget has no fields, so data will always be None, so return
+    the initial value always.
+    """
+    return initial
