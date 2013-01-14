@@ -73,6 +73,10 @@ class SuperClient(Client):
         if mime_type != "text/html":
             return response # without setting the parsed attribute
         
+        if not response.content:
+            raise Exception("Response is HTML but unexpectedly has no "
+                "content: %s: %s" % (response.status_code, response.content))
+        
         # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
         xml = """<?xml version="1.0" encoding="utf-8"?>\n""" + response.content
         parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
