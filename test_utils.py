@@ -101,11 +101,12 @@ class SuperClient(Client):
                 first_line = max(lineno - 5, 1)
                 last_line = min(lineno + 5, len(lines))
                 print xml
-                print "Context (line %s):\n%s" % (lineno,
+                print "Context (line %s):\n>>%s<<" % (lineno,
                     "".join(lines[first_line:last_line]))
             else:
                 print repr(e)
-            raise e  
+            
+            raise
         
         response.parsed = root
         return response
