@@ -69,7 +69,8 @@ class SuperClient(Client):
         if not response.content:
             return response # without setting the parsed attribute
 
-        if response['Content-Type'] != "text/html":
+        mime_type, _, charset = response['Content-Type'].partition(';')
+        if mime_type != "text/html":
             return response # without setting the parsed attribute
         
         # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
