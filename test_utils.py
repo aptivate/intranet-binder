@@ -729,7 +729,7 @@ class AptivateEnhancedTestCase(TestCase):
             "in response context: %s" % response)
 
     def assert_admin_form_with_errors_not_changelist(self, response,
-        expected_field_errors={}, expected_non_field_errors=[]):
+        expected_field_errors=None, expected_non_field_errors=None):
         
         """
         Checks that the response (to a POST to an admin change form) contains
@@ -753,8 +753,8 @@ class AptivateEnhancedTestCase(TestCase):
             "%s: %s" % (response, dir(response)))
         self.assertIn('adminform', response.context)
 
-        if expected_field_errors:
-            self.assertEqual(expected_field_errors,
+        if expected_field_errors is not None:
+            self.assertDictEqual(expected_field_errors,
                 response.context['adminform'].form.errors)
         
         """
@@ -765,15 +765,22 @@ class AptivateEnhancedTestCase(TestCase):
                     self.assertEqual('', field.errors())
         """
         
-        self.assertListEqual(expected_non_field_errors,
-            response.context['adminform'].form.non_field_errors())
+        if expected_non_field_errors is not None:
+            self.assertListEqual(expected_non_field_errors,
+                response.context['adminform'].form.non_field_errors())
+        
         top_error = self.extract_error_message(response)
-        import re
-        self.assertTrue(re.match('Please correct the error(s)? below.',
-            top_error), "Unexpected error message at top of form: %s" %
-            top_error)
-        self.assertNotIn('cl', response.context, "Unexpected changelist " +
-            "in response context: %s" % response)
+
+        if not expected_field_errors and not expected_non_field_errors:
+            self.assertIsNone(top_error)
+        else:            
+            self.assertIsNotNone(top_error)
+            import re
+            self.assertTrue(re.match('Please correct the error(s)? below.',
+                top_error), "Unexpected error message at top of form: %s" %
+                top_error)
+            self.assertNotIn('cl', response.context, "Unexpected changelist " +
+                "in response context: %s" % response)
     
     XHTML_NS = "{http://www.w3.org/1999/xhtml}"
     
