@@ -526,6 +526,7 @@ class AptivateEnhancedTestCase(TestCase):
         
         import django.forms.widgets
         import django.contrib.admin.widgets
+        import django.contrib.auth.forms
         from django.utils.encoding import force_unicode
 
         if isinstance(widget, django.forms.widgets.FileInput):
@@ -604,6 +605,9 @@ class AptivateEnhancedTestCase(TestCase):
             
         elif isinstance(widget, django.forms.widgets.Textarea):
             return {name: force_unicode(value)}
+
+        elif isinstance(widget, django.contrib.auth.forms.ReadOnlyPasswordHashWidget):
+            return {}
                 
         elif getattr(widget, '_format_value', None):
             value = widget._format_value(value)
