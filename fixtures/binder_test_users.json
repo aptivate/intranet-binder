@@ -1,0 +1,110 @@
+[
+    {
+        "pk": 1,
+        "model": "auth.user",
+        "fields": {
+            "username": "john",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$03d63$f1878afbb4d1796249b3619c34e2ed264fdb8ffa",
+            "email": "lennon@beatles.example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "auth.user",
+        "fields": {
+            "username": "ringo",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": true,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$03d63$f1878afbb4d1796249b3619c34e2ed264fdb8ffa",
+            "email": "starr@beatles.example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "auth.user",
+        "fields": {
+            "username": "ken",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$03d63$f1878afbb4d1796249b3619c34e2ed264fdb8ffa",
+            "email": "starr@report.example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "auth.user",
+        "fields": {
+            "username": "smith",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$03d63$f1878afbb4d1796249b3619c34e2ed264fdb8ffa",
+            "email": "john@smithy.example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "auth.user",
+        "fields": {
+            "username": "shearer",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$03d63$f1878afbb4d1796249b3619c34e2ed264fdb8ffa",
+            "email": "alan@football.example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "auth.user",
+        "fields": {
+            "username": "ghastly",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": true,
+            "last_login": "2012-01-24 10:36:09",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$03d63$f1878afbb4d1796249b3619c34e2ed264fdb8ffa",
+            "email": "haunted@example.com",
+            "date_joined": "2012-01-12 11:44:56"
+        }
+    }
+]
