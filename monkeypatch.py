@@ -32,7 +32,9 @@ def get_decorator_or_context_object(class_or_instance, method_name,
     
     In the first case, they return a no-argument decorator which decorates
     a bare replacement function that is not known yet. In the second case, the
-    bare replacement function is already known.
+    bare replacement function is already known, and we are returning a context
+    object that might be discarded, or might be used to undo the patch when
+    the context is exited.
     
     We ourselves are used as a decorator for a wrapper function, which does
     the work of the monkeypatch function. So we return a decorator, which
@@ -223,7 +225,7 @@ def modify_return_value(class_or_instance, method_name,
     to patch, and the name of the method in that class (or function in that
     module) to patch.
     
-    If the thirsd argument (bare_replacement_function) is None, then it
+    If the third argument (bare_replacement_function) is None, then it
     returns a decorator, i.e. a function that can be called with a function
     as its argument (the after_function), which returns a function
     (the wrapper_with_after) that executes the original function/method and
@@ -233,6 +235,23 @@ def modify_return_value(class_or_instance, method_name,
     code after a method or function returns. Your method is called with one
     additional parameter at the beginning, which is the return value of the
     original function; the value that you return becomes the new return value.
+    
+    In the non-decorator case, you can use the returned value as a context
+    object, for temporary patches. This will undo the patch when leaving the
+    context. For example:
+    
+        def after_construction_throw_exception_with_reason_from_context(self,
+            content, *args, **kwargs):
+            
+            raise Exception('403 forbidden')
+
+        from intranet_binder.monkeypatch import modify_return_value
+        from django.http import HttpResponseForbidden
+        
+        with modify_return_value(HttpResponseForbidden, '__init__',
+            after_construction_throw_exception_with_reason_from_context):
+
+            do_something_which_might_construct_a_HttpResponseForbidden()
     """
 
     def wrapper_with_modify(external_modify_function, original_function,
