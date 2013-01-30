@@ -27,7 +27,7 @@ class SuperClient(Client):
         return self.capture_results('get', response, *args, **extra)
 
     def post(self, path, data={}, content_type=MULTIPART_CONTENT,
-             **extra):
+        auto_parse_response_as_xhtml=True, **extra):
         """
         Pickle the request first, in case it contains a StringIO (file upload)
         that can't be read twice.
@@ -49,7 +49,7 @@ class SuperClient(Client):
             raise Exception("POST method responded with None!")
         
         return self.capture_results('post', response, path, data, content_type,
-            **extra)
+            auto_parse_response_as_xhtml=auto_parse_response_as_xhtml, **extra)
     
     def capture_results(self, method_name, response, *args, **kwargs):
         # print("%s.%s(%s)" % (self, method_name, args))
@@ -67,6 +67,9 @@ class SuperClient(Client):
             response.context = response.context_data
         
         if not response.content:
+            return response # without setting the parsed attribute
+        
+        if not kwargs.get('auto_parse_response_as_xhtml', True):
             return response # without setting the parsed attribute
 
         mime_type, _, charset = response['Content-Type'].partition(';')
