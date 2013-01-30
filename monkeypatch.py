@@ -24,29 +24,41 @@ def get_decorator_or_context_object(class_or_instance, method_name,
     This is really confusing, but helps reduce code duplication. You have
     been warned: be prepared for head-spinning.
     
-    A number of monkeypatch functions do the same thing, so it's abstracted
-    out here: they behave differently depending on whether
-    bare_replacement_function is None or not. If it is, they are
-    being used as a decorator for an outside (external) function. If not,
-    they are being used to provide a context object for a "with" statement.
+    A number of monkeypatch helper functions do the same thing, so it's
+    abstracted out here: they behave differently depending on whether
+    external_replacement_function is None or not:
     
-    In the first case, they return a no-argument decorator which decorates
-    a bare replacement function that is not known yet. In the second case, the
-    bare replacement function is already known, and we are returning a context
-    object that might be discarded, or might be used to undo the patch when
-    the context is exited.
+    If external_replacement_function is None, the monkeypatch helper is
+    being used as a decorator for an external replacement function (the
+    actual monkey patch code) which is not yet known, so the helper returns
+    a no-argument decorator which then decorates the monkey patch
+    (the final_decorator).
     
-    We ourselves are used as a decorator for a wrapper function, which does
-    the work of the monkeypatch function. So we return a decorator, which
-    consumes this decoratee (the wrapper function), and returns either a
-    another decorator (this one for the external_replacement_function)
-    or a context object.
+    If external_replacement_function is provided, the monkeypatch helper is
+    being used as a procedure, to permanently replace a function or method
+    with a monkeypatched version that involves the external_replacement_function
+    in some way (before, after or around the original_function), or as a
+    context object for a "with" statement, which undoes the patching when
+    it finishes. We handle that by always returning a context object (a
+    TemporaryPatcher) and if it's discarded (procedural style) then the
+    patch is never undone and is permanent. In the context of a "with"
+    statement, the TemporaryPatcher's __exit__ method undoes the patch when
+    the statement exits.
     
-    The wrapper function receives the undecorated external_replacement_function
-    as its first argument, and the original function as its second argument.
+    The monkeypatch helpers use this function (get_decorator_or_context_object)
+    to decorate their own wrapper_function, which encapsulates what's unique
+    about them: in what order, and with what arguments, they run the
+    external_replacement_function and the original_function.
+    
+    The wrapper function is curried to receive two additional parameters, and
+    patched over the target class method or module function. The additional
+    parameters, which go before the arguments that the original_function is
+    called with, are: (1) the undecorated external_replacement_function and
+    (2) the original_function.
     
     THIS method is only ever used as an argumented decorator, so always returns
-    a raw decorator that takes only one argument, the function to be decorated.
+    a raw_decorator that takes only one argument, the monkeypatch helper's
+    wrapper_function, which is to be decorated.
     """
 
     original_function = getattr(class_or_instance, method_name)
