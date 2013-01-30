@@ -24,15 +24,19 @@ def get_decorator_or_context_object(class_or_instance, method_name,
     This is really confusing, but helps reduce code duplication. You have
     been warned: be prepared for head-spinning.
     
-    A number of monkeypatch helper functions do the same thing, so it's
-    abstracted out here: they behave differently depending on whether
-    external_replacement_function is None or not:
+    A number of monkeypatch helper functions (before, after, patch...)
+    do the same thing, so it's abstracted out here: they behave differently
+    depending on whether external_replacement_function is None or not.
     
     If external_replacement_function is None, the monkeypatch helper is
     being used as a decorator for an external replacement function (the
     actual monkey patch code) which is not yet known, so the helper returns
     a no-argument decorator which then decorates the monkey patch
-    (the final_decorator).
+    (the final_decorator). For example:
+    
+        @after(MyClass, 'do_something')
+        def after_MyClass_do_something_add_monkeys(*args, **kwargs):
+            monkeys++
     
     If external_replacement_function is provided, the monkeypatch helper is
     being used as a procedure, to permanently replace a function or method
@@ -45,6 +49,17 @@ def get_decorator_or_context_object(class_or_instance, method_name,
     statement, the TemporaryPatcher's __exit__ method undoes the patch when
     the statement exits.
     
+    An example of procedural use: 
+    
+        def after_MyClass_do_something_add_monkeys(*args, **kwargs):
+            monkeys++
+        after(MyClass, 'do_something', after_MyClass_do_something_add_monkeys)
+        
+    An example of use in a "with" statement (temporary patching):
+        
+        with after(MyClass, 'do_something', after_MyClass_do_something_add_monkeys):
+            MyClass().do_something()
+
     The monkeypatch helpers use this function (get_decorator_or_context_object)
     to decorate their own wrapper_function, which encapsulates what's unique
     about them: in what order, and with what arguments, they run the
@@ -53,8 +68,8 @@ def get_decorator_or_context_object(class_or_instance, method_name,
     The wrapper function is curried to receive two additional parameters, and
     patched over the target class method or module function. The additional
     parameters, which go before the arguments that the original_function is
-    called with, are: (1) the undecorated external_replacement_function and
-    (2) the original_function.
+    called with, are: (1) the undecorated external_replacement_function; and
+    (2) the original_function, that was replaced by the monkey patch.
     
     THIS method is only ever used as an argumented decorator, so always returns
     a raw_decorator that takes only one argument, the monkeypatch helper's
