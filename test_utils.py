@@ -901,3 +901,38 @@ class AptivateEnhancedTestCase(TestCase):
         
         return response
 
+def throwing_exception_on_HttpResponseForbidden(decoratee_method):
+    """
+    This test decorator makes debugging tests easier by throwing an exception
+    whenever a HttpResponseForbidden response is constructed, instead of
+    returning it as an HttpResponse with status 403.
+    """
+
+    def decorated_method(*args, **kwargs):
+        # Extract the context hidden away by instrumented_test_render
+        extracted_data = {}
+        def after_store_rendered_templates_extract_stored_data(store, *args, 
+            **kwargs):
+            extracted_data.update(store)
+        
+        from intranet_binder.monkeypatch import after
+        import django.test.client
+        
+        with after(django.test.client, 'store_rendered_templates',
+            after_store_rendered_templates_extract_stored_data):
+         
+            def after_construction_throw_exception_with_reason_from_context(self,
+                content, *args, **kwargs):
+                
+                raise Exception(extracted_data['context']['reason'])
+    
+            from intranet_binder.monkeypatch import modify_return_value
+            from django.http import HttpResponseForbidden
+            
+            with modify_return_value(HttpResponseForbidden, '__init__',
+                after_construction_throw_exception_with_reason_from_context):
+
+                return decoratee_method(*args, **kwargs)
+    
+    decorated_method.func_name = decoratee_method.func_name
+    return decorated_method
