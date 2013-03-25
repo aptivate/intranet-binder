@@ -890,6 +890,13 @@ class AptivateEnhancedTestCase(TestCase):
             (instance._meta.app_label, instance._meta.module_name),
             args=[instance.pk])
 
+    def admin_changelist_url(self, model):
+        # Return the URL needed to call the admin changelist page
+        # for the given model
+        from django.core.urlresolvers import reverse
+        return reverse('admin:%s_%s_changelist' %
+            (model._meta.app_label, model._meta.module_name))
+
     def assert_login_required(self, view, message=None):
         from django.core.urlresolvers import reverse
         uri = reverse(view)
