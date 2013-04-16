@@ -21,7 +21,7 @@ class SuperClient(Client):
     def __init__(self, enforce_csrf_checks=False, **defaults):
         super(SuperClient, self).__init__(enforce_csrf_checks, **defaults)
         self.handler = SuperClientHandler(enforce_csrf_checks)
-        
+
     def get(self, *args, **extra):
         response = Client.get(self, *args, **extra)
         return self.capture_results('get', response, *args, **extra)
@@ -31,7 +31,7 @@ class SuperClient(Client):
         """
         Pickle the request first, in case it contains a StringIO (file upload)
         that can't be read twice.
-        
+
         If the data doesn't have an items() method, then it's probably already
         been converted to a string (encoded), and if we try again we'll call
         the nonexistent items() method and fail, so just don't encode it at
@@ -39,51 +39,51 @@ class SuperClient(Client):
         if content_type == MULTIPART_CONTENT and \
             getattr(data, 'items', None) is not None:
             data = encode_multipart(BOUNDARY, data)
-        
+
         # print "session cookie = %s" % (
         # self.cookies[django_settings.SESSION_COOKIE_NAME])
         response = Client.post(self, path, data, content_type,
             **extra)
-        
+
         if response is None:
             raise Exception("POST method responded with None!")
-        
+
         return self.capture_results('post', response, path, data, content_type,
             auto_parse_response_as_xhtml=auto_parse_response_as_xhtml, **extra)
-    
+
     def capture_results(self, method_name, response, *args, **kwargs):
         # print("%s.%s(%s)" % (self, method_name, args))
         self.last_method = method_name
         self.last_method_args = args
         self.last_method_kwargs = kwargs
         self.last_response = response
-        
+
         from django.template.response import SimpleTemplateResponse
         if isinstance(response, SimpleTemplateResponse):
             response.render()
-            
+
         if getattr(response, 'context', None) is None and \
             getattr(response, 'context_data', None) is not None:
             response.context = response.context_data
-        
+
         if not response.content:
             return response # without setting the parsed attribute
-        
+
         if not kwargs.get('auto_parse_response_as_xhtml', True):
             return response # without setting the parsed attribute
 
         mime_type, _, charset = response['Content-Type'].partition(';')
         if mime_type != "text/html":
             return response # without setting the parsed attribute
-        
+
         if not response.content:
             raise Exception("Response is HTML but unexpectedly has no "
                 "content: %s: %s" % (response.status_code, response.content))
-        
+
         # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
         xml = """<?xml version="1.0" encoding="utf-8"?>\n""" + response.content
         parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
-        
+
         try:
             root = etree.fromstring(xml, parser)
         except SyntaxError as e:
@@ -98,7 +98,7 @@ class SuperClient(Client):
                     lineno = int(match.group(1))
                 else:
                     lineno = e.lineno
-                
+
             lines = xml.splitlines(True)
             if lineno is not None:
                 first_line = max(lineno - 5, 1)
@@ -108,24 +108,24 @@ class SuperClient(Client):
                     "".join(lines[first_line:last_line]))
             else:
                 print repr(e)
-            
+
             raise
-        
+
         response.parsed = root
         return response
-        
+
     def retry(self):
         """Try the same request again (e.g. after login)."""
-        # print "retry kwargs = %s" % self.last_method_kwargs 
+        # print "retry kwargs = %s" % self.last_method_kwargs
         return getattr(self, self.last_method)(*self.last_method_args,
             **self.last_method_kwargs)
-    
+
     """
     def request(self, **request):
         print "request = %s" % request
         return super(SuperClient, self).request(**request)
     """
-    
+
     def additional_login(self, user):
         """
         Simulate another user logging in, without changing our current
@@ -139,7 +139,7 @@ class SuperClient(Client):
             request.session = self.session
         else:
             request.session = engine.SessionStore()
-        
+
         request.user = None
         # login() doesn't give our session store a chance to
         # initialise itself for the current request, and django
@@ -154,7 +154,7 @@ class SuperClient(Client):
         # Save the session values.
         request.session.save()
         return request
-        
+
     def login(self, **credentials):
         """
         Sets the Factory to appear as if it has successfully logged into a site.
@@ -169,7 +169,7 @@ class SuperClient(Client):
         the current user.
         """
         user = authenticate(**credentials)
-        
+
         if user and user.is_active \
                 and 'django.contrib.sessions' in settings.INSTALLED_APPS:
             request = self.additional_login(user)
@@ -192,13 +192,13 @@ class SuperClient(Client):
 
 class AptivateEnhancedTestCase(TestCase):
     longMessage = True
-	
+
     def _pre_setup(self):
         """
         We need to change the Haystack configuration before fixtures are
         loaded, otherwise they end up in the developer's index and not the
         temporary test index, which is bad for both developers and tests.
-        
+
         This is an internal interface and its use is not recommended.
         """
 
@@ -210,20 +210,20 @@ class AptivateEnhancedTestCase(TestCase):
             import shutil
             shutil.rmtree(settings.MEDIA_ROOT)
         os.mkdir(settings.MEDIA_ROOT)
-        
+
     def setUp(self):
         TestCase.setUp(self)
 
         self.client = SuperClient()
-        
+
         settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
-        
+
         from django.core.mail.backends.locmem import EmailBackend
         EmailBackend() # create the outbox
-        
+
         from django.core import mail
         self.emails = mail.outbox
-        
+
         from django.template import (Template, NodeList, VariableNode,
             FilterExpression)
         from django.template.debug import DebugVariableNode
@@ -234,16 +234,16 @@ class AptivateEnhancedTestCase(TestCase):
             self.assertVariableNodeEqual)
         self.addTypeEqualityFunc(FilterExpression,
             self.assertFilterExpressionEqual)
-        
+
         import warnings
         warnings.filterwarnings('error',
             r"DateTimeField received a naive datetime",
             RuntimeWarning, r'django\.db\.models\.fields')
-        
+
         from django.contrib.auth.hashers import make_password
         self.test_password = 'testpass'
         self.test_password_encrypted = make_password(self.test_password)
-        
+
     def assertTemplateEqual(self, first, second, msg=None):
         self.assertListEqual(first.nodelist, second.nodelist, msg)
 
@@ -258,7 +258,7 @@ class AptivateEnhancedTestCase(TestCase):
         """
         Argh! Copied and pasted from case.py to change one line: use
         self.assertEquals instead of ==.
-        
+
         An equality assertion for ordered sequences (like lists and tuples).
 
         For the purposes of this function, a valid ordered sequence type is one
@@ -309,7 +309,7 @@ class AptivateEnhancedTestCase(TestCase):
                 except self.failureException:
                     # will be handled below
                     pass
-            
+
             seq1_repr = repr(seq1)
             seq2_repr = repr(seq2)
             if len(seq1_repr) > 30:
@@ -378,10 +378,10 @@ class AptivateEnhancedTestCase(TestCase):
         import os.path
         path = os.path.join(os.path.dirname(module.__file__), 'fixtures',
             fixture_file_name)
-        
+
         from django.core.files import File as DjangoFile
         df = DjangoFile(open(path))
-        filefield.save(fixture_file_name, df, save=False) 
+        filefield.save(fixture_file_name, df, save=False)
 
     def login(self, user):
         credentials = dict(username=user.username,
@@ -398,23 +398,23 @@ class AptivateEnhancedTestCase(TestCase):
         self.fake_login_request = self.client.login(**credentials)
         self.assertTrue(self.fake_login_request, "Login failed")
         self.current_user = user
-    
+
     def assertInDict(self, member, container, msg=None):
         """
         Returns the member if the assertion passes.
-        
+
         Makes sense that if you're asserting that a dictionary has a
         member, you might want to use that member! Just saying. If not,
         you can always throw it away.
         """
-        
+
         self.assertIn(member, container, msg=msg)
         try:
             return container[member]
         except TypeError as e:
             raise TypeError(("%s (is the second argument really a " +
                 "dictionary? %s)") % (e, container))
-    
+
     def absolute_url_for_site(self, relative_url):
         """
         Convert a relative URL to an absolute URL, using the name of the
@@ -423,7 +423,7 @@ class AptivateEnhancedTestCase(TestCase):
         canonical name configurable, and matches what the absurl
         templatetag does.
         """
-        
+
         from django.contrib.sites.models import Site
         return "http://%s%s" % (Site.objects.get_current().domain,
             relative_url)
@@ -435,7 +435,7 @@ class AptivateEnhancedTestCase(TestCase):
         value used by HttpRequest.build_absolute_uri when called by
         the test client.
         """
-        
+
         from django.contrib.sites.models import Site
         return "http://%s%s" % ('testserver', relative_url)
 
@@ -443,13 +443,13 @@ class AptivateEnhancedTestCase(TestCase):
         """
         Extract a list of fields names and values from a ModelForm.
         Typical usage:
-        
+
         fields = dict(extract_fields(my_form))
         self.assertEquals("Foo", fields['bar'].verbose_name)
         """
-        
+
         from django.forms.forms import BoundField
-        
+
         for fieldset in form:
             for line in fieldset:
                 for field in line:
@@ -464,17 +464,17 @@ class AptivateEnhancedTestCase(TestCase):
         class-based views. Quite trivial, but makes tests more
         readable.
         """
-        
+
         if message is None:
             prefix = ''
         else:
             prefix = '%s: ' % message
-        
+
         self.assertIn('context', dir(response), prefix + "Missing context " +
             "in response: %s: %s" % (response, dir(response)))
         self.assertIsNotNone(response.context, prefix + "Empty context in " +
             "response: %s: %s" % (response, dir(response)))
-        return self.assertInDict('form', response.context, prefix + 
+        return self.assertInDict('form', response.context, prefix +
             "Missing form in response context")
 
     def extract_admin_form(self, response):
@@ -491,30 +491,30 @@ class AptivateEnhancedTestCase(TestCase):
 
     def extract_admin_form_as_normal_form(self, response):
         form = self.extract_admin_form(response)
-        
+
         flat_form = []
         for fieldset in form:
             for line in fieldset:
                 for field in line:
                     flat_form.append(field.field)
-                    
+
         return flat_form
-        
+
     def extract_admin_form_fields(self, response):
         """
         Extract all fields from a form generated by the admin interface.
         """
-        
+
         return dict(self.extract_fields(self.extract_admin_form(response)))
 
     def extract_admin_form_field(self, response, field_name):
         """
         Extract a named field from a form generated by the admin interface.
         """
-        
+
         fields = self.extract_admin_form_fields(response)
         return self.assertInDict(field_name, fields)
-    
+
     def value_to_datadict(self, widget, name, value, strict=True):
         """
         There's a value_from_datadict method in each django.forms.widgets widget,
@@ -522,11 +522,11 @@ class AptivateEnhancedTestCase(TestCase):
         test_utils.AptivateEnhancedTestCase.update_form_values really wants to
         convert form instance values (Python data) into a set of parameters
         suitable for passing to client.post().
-        
+
         This needs to be implemented for each subclass of Widget that doesn't
         just convert its value to a string.
         """
-        
+
         import django.forms.widgets
         import django.contrib.admin.widgets
         import django.contrib.auth.forms
@@ -540,7 +540,7 @@ class AptivateEnhancedTestCase(TestCase):
             else:
                 # empty file upload, don't set any parameters
                 return {}
-        
+
         elif isinstance(widget, django.forms.widgets.MultiWidget):
             values = {}
             for index, subwidget in enumerate(widget.widgets):
@@ -548,7 +548,7 @@ class AptivateEnhancedTestCase(TestCase):
                 values.update(self.value_to_datadict(subwidget, param_name,
                     value, strict))
             return values
-        
+
         elif isinstance(widget, django.forms.widgets.CheckboxInput):
             if widget.check_test(value):
                 return {name: '1'}
@@ -561,11 +561,11 @@ class AptivateEnhancedTestCase(TestCase):
                 values = list(value)
             else:
                 values = [value]
-            
+
             choices = list(widget.choices)
             possible_values = [v for v, label in choices]
             found_values = []
-            
+
             for v in values:
                 if v in possible_values:
                     found_values.append(str(v))
@@ -584,12 +584,12 @@ class AptivateEnhancedTestCase(TestCase):
                     # that each menu includes a default pre-selected OPTION
                     # (i.e. that a list includes a selected value)
                     raise Exception("List without selected value: "
-                        "%s = %s (should be one of: %s)" % 
+                        "%s = %s (should be one of: %s)" %
                         (name, value, [label for label, value in choices]))
                 else:
                     # don't add anything to the list right now
                     pass
-            
+
             if found_values:
                 return {name: found_values}
             elif isinstance(widget, django.forms.widgets.RadioSelect):
@@ -604,18 +604,18 @@ class AptivateEnhancedTestCase(TestCase):
             else:
                 # most browsers pre-select the first value
                 return {name: str(choices[0][0])}
-        
+
         elif isinstance(widget, django.contrib.admin.widgets.RelatedFieldWidgetWrapper):
             subwidget = widget.widget
             subwidget.choices = list(widget.choices)
             return self.value_to_datadict(subwidget, name, value, strict)
-            
+
         elif isinstance(widget, django.forms.widgets.Textarea):
             return {name: force_unicode(value)}
 
         elif isinstance(widget, django.contrib.auth.forms.ReadOnlyPasswordHashWidget):
             return {}
-                
+
         elif getattr(widget, '_format_value', None):
             value = widget._format_value(value)
             if value is None:
@@ -633,9 +633,9 @@ class AptivateEnhancedTestCase(TestCase):
         which represent a file upload where no file is provided, and
         return a values dict suitable for self.client.post().
         """
-        
+
         params = dict()
-        
+
         field_names = [bound_field.name for bound_field in form]
         for name in new_values:
             if name not in field_names:
@@ -648,15 +648,15 @@ class AptivateEnhancedTestCase(TestCase):
             # which is where the widget lives
             form_field = bound_field.field
             widget = form_field.widget
-            
-            # defaults to the current value bound into the form: 
+
+            # defaults to the current value bound into the form:
             value = new_values.get(bound_field.name, bound_field.value())
-            
+
             # be strict with values passed by tests to this function,
             # and lax with values that were already in the record/form
             new_params = self.value_to_datadict(widget, bound_field.name, value,
                 strict=(bound_field.name in new_values))
-            
+
             params.update(new_params)
 
         return params
@@ -668,19 +668,19 @@ class AptivateEnhancedTestCase(TestCase):
         if error_message is None:
             error_message = response.parsed.findtext('.//' +
                 self.xhtml('p') + '[@class="errornote"]')
-        
+
         if error_message is not None:
             # extract individual field errors, if any
             more_error_messages = response.parsed.findtext('.//' +
                 self.xhtml('td') + '[@class="errors-cell"]')
             if more_error_messages is not None:
                 error_message += more_error_messages
-            
+
             # trim and canonicalise whitespace
             error_message = error_message.strip()
             import re
             error_message = re.sub('\\s+', ' ', error_message)
-            
+
         # return message or None
         return error_message
 
@@ -690,15 +690,15 @@ class AptivateEnhancedTestCase(TestCase):
         a changelist, which means that the update was successful; and not
         an adminform with errors, which would mean that the update was
         unsuccessful.
-        
+
         If not, the update unexpectedly failed, so we extract and report the
         error messages from the form in a helpful way.
         """
-        
+
         self.assertTrue(hasattr(response, 'context'), "Missing context " +
             "in response: %s: %s" % (response, dir(response)))
-        from django.http import HttpResponseRedirect 
-        self.assertNotIsInstance(response, HttpResponseRedirect, 
+        from django.http import HttpResponseRedirect
+        self.assertNotIsInstance(response, HttpResponseRedirect,
             "Response is a redirect: did you forget to add follow=True " +
             "to the request?")
         self.assertIsNotNone(response.context, "Empty context in response: " +
@@ -708,7 +708,7 @@ class AptivateEnhancedTestCase(TestCase):
             # if there are global errors, this will fail, and show us all
             # the errors when it does.
             self.assertDictEqual({}, response.context['adminform'].form.errors)
-            
+
             # if there are field errors, this will fail, and show us the
             # the field name and the errors
             for fieldset in response.context['adminform']:
@@ -733,23 +733,23 @@ class AptivateEnhancedTestCase(TestCase):
 
     def assert_admin_form_with_errors_not_changelist(self, response,
         expected_field_errors=None, expected_non_field_errors=None):
-        
+
         """
         Checks that the response (to a POST to an admin change form) contains
         an adminform with errors, which means that the update was
         unsuccessful, and not a changelist, which would mean that the update
         was successful when it should not have been.
-        
+
         Also check that the errors on the adminform are exactly what we
         expected.
         """
-        
-        from django.http import HttpResponseRedirect 
+
+        from django.http import HttpResponseRedirect
         self.assertNotIsInstance(response, HttpResponseRedirect,
             ('Unexpected redirect to %s: did the POST succeed when it ' +
-            'should have failed? Expected errors were: %s') % 
+            'should have failed? Expected errors were: %s') %
             (response.get('location', None), expected_field_errors))
-        
+
         self.assertTrue(hasattr(response, 'context'), "Missing context " +
             "in response: %s: %s" % (response, dir(response)))
         self.assertIsNotNone(response.context, "Empty context in response: " +
@@ -759,7 +759,7 @@ class AptivateEnhancedTestCase(TestCase):
         if expected_field_errors is not None:
             self.assertDictEqual(expected_field_errors,
                 response.context['adminform'].form.errors)
-        
+
         """
         for fieldset in response.context['adminform']:
             for line in fieldset:
@@ -767,16 +767,16 @@ class AptivateEnhancedTestCase(TestCase):
                 for field in line:
                     self.assertEqual('', field.errors())
         """
-        
+
         if expected_non_field_errors is not None:
             self.assertListEqual(expected_non_field_errors,
                 response.context['adminform'].form.non_field_errors())
-        
+
         top_error = self.extract_error_message(response)
 
         if not expected_field_errors and not expected_non_field_errors:
             self.assertIsNone(top_error)
-        else:            
+        else:
             self.assertIsNotNone(top_error)
             import re
             self.assertTrue(re.match('Please correct the error(s)? below.',
@@ -784,15 +784,15 @@ class AptivateEnhancedTestCase(TestCase):
                 top_error)
             self.assertNotIn('cl', response.context, "Unexpected changelist " +
                 "in response context: %s" % response)
-    
+
     XHTML_NS = "{http://www.w3.org/1999/xhtml}"
-    
+
     def xhtml(self, name):
-        return "%s%s" % (self.XHTML_NS, name) 
+        return "%s%s" % (self.XHTML_NS, name)
 
     def get_page_element(self, xpath, required=True):
         self.assertTrue(self.client.last_response.content,
-            "Last response was empty or not parsed: %s" % 
+            "Last response was empty or not parsed: %s" %
             self.client.last_response)
         element = self.client.last_response.parsed.find(xpath)
         self.assertIsNotNone(element, "Failed to find %s in page: %s" %
@@ -812,20 +812,20 @@ class AptivateEnhancedTestCase(TestCase):
         columns = table.base_columns.items()
         self.assertNotIn('score', [c[0] for c in columns],
             "Score column is disabled on request")
-        
+
         data = table.data
         from django_tables2.tables import TableData
         self.assertIsInstance(data, TableData)
-        
+
         queryset = data.queryset
         from haystack.query import SearchQuerySet
         self.assertIsInstance(queryset, SearchQuerySet)
-        
+
         return table, queryset
 
     def assert_not_redirected(self, response, message=None):
-        from django.http import HttpResponseRedirect 
-        self.assertNotIsInstance(response, HttpResponseRedirect,   
+        from django.http import HttpResponseRedirect
+        self.assertNotIsInstance(response, HttpResponseRedirect,
             message)
         self.assertSequenceEqual([],
             getattr(response, 'redirect_chain', []), message)
@@ -840,13 +840,13 @@ class AptivateEnhancedTestCase(TestCase):
 
         expected_uri = response.real_request.build_absolute_uri(expected_url)
 
-        self.assertNotIn(int(response.status_code), (301, 302), 
+        self.assertNotIn(int(response.status_code), (301, 302),
             "Response was a redirect, but was not followed. " +
             "Please add follow=True to the request call")
 
         message = "Response was not a redirect to %s: " % expected_uri
         message += "(there should be a redirect chain)\n\n"
-        
+
         """
         elif error_message_path:
             error_message_path = './/' + error_message_path
@@ -857,22 +857,22 @@ class AptivateEnhancedTestCase(TestCase):
                 message += (", and failed to find an error message matching %s"
                     % error_message_path)
         """
-         
+
         message += "The complete response (status %s) was: %s" % \
             (response.status_code, response.content)
-         
+
         redirect_chain = self.assertInDict('redirect_chain', response.__dict__,
     	    message)
-        
+
         self.assert_no_form_with_errors(response)
-        
+
         expected_uri = response.real_request.build_absolute_uri(expected_url)
         self.assertSequenceEqual([(expected_uri, 302)],
             redirect_chain, message)
         self.assertEquals(expected_code, response.status_code,
             "final response, after following, should have been a " +
             "%s, not this: %s" % (expected_code, response.content))
-    
+
     def assert_no_form_with_errors(self, response, form_name='form'):
         if response.status_code == 200:
             # most likely this was a form validation error, so see if
@@ -901,11 +901,11 @@ class AptivateEnhancedTestCase(TestCase):
         from django.core.urlresolvers import reverse
         uri = reverse(view)
         response = self.client.get(uri)
-        
+
         from django.conf import settings
         login_url = settings.LOGIN_URL + "?next=" + uri
         self.assertRedirects(response, login_url)
-        
+
         return response
 
 def throwing_exception_on_HttpResponseForbidden(decoratee_method):
@@ -918,28 +918,28 @@ def throwing_exception_on_HttpResponseForbidden(decoratee_method):
     def decorated_method(*args, **kwargs):
         # Extract the context hidden away by instrumented_test_render
         extracted_data = {}
-        def after_store_rendered_templates_extract_stored_data(store, *args, 
+        def after_store_rendered_templates_extract_stored_data(store, *args,
             **kwargs):
             extracted_data.update(store)
-        
-        from intranet_binder.monkeypatch import after
+
+        from aptivate_monkeypatch.monkeypatch import after
         import django.test.client
-        
+
         with after(django.test.client, 'store_rendered_templates',
             after_store_rendered_templates_extract_stored_data):
-         
+
             def after_construction_throw_exception_with_reason_from_context(self,
                 content, *args, **kwargs):
-                
+
                 raise Exception(extracted_data['context']['reason'])
-    
-            from intranet_binder.monkeypatch import modify_return_value
+
+            from aptivate_monkeypatch.monkeypatch import modify_return_value
             from django.http import HttpResponseForbidden
-            
+
             with modify_return_value(HttpResponseForbidden, '__init__',
                 after_construction_throw_exception_with_reason_from_context):
 
                 return decoratee_method(*args, **kwargs)
-    
+
     decorated_method.func_name = decoratee_method.func_name
     return decorated_method
