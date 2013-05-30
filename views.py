@@ -10,3 +10,7 @@ from django.views.generic.base import TemplateView
 
 class FrontPageView(TemplateView):
     template_name = 'front_page.dhtml'
+
+def add_plain_view(clazz):
+    clazz.plain_view = staticmethod(clazz.as_view())
+    return clazz
