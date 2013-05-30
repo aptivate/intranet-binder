@@ -873,6 +873,40 @@ class AptivateEnhancedTestCase(TestCase):
             "final response, after following, should have been a " +
             "%s, not this: %s" % (expected_code, response.content))
 
+    def assertRedirectedWithoutFollowing(self, response, expected_url,
+        status_code=302, host=None, msg_prefix=''):
+        """Asserts that a response redirected to a specific URL. Unlike
+        :method:assertRedirects, this one will work for external links,
+        since it doesn't try to follow them.
+        """
+        if msg_prefix:
+            msg_prefix += ": "
+
+        self.assertFalse(hasattr(response, 'redirect_chain'),
+            "A redirect was followed, it's too late to call "
+            "assertRedirectedWithoutFollowing")
+        
+        # Not a followed redirect
+        self.assertEqual(response.status_code, status_code,
+            msg_prefix + "Response didn't redirect as expected: Response"
+            " code was %d (expected %d)" %
+                (response.status_code, status_code))
+
+        try:
+            from urllib.parse import urlsplit, urlunsplit
+        except ImportError:     # Python 2
+            from urlparse import urlsplit, urlunsplit
+
+        e_scheme, e_netloc, e_path, e_query, e_fragment = urlsplit(expected_url)
+        if not (e_scheme or e_netloc):
+            expected_url = urlunsplit(('http', host or 'testserver', e_path,
+                e_query, e_fragment))
+
+        actual_url = response['Location']
+        self.assertEqual(actual_url, expected_url,
+            msg_prefix + "Response redirected to '%s', expected '%s'" %
+                (actual_url, expected_url))
+
     def assert_no_form_with_errors(self, response, form_name='form'):
         if response.status_code == 200:
             # most likely this was a form validation error, so see if
