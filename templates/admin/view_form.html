@@ -68,7 +68,7 @@
 			{% endif %}
 			{% if show_edit_link %}
 				<input type="submit" value="Edit" 
-					onclick="location.assign('{% url change_view object_id %}'); return false;" />
+					onclick="location.assign('{% url 'change_view' object_id %}'); return false;" />
 			{% endif %}
 			{% if show_delete_link %}
 				<input type="button" value="{% trans "Delete" %}"
