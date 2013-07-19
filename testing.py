@@ -16,7 +16,11 @@ Install it by adding the following line to your settings.py:
 import unittest
 
 from django.test.simple import DjangoTestSuiteRunner
-from django.test.testcases import OutputChecker
+
+try:
+    from django.test.testcases import OutputChecker, DocTestRunner
+except ImportError as e:
+    from django.test.simple import OutputChecker, DocTestRunner
 
 class SmartTestSuiteRunner(DjangoTestSuiteRunner):
     def build_suite(self, test_labels, extra_tests=None, **kwargs):
@@ -40,7 +44,11 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
             for test in extra_tests:
                 suite.addTest(test)
 
-        from django.test.simple import reorder_suite
+        try:
+            from django.test.simple import reorder_suite
+        except ImportError:
+            from django.test.runner import reorder_suite
+            
         from unittest import TestCase
         return reorder_suite(suite, (TestCase,))
 
@@ -84,7 +92,7 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
                 try:
                     module = sub_module
                     from django.test import _doctest as doctest
-                    from django.test.testcases import DocTestRunner
+                    
                     doctests = doctest.DocTestSuite(module,
                                                     checker=self.doctestOutputChecker,
                                                     runner=DocTestRunner)
