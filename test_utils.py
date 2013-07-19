@@ -408,7 +408,13 @@ class AptivateEnhancedTestCase(TestCase):
         you can always throw it away.
         """
 
+        if isinstance(container, dict):
+            self.assertIsInstance(member, str, "Dict keys must be strings")
+        elif isinstance(container, str):
+            self.assertIsInstance(member, str, "Only strings can be in other strings")
+
         self.assertIn(member, container, msg=msg)
+
         try:
             return container[member]
         except TypeError as e:
@@ -457,6 +463,18 @@ class AptivateEnhancedTestCase(TestCase):
                         yield field.field.name, field
                     else:
                         yield field.field['name'], field
+
+    def extract_field(self, form, field_name):
+        for fieldset in form:
+            for line in fieldset:
+                for field in line:
+                    if isinstance(field.field, BoundField):
+                        if field.field.name == field_name:
+                            return field
+                    else:
+                        if field.field['name'] == field_name:
+                            return field
+        raise KeyError('Field not found in form: %s' % field_name)
 
     def extract_form(self, response, message=None):
         """
