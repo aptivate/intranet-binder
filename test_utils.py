@@ -1,5 +1,6 @@
 import difflib
 import pprint
+import datetime
 
 from lxml import etree
 
@@ -10,6 +11,7 @@ from django.test import TestCase
 from django.test.client import Client, ClientHandler, encode_multipart, \
     MULTIPART_CONTENT, BOUNDARY
 from django.utils.importlib import import_module
+from django.utils import timezone
 
 class SuperClientHandler(ClientHandler):
     def get_response(self, request):
@@ -80,7 +82,7 @@ class SuperClient(Client):
             raise Exception("Response is HTML but unexpectedly has no "
                 "content: %s: %s" % (response.status_code, response.content))
 
-        # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
+       # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
         xml = """<?xml version="1.0" encoding="utf-8"?>\n""" + response.content
         parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
 
@@ -412,7 +414,6 @@ class AptivateEnhancedTestCase(TestCase):
             self.assertIsInstance(member, str, "Dict keys must be strings")
         elif isinstance(container, str):
             self.assertIsInstance(member, str, "Only strings can be in other strings")
-
         self.assertIn(member, container, msg=msg)
 
         try:
@@ -751,7 +752,6 @@ class AptivateEnhancedTestCase(TestCase):
 
     def assert_admin_form_with_errors_not_changelist(self, response,
         expected_field_errors=None, expected_non_field_errors=None):
-
         """
         Checks that the response (to a POST to an admin change form) contains
         an adminform with errors, which means that the update was
@@ -789,7 +789,6 @@ class AptivateEnhancedTestCase(TestCase):
         if expected_non_field_errors is not None:
             self.assertListEqual(expected_non_field_errors,
                 response.context['adminform'].form.non_field_errors())
-
         top_error = self.extract_error_message(response)
 
         if not expected_field_errors and not expected_non_field_errors:
@@ -903,7 +902,7 @@ class AptivateEnhancedTestCase(TestCase):
         self.assertFalse(hasattr(response, 'redirect_chain'),
             "A redirect was followed, it's too late to call "
             "assertRedirectedWithoutFollowing")
-        
+
         # Not a followed redirect
         self.assertEqual(response.status_code, status_code,
             msg_prefix + "Response didn't redirect as expected: Response"
@@ -995,3 +994,25 @@ def throwing_exception_on_HttpResponseForbidden(decoratee_method):
 
     decorated_method.func_name = decoratee_method.func_name
     return decorated_method
+
+
+class MonotonicTimeMixin(object):
+
+    def setUp(self):
+        # Ensure value of "now" always increases by amount sufficient
+        # to show up as a change, even if db resolution for datetime
+        # is one second.
+        # timezone.now is used within save()
+        def now_iter(start):
+            t = start
+            while True:
+                t += datetime.timedelta(minutes=1)
+                yield t
+        import minimock
+        minimock.mock("timezone.now", returns_iter=now_iter(timezone.now()), tracker=None)
+        super(MonotonicTimeMixin, self).setUp()
+
+    def tearDown(self):
+        import minimock
+        minimock.restore()
+        super(MonotonicTimeMixin, self).tearDown()
