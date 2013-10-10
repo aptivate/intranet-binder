@@ -38,9 +38,6 @@ class SuperClient(Client):
         been converted to a string (encoded), and if we try again we'll call
         the nonexistent items() method and fail, so just don't encode it at
         all."""
-        if content_type == MULTIPART_CONTENT and \
-            getattr(data, 'items', None) is not None:
-            data = encode_multipart(BOUNDARY, data)
 
         # print "session cookie = %s" % (
         # self.cookies[django_settings.SESSION_COOKIE_NAME])
