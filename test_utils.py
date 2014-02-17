@@ -7,6 +7,7 @@ from lxml import etree
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.http import HttpRequest
+from django.http.request import QueryDict
 from django.test import TestCase
 from django.test.client import Client, ClientHandler, encode_multipart, \
     MULTIPART_CONTENT, BOUNDARY
@@ -448,6 +449,8 @@ class FormUtilsMixin(object):
 
         if post_data is None:
             post_data = {}
+        else:
+            post_data = dict(post_data)
 
         fields_to_delete = []
 
@@ -475,7 +478,15 @@ class FormUtilsMixin(object):
 
                 post_data[field.name] = value
 
-        new_form = form.__class__(post_data)
+        query_dict = QueryDict('', mutable=True).copy()
+        for key, value in post_data.iteritems():
+            if hasattr(value, '__iter__'):
+                query_dict.setlist(key, value)
+            else:
+                query_dict.setlist(key, [value])
+        query_dict._mutable = False
+
+        new_form = form.__class__(query_dict)
 
         for field_name in fields_to_delete:
             del new_form.fields[field_name]
