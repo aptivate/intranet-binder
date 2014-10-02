@@ -2,7 +2,7 @@ from haystack import indexes, fields
 
 import configurable
 
-class UserIndex(indexes.RealTimeSearchIndex, indexes.Indexable):
+class UserIndex(indexes.SearchIndex, indexes.Indexable):
     text = fields.CharField(model_attr='full_name', document=True)
     title = fields.CharField(model_attr='full_name')
     job_title = fields.CharField(model_attr='job_title')
