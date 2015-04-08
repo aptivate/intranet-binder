@@ -16,6 +16,9 @@ from django.utils import timezone
 
 class SuperClientHandler(ClientHandler):
     def get_response(self, request):
+        request.body # access it now to stop later access from blowing up
+        # after cms.utils.get_language_from_request() forces discarding it.
+
         response = super(SuperClientHandler, self).get_response(request)
         response.real_request = request
         return response
