@@ -460,6 +460,8 @@ class FormUtilsMixin(object):
 
                 if isinstance(widget, django.forms.widgets.Select):
                     choices = list(widget.choices)
+                    if not choices:
+                        choices = list(field.field.choices)
                     possible_values = [v for v, label in choices]
                     if isinstance(widget, django.forms.widgets.SelectMultiple):
                         value = [possible_values[0]]
