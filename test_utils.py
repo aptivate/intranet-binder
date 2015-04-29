@@ -286,6 +286,26 @@ class FormUtilsMixin(object):
         fields = self.extract_admin_form_fields(response)
         return self.assertInDict(field_name, fields)
 
+    def extract_values_from_choices(self, choices):
+        # allow for the optgroup syntax
+        possible_values = []
+        for option_value, option_label in choices:
+            if isinstance(option_label, (list, tuple)):
+                possible_values += [v for v, label in option_label]
+            else:
+                possible_values.append(option_value)
+        return possible_values
+
+    def extract_labels_from_choices(self, choices):
+        # allow for the optgroup syntax
+        possible_values = []
+        for option_value, option_label in choices:
+            if isinstance(option_label, (list, tuple)):
+                possible_values += [label for v, label in option_label]
+            else:
+                possible_values.append(option_label)
+        return possible_values
+
     def value_to_datadict(self, widget, name, value, strict=True):
         """
         There's a value_from_datadict method in each django.forms.widgets widget,
@@ -339,7 +359,7 @@ class FormUtilsMixin(object):
                 values = [value]
 
             choices = list(widget.choices)
-            possible_values = [v for v, label in choices]
+            possible_values = self.extract_values_from_choices(choices)
             found_values = []
 
             for v in values:
@@ -361,7 +381,7 @@ class FormUtilsMixin(object):
                     # (i.e. that a list includes a selected value)
                     raise Exception("List without selected value: "
                         "%s = %s (should be one of: %s)" %
-                        (name, value, [label for label, value in choices]))
+                        (name, value, self.extract_labels_from_choices(choices)))
                 else:
                     # don't add anything to the list right now
                     pass
