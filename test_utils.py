@@ -14,14 +14,16 @@ from django.test.client import Client, ClientHandler, encode_multipart, \
 from django.utils.importlib import import_module
 from django.utils import timezone
 
+
 class SuperClientHandler(ClientHandler):
     def get_response(self, request):
-        request.body # access it now to stop later access from blowing up
+        request.body  # access it now to stop later access from blowing up
         # after cms.utils.get_language_from_request() forces discarding it.
 
         response = super(SuperClientHandler, self).get_response(request)
         response.real_request = request
         return response
+
 
 class SuperClient(Client):
     def __init__(self, enforce_csrf_checks=False, **defaults):
@@ -33,7 +35,7 @@ class SuperClient(Client):
         return self.capture_results('get', response, *args, **extra)
 
     def post(self, path, data={}, content_type=MULTIPART_CONTENT,
-        auto_parse_response_as_xhtml=True, **extra):
+            auto_parse_response_as_xhtml=True, **extra):
         """
         Pickle the request first, in case it contains a StringIO (file upload)
         that can't be read twice.
@@ -43,7 +45,7 @@ class SuperClient(Client):
         the nonexistent items() method and fail, so just don't encode it at
         all."""
         if content_type == MULTIPART_CONTENT and \
-            getattr(data, 'items', None) is not None:
+                getattr(data, 'items', None) is not None:
             data = encode_multipart(BOUNDARY, data)
 
         # print "session cookie = %s" % (
@@ -69,24 +71,24 @@ class SuperClient(Client):
             response.render()
 
         if getattr(response, 'context', None) is None and \
-            getattr(response, 'context_data', None) is not None:
+                getattr(response, 'context_data', None) is not None:
             response.context = response.context_data
 
         if not response.content:
-            return response # without setting the parsed attribute
+            return response  # without setting the parsed attribute
 
         if not kwargs.get('auto_parse_response_as_xhtml', True):
-            return response # without setting the parsed attribute
+            return response  # without setting the parsed attribute
 
         mime_type, _, charset = response['Content-Type'].partition(';')
         if mime_type != "text/html":
-            return response # without setting the parsed attribute
+            return response  # without setting the parsed attribute
 
         if not response.content:
             raise Exception("Response is HTML but unexpectedly has no "
                 "content: %s: %s" % (response.status_code, response.content))
 
-       # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
+        # http://stackoverflow.com/questions/5170252/whats-the-best-way-to-handle-nbsp-like-entities-in-xml-documents-with-lxml
         xml = """<?xml version="1.0" encoding="utf-8"?>\n""" + response.content
         parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
 
@@ -196,8 +198,11 @@ class SuperClient(Client):
         else:
             return None
 
+from django.forms.forms import BoundField
+
 
 class FormUtilsMixin(object):
+
     def extract_fields(self, form):
         """
         Extract a list of fields names and values from a ModelForm.
@@ -206,9 +211,6 @@ class FormUtilsMixin(object):
         fields = dict(extract_fields(my_form))
         self.assertEquals("Foo", fields['bar'].verbose_name)
         """
-
-        from django.forms.forms import BoundField
-
         for fieldset in form:
             for line in fieldset:
                 for field in line:
@@ -325,7 +327,7 @@ class FormUtilsMixin(object):
 
         try:
             from captcha.widgets import ReCaptcha
-        except ImportError as e:
+        except ImportError:
             ReCaptcha = None
 
         if isinstance(widget, django.forms.widgets.FileInput):
@@ -442,7 +444,6 @@ class FormUtilsMixin(object):
                 self.fail("Tried to change value for unknown field %s. Valid "
                     "field names are: %s" % (name, field_names))
 
-        from django.forms.widgets import MultiWidget
         for bound_field in form:
             # fields[k] returns a BoundField, not a django.forms.fields.Field
             # which is where the widget lives
@@ -467,7 +468,7 @@ class FormUtilsMixin(object):
 
         try:
             from captcha.widgets import ReCaptcha
-        except ImportError as e:
+        except ImportError:
             ReCaptcha = None
 
         if post_data is None:
@@ -525,7 +526,6 @@ class FormUtilsMixin(object):
         """
 
         return new_form, post_data
-
 
     def extract_error_message(self, response):
         error_message = response.parsed.findtext('.//' +
@@ -598,7 +598,7 @@ class FormUtilsMixin(object):
             "in response context: %s" % response)
 
     def assert_admin_form_with_errors_not_changelist(self, response,
-        expected_field_errors=None, expected_non_field_errors=None):
+            expected_field_errors=None, expected_non_field_errors=None):
         """
         Checks that the response (to a POST to an admin change form) contains
         an adminform with errors, which means that the update was
@@ -679,13 +679,12 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
         settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
         from django.core.mail.backends.locmem import EmailBackend
-        EmailBackend() # create the outbox
+        EmailBackend()  # create the outbox
 
         from django.core import mail
         self.emails = mail.outbox
 
-        from django.template import (Template, NodeList, VariableNode,
-            FilterExpression)
+        from django.template import Template, VariableNode, FilterExpression
         from django.template.debug import DebugVariableNode
         self.addTypeEqualityFunc(Template, self.assertTemplateEqual)
         # self.addTypeEqualityFunc(NodeList, self.assertListEqual)
@@ -733,6 +732,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
                     differences.
             max_diff: Maximum size off the diff, larger diffs are not shown
         """
+        from unittest.util import safe_repr
         if seq_type is not None:
             seq_type_name = seq_type.__name__
             if not isinstance(seq1, seq_type):
@@ -800,7 +800,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
                     break
             else:
                 if (len1 == len2 and seq_type is None and
-                    type(seq1) != type(seq2)):
+                        type(seq1) != type(seq2)):
                     # The sequences are the same, but have differing types.
                     return
 
@@ -900,8 +900,6 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
         value used by HttpRequest.build_absolute_uri when called by
         the test client.
         """
-
-        from django.contrib.sites.models import Site
         return "http://%s%s" % ('testserver', relative_url)
 
     XHTML_NS = "{http://www.w3.org/1999/xhtml}"
@@ -921,7 +919,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
     def assert_search_results_table_get_queryset(self, response):
         try:
             table = response.context['results_table']
-        except KeyError as e:
+        except KeyError:
             self.fail("No table in response context: %s" %
                 response.context.keys())
 
@@ -950,12 +948,12 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
             getattr(response, 'redirect_chain', []), message)
 
     def assert_followed_redirect(self, response, expected_url,
-        expected_code=200, error_message_path=None):
+            expected_code=200, error_message_path=None):
         return self.assertFollowedRedirect(response, expected_url,
             expected_code, error_message_path)
 
     def assertFollowedRedirect(self, response, expected_url,
-        expected_code=200, error_message_path=None):
+            expected_code=200, error_message_path=None):
 
         expected_uri = response.real_request.build_absolute_uri(expected_url)
 
@@ -980,8 +978,8 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
         message += "The complete response (status %s) was: %s" % \
             (response.status_code, response.content)
 
-        redirect_chain = self.assertInDict('redirect_chain', response.__dict__,
-    	    message)
+        redirect_chain = self.assertInDict(
+            'redirect_chain', response.__dict__, message)
 
         self.assert_no_form_with_errors(response)
 
@@ -993,7 +991,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
             "%s, not this: %s" % (expected_code, response.content))
 
     def assertRedirectedWithoutFollowing(self, response, expected_url,
-        status_code=302, host=None, msg_prefix=''):
+            status_code=302, host=None, msg_prefix=''):
         """Asserts that a response redirected to a specific URL. Unlike
         :method:assertRedirects, this one will work for external links,
         since it doesn't try to follow them.
@@ -1061,6 +1059,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
 
         return response
 
+
 def throwing_exception_on_HttpResponseForbidden(decoratee_method):
     """
     This test decorator makes debugging tests easier by throwing an exception
@@ -1071,18 +1070,19 @@ def throwing_exception_on_HttpResponseForbidden(decoratee_method):
     def decorated_method(*args, **kwargs):
         # Extract the context hidden away by instrumented_test_render
         extracted_data = {}
+
         def after_store_rendered_templates_extract_stored_data(store, *args,
-            **kwargs):
+                **kwargs):
             extracted_data.update(store)
 
         from aptivate_monkeypatch.monkeypatch import after
         import django.test.client
 
         with after(django.test.client, 'store_rendered_templates',
-            after_store_rendered_templates_extract_stored_data):
+                after_store_rendered_templates_extract_stored_data):
 
             def after_construction_throw_exception_with_reason_from_context(self,
-                content, *args, **kwargs):
+                    content, *args, **kwargs):
 
                 raise Exception(extracted_data['context']['reason'])
 
@@ -1090,7 +1090,7 @@ def throwing_exception_on_HttpResponseForbidden(decoratee_method):
             from django.http import HttpResponseForbidden
 
             with modify_return_value(HttpResponseForbidden, '__init__',
-                after_construction_throw_exception_with_reason_from_context):
+                    after_construction_throw_exception_with_reason_from_context):
 
                 return decoratee_method(*args, **kwargs)
 
