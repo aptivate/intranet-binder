@@ -42,21 +42,21 @@ class TemplateChoiceMixin(object):
     rendered text without creating a custom subclass, by passing a
     "template" parameter.
     """
-     
+
     template = u'{{ obj }}'
-    context = {} 
-    
+    context = {}
+
     def __init__(self, template=None, context=None, *args, **kwargs):
         from django.template import Template
         self.template = Template(template if template else self.template)
         self.context = context if context else self.context
         super(TemplateChoiceMixin, self).__init__(*args, **kwargs)
-        
+
     def label_from_instance(self, obj):
         """
         This method is used to convert objects into strings; it's used to
         generate the labels for the choices presented by this object.
-        
+
         TemplatedModelChoiceField renders the template provided in the
         "template" kwarg to the constructor, passing "obj" (the current list item)
         and "context" (self.context) as the dictionary to interpolate with,
@@ -80,7 +80,7 @@ def defer_save_signal(original_function):
     def wrapper(*args, **kwargs):
         old_receivers = signals.post_save.receivers
         signals.post_save.receivers = []
-        
+
         captured = []
         def capture_args_receiver(signal, sender, **named):
             captured.append({
@@ -88,7 +88,7 @@ def defer_save_signal(original_function):
                 'kwargs': named
                 })
         signals.post_save.connect(capture_args_receiver, sender=None)
-        
+
         try:
             return original_function(*args, **kwargs)
         finally:
@@ -96,7 +96,7 @@ def defer_save_signal(original_function):
             for capture in captured:
                 signals.post_save.send(sender=capture['sender'],
                     **capture['kwargs'])
-    
+
     return wrapper
 
 class AllowOverrideAdminFormFieldByNameMixin(object):
@@ -104,7 +104,7 @@ class AllowOverrideAdminFormFieldByNameMixin(object):
     Allows overriding form field settings by field name instead of
     by class. For example:
 
-    class MyModelAdmin(ModelAdmin):    
+    class MyModelAdmin(ModelAdmin):
         formfield_overrides = {
             'photo': {'widget': widgets.AdminImageWidgetWithThumbnail}
             db_fields.URLField: {'widget': widgets.URLFieldWidgetWithLink},
@@ -128,32 +128,32 @@ class DisableAddRelatedMixin(object):
     def formfield_for_dbfield(self, db_field, **kwargs):
         old_formfield = super(DisableAddRelatedMixin,
             self).formfield_for_dbfield(db_field, **kwargs)
-        
+
         if (hasattr(old_formfield, 'widget') and
             isinstance(old_formfield.widget, widgets.RelatedFieldWidgetWrapper)):
 
             related_widget = old_formfield.widget
             wrapped_widget = old_formfield.widget.widget
-            
+
             related_widget.can_add_related = False
-            
+
             if hasattr(wrapped_widget, 'has_readonly_view'):
                 related_widget.has_readonly_view = wrapped_widget.has_readonly_view
-        
+
         return old_formfield
 
 from django.contrib.admin import ModelAdmin
 import widgets
 class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
     DisableAddRelatedMixin, ModelAdmin):
-	
+
     # customise the default display of some form fields:
     formfield_overrides = {
         db_fields.URLField: {'widget': widgets.URLFieldWidgetWithLink},
         db_fields.FileField: {'widget': widgets.AdminFileWidgetWithSize},
         db_fields.ImageField: {'widget': widgets.AdminImageWidgetWithThumbnail},
     }
-    
+
     def __init__(self, model, admin_site):
         """
         Every model that uses an AdminWithReadOnly needs a view_ permission
@@ -167,10 +167,10 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
 
         # Copied from django/contrib/management/__init__.py, which
         # is unfortunately not reusable.
-                 
+
         # This will hold the permissions we're looking for as
         # (content_type, (codename, name))
-    
+
         # The codenames and ctypes that should exist.
         from django.contrib.contenttypes.models import ContentType
         ctype = ContentType.objects.get_for_model(model)
@@ -190,13 +190,13 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         ).values_list(
             "content_type", "codename"
         ))
-        
+
         objs = [
             auth_app.Permission(codename=codename, name=name, content_type=ctype)
             for ctype, (codename, name) in expected_perms
             if (ctype.pk, codename) not in found_perms
         ]
-        
+
         for ctype, (codename, name) in expected_perms:
             # If the permissions exists, move on.
             if (ctype.pk, codename) in found_perms:
@@ -208,7 +208,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             )
 
         super(AdminWithReadOnly, self).__init__(model, admin_site)
-    
+
     def get_urls(self):
         """
         Add a URL pattern for a read-only view to the default admin views.
@@ -222,7 +222,10 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
                 return self.admin_site.admin_view(view)(*args, **kwargs)
             return update_wrapper(wrapper, view)
 
-        from django.conf.urls.defaults import url
+        try:
+            from django.conf.urls import url
+        except ImportError:
+            from django.conf.urls.defaults import url
         from django.utils.encoding import force_unicode
 
         opts = self.model._meta
@@ -257,7 +260,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
 
     def get_view_permission(self):
         return 'view_%s' % self.opts.object_name.lower()
-    
+
     def has_view_permission(self, request, obj=None):
         """
         Returns True if the given request has permission to view an object.
@@ -265,7 +268,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         """
         opts = self.opts
         return request.user.has_perm(opts.app_label + '.' + self.get_view_permission())
-    
+
     def has_change_permission(self, request, obj=None):
         """
         Returns True if the given request has permission to change the given
@@ -273,21 +276,21 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         as a read-only view, by pretending to have "change" permissions when
         the access is read-only.
         """
-        
+
         if (request.user.is_authenticated() and
             getattr(request, 'is_read_only', False) and
             request.method == 'GET' and
             self.has_view_permission(request, obj)):
-            
+
             return True
 
         return super(AdminWithReadOnly, self).has_change_permission(request,
             obj)
-    
+
     def changelist_view(self, request, extra_context=None):
         request.is_read_only = True
         return super(AdminWithReadOnly, self).changelist_view(request, extra_context)
-    
+
     @defer_save_signal
     def add_view(self, request, form_url='', extra_context=None):
         """
@@ -299,7 +302,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             'read_only' in extra_context)
         return super(AdminWithReadOnly, self).add_view(request, form_url,
             extra_context)
-    
+
     @defer_save_signal
     def change_view(self, request, object_id, extra_context=None):
         """
@@ -311,7 +314,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             'read_only' in extra_context)
         return super(AdminWithReadOnly, self).change_view(request, object_id,
             extra_context)
-    
+
     def render_change_form(self, request, context, add=False, change=False,
         form_url='', obj=None):
         """
@@ -320,12 +323,12 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         view, as the fields have already been calculated and are available
         to us. We shouldn't really muck about with the internals of the
         AdminForm object, but this seems like the cleanest (least invasive)
-        solution to making a completely read-only admin form.  
+        solution to making a completely read-only admin form.
         """
 
         opts = self.model._meta
         app_label = opts.app_label
-        
+
         if 'read_only' in context:
             adminForm = context['adminform']
             readonly = []
@@ -336,37 +339,37 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
                 "admin/%s/%s/view_form.html" % (app_label, opts.object_name.lower()),
                 "admin/%s/view_form.html" % app_label,
                 "admin/view_form.html"
-            ] 
+            ]
         else:
             form_template = None
 
         context['referrer'] = request.META.get('HTTP_REFERER')
 
         is_popup = context['is_popup']
-        
+
         # We call the superclass' has_change_permission method here,
-        # because if we're looking at a read-only view, our own 
+        # because if we're looking at a read-only view, our own
         # has_change_permission always returns True, even if the user
         # doesn't really have the change permission, and here we want to
         # know if they really do have that permission.
-        has_change_permission = (obj is not None and 
+        has_change_permission = (obj is not None and
             super(AdminWithReadOnly, self).has_change_permission(request, obj))
-        has_delete_permission = (obj is not None and 
+        has_delete_permission = (obj is not None and
             self.has_delete_permission(request, obj))
 
         context['show_edit_link'] = (not is_popup and has_change_permission)
         context['show_delete_link'] = (not is_popup and has_delete_permission)
-        
+
         """
         return django.contrib.admin.ModelAdmin.render_change_form(self,
             request, context, add=add, change=change, form_url=form_url,
             obj=obj)
         """
-        
+
         # What follows was copied from super.render_change_form and
         # adapted to allow passing in a custom template by making
         # form_template an optional method parameter, defaulting to None
-        
+
         from django.contrib.contenttypes.models import ContentType
 
         ordered_objects = opts.get_ordered_objects()
@@ -376,7 +379,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             'has_add_permission': self.has_add_permission(request),
             'has_change_permission': has_change_permission,
             'has_delete_permission': has_delete_permission,
-            'has_file_field': True, # FIXME - this should check if form or formsets have a FileField,
+            'has_file_field': True,  # FIXME - this should check if form or formsets have a FileField,
             'has_absolute_url': hasattr(self.model, 'get_absolute_url'),
             'ordered_objects': ordered_objects,
             'form_url': mark_safe(form_url),
@@ -386,21 +389,21 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             'save_on_top': self.save_on_top,
             'root_path': self.admin_site.root_path,
         })
-        
+
         if form_template is None:
             if add and self.add_form_template is not None:
                 form_template = self.add_form_template
             else:
                 form_template = self.change_form_template
-        
+
         context_instance = template.RequestContext(request, current_app=self.admin_site.name)
         return render_to_response(form_template or [
             "admin/%s/%s/change_form.html" % (app_label, opts.object_name.lower()),
             "admin/%s/change_form.html" % app_label,
             "admin/change_form.html"
         ], context, context_instance=context_instance)
-    
-    def get_changelist(self, request, **kwargs): 
+
+    def get_changelist(self, request, **kwargs):
         """
         Return a custom ChangeList that links each object to the read-only
         view instead of the editable one.
@@ -411,10 +414,10 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
     @csrf_protect_m
     @transaction.commit_on_success
     def get_deleted_objects(self, objs, opts, request, using):
-        
+
         return django.contrib.admin.util.get_deleted_objects(objs, opts,
             request.user, self.admin_site, using)
-    
+
     # remove when https://code.djangoproject.com/ticket/17962 lands
     @csrf_protect_m
     @transaction.commit_on_success
@@ -422,42 +425,42 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         "The 'delete' admin view for this model."
         opts = self.model._meta
         app_label = opts.app_label
-    
+
         obj = self.get_object(request, unquote(object_id))
-    
+
         if not self.has_delete_permission(request, obj):
             raise PermissionDenied
-    
+
         if obj is None:
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_unicode(opts.verbose_name), 'key': escape(object_id)})
-    
+
         using = router.db_for_write(self.model)
-    
+
         # Populate deleted_objects, a data structure of all related objects that
         # will also be deleted.
         (deleted_objects, perms_needed, protected) = self.get_deleted_objects(
             [obj], opts, request, using)
-    
-        if request.POST: # The user has already confirmed the deletion.
+
+        if request.POST:  # The user has already confirmed the deletion.
             if perms_needed:
                 raise PermissionDenied
             obj_display = force_unicode(obj)
             self.log_deletion(request, obj, obj_display)
             self.delete_model(request, obj)
-    
+
             self.message_user(request, _('The %(name)s "%(obj)s" was deleted successfully.') % {'name': force_unicode(opts.verbose_name), 'obj': force_unicode(obj_display)})
-    
+
             if not self.has_change_permission(request, None):
                 return HttpResponseRedirect("../../../../")
             return HttpResponseRedirect("../../")
-    
+
         object_name = force_unicode(opts.verbose_name)
-    
+
         if perms_needed or protected:
             title = _("Cannot delete %(name)s") % {"name": object_name}
         else:
             title = _("Are you sure?")
-    
+
         context = {
             "title": title,
             "object_name": object_name,
@@ -483,16 +486,16 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         ModelAdmin's add_view and change_view methods. obj will be None
         if called from add_view, and the object being modified if called
         from change_view.
-        
+
         Overridden from ModelAdmin because that version tends to
         duplicate fields listed in readonly_fields. Tested by
         DocumentsModuleTest.test_document_admin_form_without_duplicate_fields.
         """
-        
+
         if self.declared_fieldsets:
             return self.declared_fieldsets
         form = self.get_form(request, obj)
-        
+
         from ordered_set import OrderedSet
         fields = OrderedSet(form.base_fields.keys()) \
             | OrderedSet(self.get_readonly_fields(request, obj))
@@ -502,16 +505,16 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         """
         Hook for changing the form class returned by get_form(), without
         losing the request-poking behaviour.
-        
+
         The default implementation below calls ModelAdmin's get_form method,
         which overrides ModelForm's automatic fieldsets using
-        our Meta class declared_fieldsets and exclude attributes.  
+        our Meta class declared_fieldsets and exclude attributes.
         However you can easily override this method to return any form
         class that you'd prefer to use instead. Fields in that form will
         still not be rendered by the AdminForm unless get_fieldsets returns
         them as well.
         """
-        
+
         return super(AdminWithReadOnly, self).get_form(request, obj,
             **kwargs)
 
@@ -521,32 +524,32 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         they doesn't normally have access to the request to find out;
         or to the object ID for that matter. So we poke both of these
         into the form instance.
-        
+
         Unfortunately, this function doesn't return a form object, but a
         form class, so we can't just stuff the request into it. But we can
         return a curried generator function instead, taking advantage of
         duck typing and how Python constructors work, and ModelAdmin will
         construct an instance of our form by calling the generator.
-        
+
         If you just want to change the class of form returned, you can just
         override get_form_class() instead.
         """
-        
+
         form_class = self.get_form_class(request, obj, **kwargs)
-        
-        def generator(data=None, files=None, auto_id='id_%s', prefix=None, 
-            initial=None, error_class=ErrorList, label_suffix=':', 
+
+        def generator(data=None, files=None, auto_id='id_%s', prefix=None,
+            initial=None, error_class=ErrorList, label_suffix=':',
             empty_permitted=False, instance=None):
-            
+
             new_instance = form_class(data, files, auto_id, prefix, initial,
                 error_class, label_suffix, empty_permitted, instance)
             new_instance.request = request
             new_instance.object_being_updated = obj
             return new_instance
-        
+
         # to keep ModelAdmin.get_fieldsets() happy:
         generator.base_fields = form_class.base_fields
-        
+
         return generator
 
 from django.forms.forms import BoundField
@@ -554,9 +557,9 @@ class BoundFieldWithReadOnly(BoundField):
     def readonly(self):
         from django.forms.fields import ChoiceField
         from django.forms.models import ModelChoiceField
-        
+
         value = self.value()
-        
+
         if hasattr(self.field.widget, 'has_readonly_view'):
             return self.as_widget(attrs={'readonly': True})
         elif isinstance(self.field, ModelChoiceField):
@@ -574,7 +577,7 @@ class BoundFieldWithReadOnly(BoundField):
                 return "Unknown value %s" % value
         else:
             return value
-        #    
+        #
         #    return super(CustomAdminReadOnlyField, self).contents()
 
 class ModelFormWithReadOnly(ModelForm):
@@ -593,39 +596,39 @@ class CustomAdminReadOnlyField(AdminReadonlyField):
     by implementing a has_readonly_view attribute, and responding to
     their render() method differently if readonly=True is passed to it.
     """
-    
+
     def contents(self, **widget_extra_attrs):
         widget_attrs = {'readonly': True}
 
         if widget_extra_attrs is not None:
             widget_attrs.update(widget_extra_attrs)
-            
+
         form = self.form
         field = self.field['field']
         # print "CustomAdminReadOnlyField.contents: form = %s, is_bound = %s" % (
         #    form.__class__, form.is_bound)
-        
+
         if hasattr(form[field].field.widget, 'has_readonly_view'):
             return form[field].as_widget(attrs=widget_attrs)
         else:
             return super(CustomAdminReadOnlyField, self).contents()
-        
+
     # patch for https://code.djangoproject.com/ticket/16433
     def help_text_for_field(self, name, model):
         from django.db import models
         from django.utils.encoding import smart_unicode
-        
+
         try:
             help_text = model._meta.get_field_by_name(name)[0].help_text
         except (models.FieldDoesNotExist, AttributeError):
             help_text = ""
         return smart_unicode(help_text)
-    
+
     # patch __init__ to use the patched help_text_for_field method
     def __init__(self, form, field, is_first, model_admin=None):
         from django.contrib.admin.util import label_for_field
         label = label_for_field(field, form._meta.model, model_admin)
-        
+
         # Make self.field look a little bit like a field. This means that
         # {{ field.name }} must be a useful class name to identify the field.
         # For convenience, store other field-related data here too.
