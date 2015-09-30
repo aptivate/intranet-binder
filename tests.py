@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.template import Context
+from django.test.client import RequestFactory
+from django.test.utils import override_settings
 UserModel = get_user_model()
 
 from django_dynamic_fixture import G
@@ -8,8 +10,10 @@ from django_dynamic_fixture import G
 from test_utils import AptivateEnhancedTestCase
 
 
+@override_settings(ROOT_URLCONF='intranet_binder.urls')
 class BinderTest(AptivateEnhancedTestCase):
-    fixtures = ['test_permissions', 'binder_test_users']
+    fixtures = ['test_permissions']
+    # fixtures = ['test_permissions', 'binder_test_users']
 
     def test_front_page_without_login(self):
         response = self.client.get('/')
