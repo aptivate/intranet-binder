@@ -120,14 +120,14 @@ class BinderTest(AptivateEnhancedTestCase):
             'request': factory.get('/', data=get_dict)
         }
 
-    def test_url_replace_templatetags_with_field_not_present(self):
-        from templatetags.url_replace import url_replace
-        path = url_replace(self.fake_context({'q': 'x'}), 'page', '3')
+    def test_url_get_params_replace_templatetags_with_field_not_present(self):
+        from templatetags.url_get_params_replace import url_get_params_replace
+        path = url_get_params_replace(self.fake_context({'q': 'x'}), 'page', '3')
         self.assertEquals('q=x&page=3', path)
 
-    def test_url_replace_templatetags_with_field_present(self):
-        from templatetags.url_replace import url_replace
-        path = url_replace(self.fake_context({'q': 'x', 'page': '1'}), 'page', '3')
+    def test_url_get_params_replace_templatetags_with_field_present(self):
+        from templatetags.url_get_params_replace import url_get_params_replace
+        path = url_get_params_replace(self.fake_context({'q': 'x', 'page': '1'}), 'page', '3')
         self.assertEquals('q=x&page=3', path)
 
     def test_ip_address_range_field_validator(self):
