@@ -10,7 +10,7 @@ from django_dynamic_fixture import G
 from test_utils import AptivateEnhancedTestCase
 
 
-@override_settings(ROOT_URLCONF='intranet_binder.urls')
+@override_settings(ROOT_URLCONF='{0}.urls'.format(__package__))
 class BinderTest(AptivateEnhancedTestCase):
     fixtures = ['test_permissions']
     # fixtures = ['test_permissions', 'binder_test_users']
@@ -131,7 +131,7 @@ class BinderTest(AptivateEnhancedTestCase):
         self.assertEquals('q=x&page=3', path)
 
     def test_ip_address_range_field_validator(self):
-        from intranet_binder.modelfields import IpAddressRangeField
+        from .modelfields import IpAddressRangeField
 
         def assert_valid_range(range_text):
             IpAddressRangeField().run_validators(range_text)
