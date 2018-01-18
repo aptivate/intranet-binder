@@ -1,10 +1,10 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 import views
 import django.contrib.auth.views
 
-urlpatterns = patterns('',
-    url(r'^$', 
+urlpatterns = (
+    url(r'^$',
         views.FrontPageView.as_view(),
         name='front_page'),
     url(r'^login$', django.contrib.auth.views.login,

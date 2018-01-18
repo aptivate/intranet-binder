@@ -2,10 +2,7 @@ from django.contrib.admin.widgets import AdminFileWidget
 class AdminFileWidgetWithSize(AdminFileWidget):
     template_with_initial = u'%(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
     readonly_template = u'%(link_to_file)s (%(size)s)'
-    
-    from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
-    readonly_unset_template = EMPTY_CHANGELIST_VALUE
-    
+   
     has_readonly_view = True
 
     def extra_context(self, name, value, attrs):
@@ -53,7 +50,8 @@ class AdminFileWidgetWithSize(AdminFileWidget):
             if value and hasattr(value, "url"):
                 template = self.readonly_template
             else:
-                template = self.readonly_unset_template
+                # TODO: Is this correct? What is we don't have a value?
+                template = value.model_admin.get_empty_value_display()
         
         substitutions.update(self.extra_context(name, value, attrs))
         

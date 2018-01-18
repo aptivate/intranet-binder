@@ -6,14 +6,14 @@ import models
 from django import forms, template
 from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
-from django.contrib.admin.util import unquote
+from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db import models as db_fields
 from django.db import transaction, router
 from django.forms import ModelForm
 from django.forms import fields as form_fields
-from django.forms.util import ErrorList
+from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.utils.encoding import force_unicode
@@ -412,7 +412,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
 
     # remove when https://code.djangoproject.com/ticket/17962 lands
     @csrf_protect_m
-    @transaction.commit_on_success
+    @transaction.atomic
     def get_deleted_objects(self, objs, opts, request, using):
 
         return django.contrib.admin.util.get_deleted_objects(objs, opts,
@@ -420,7 +420,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
 
     # remove when https://code.djangoproject.com/ticket/17962 lands
     @csrf_protect_m
-    @transaction.commit_on_success
+    @transaction.atomic
     def delete_view(self, request, object_id, extra_context=None):
         "The 'delete' admin view for this model."
         opts = self.model._meta
