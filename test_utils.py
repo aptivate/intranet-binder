@@ -11,7 +11,7 @@ from django.http.request import QueryDict
 from django.test import TestCase
 from django.test.client import Client, ClientHandler, encode_multipart, \
     MULTIPART_CONTENT, BOUNDARY
-from django.utils.importlib import import_module
+from importlib import import_module
 from django.utils import timezone
 
 
