@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
-from models import IntranetUser
+from .models import IntranetUser
 import ldap
 
 class ActiveDirectoryBackend:

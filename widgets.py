@@ -1,7 +1,7 @@
 from django.contrib.admin.widgets import AdminFileWidget
 class AdminFileWidgetWithSize(AdminFileWidget):
-    template_with_initial = u'%(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
-    readonly_template = u'%(link_to_file)s (%(size)s)'
+    template_with_initial = '%(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
+    readonly_template = '%(link_to_file)s (%(size)s)'
    
     has_readonly_view = True
 
@@ -16,7 +16,7 @@ class AdminFileWidgetWithSize(AdminFileWidget):
             'clear_template': '',
             'clear_checkbox_label': self.clear_checkbox_label,
         }
-        template = u'%(input)s'
+        template = '%(input)s'
         substitutions['input'] = super(ClearableFileInput,
             self).render(name, value, attrs)
 
@@ -31,7 +31,7 @@ class AdminFileWidgetWithSize(AdminFileWidget):
             
             from django.utils.encoding import force_unicode
             from django.utils.html import escape, conditional_escape
-            substitutions['link_to_file'] = (u'<a href="%s">%s</a>'
+            substitutions['link_to_file'] = ('<a href="%s">%s</a>'
                                         % (escape(value.url),
                                            escape(force_unicode(value))))
             
@@ -59,9 +59,9 @@ class AdminFileWidgetWithSize(AdminFileWidget):
         return mark_safe(template % substitutions)
 
 class AdminImageWidgetWithThumbnail(AdminFileWidgetWithSize):
-    template_with_initial = u'%(thumbnail)s %(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
-    readonly_template = u'%(thumbnail)s %(link_to_file)s (%(size)s)'
-    thumbnail_template = u'<img class="thumbnail" src="%s" /><br />'
+    template_with_initial = '%(thumbnail)s %(initial_text)s: %(link_to_file)s (%(size)s) %(clear_template)s<br />%(input_text)s: %(input)s'
+    readonly_template = '%(thumbnail)s %(link_to_file)s (%(size)s)'
+    thumbnail_template = '<img class="thumbnail" src="%s" /><br />'
     thumbnail_options = {
         'size': (200, 200),
         'crop': True,

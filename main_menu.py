@@ -29,7 +29,7 @@ class MainMenu(Menu):
             self.append("Documents", 'document_list')
         
             if request.user.is_manager:
-                from configurable import UserModel
+                from .configurable import UserModel
                 user_changelist = ('admin:%s_%s_changelist' %
                     (UserModel._meta.app_label, UserModel._meta.module_name))
                 from django.utils.text import capfirst

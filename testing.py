@@ -73,7 +73,7 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
             from django.test.simple import get_tests
             app_tests_module = get_tests(app_models_module)
             
-            for sub_module in [m for m in app_models_module, app_tests_module
+            for sub_module in [m for m in (app_models_module, app_tests_module)
                 if m is not None]:
                 
                 # print "Checking for %s in %s" % (label, sub_module)
@@ -81,7 +81,7 @@ class SmartTestSuiteRunner(DjangoTestSuiteRunner):
                 for name in dir(sub_module):
                     obj = getattr(sub_module, name)
                     import types
-                    if (isinstance(obj, (type, types.ClassType)) and
+                    if (isinstance(obj, type) and
                         issubclass(obj, unittest.TestCase)):
                         
                         test_names = loader.getTestCaseNames(obj)

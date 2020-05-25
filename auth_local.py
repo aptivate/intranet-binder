@@ -1,7 +1,7 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 
-import configurable
+from . import configurable
 
 class ConfigurableUserBackend(ModelBackend):
     """

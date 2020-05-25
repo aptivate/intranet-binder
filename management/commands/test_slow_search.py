@@ -13,12 +13,12 @@ class Command(NoArgsCommand):
         with ix.searcher() as searcher:
             parser = QueryParser("text", ix.schema)
 
-            q = parser.parse(u'(programs:4 or programs:5)')
-            print "or => %s" % q
+            q = parser.parse('(programs:4 or programs:5)')
+            print("or => %s" % q)
             results = searcher.search(q)
-            print len(results)
+            print(len(results))
             
-            q = parser.parse(u'(programs:4 OR programs:5)')
-            print "OR => %s" % q
+            q = parser.parse('(programs:4 OR programs:5)')
+            print("OR => %s" % q)
             results = searcher.search(q, optimize=False)
-            print len(results)
+            print(len(results))

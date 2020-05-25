@@ -50,7 +50,7 @@ class Command(BaseCommand):
         """
         
         from django.conf import settings
-        login = raw_input("Your user name on %s: " % settings.AD_NT4_DOMAIN)
+        login = input("Your user name on %s: " % settings.AD_NT4_DOMAIN)
         password = getpass.getpass("Password for %s on %s: " %
             (login, settings.AD_NT4_DOMAIN))
         
@@ -75,9 +75,9 @@ class Command(BaseCommand):
                 try:
                     user = auth.create_or_update_user_from_result(dn=result[0],
                         attrs=result[1], username=result[1]['sAMAccountName'][0])
-                    print("Imported user: %s" % user.username)
+                    print(("Imported user: %s" % user.username))
                 except KeyError as e:
-                    print("Failed to import user %s: %s" % (result[0], e))
+                    print(("Failed to import user %s: %s" % (result[0], e)))
                 """
                 except TypeError as e:
                     import pdb; pdb.set_trace()

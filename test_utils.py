@@ -111,11 +111,11 @@ class SuperClient(Client):
             if lineno is not None:
                 first_line = max(lineno - 5, 1)
                 last_line = min(lineno + 5, len(lines))
-                print xml
-                print "Context (line %s):\n>>%s<<" % (lineno,
-                    "".join(lines[first_line:last_line]))
+                print(xml)
+                print("Context (line %s):\n>>%s<<" % (lineno,
+                    "".join(lines[first_line:last_line])))
             else:
-                print repr(e)
+                print(repr(e))
 
             raise
 
@@ -505,7 +505,7 @@ class FormUtilsMixin(object):
                 post_data[field.name] = value
 
         query_dict = QueryDict('', mutable=True).copy()
-        for key, value in post_data.iteritems():
+        for key, value in post_data.items():
             if hasattr(value, '__iter__'):
                 query_dict.setlist(key, value)
             else:
@@ -779,7 +779,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
             elements = (seq_type_name.capitalize(), seq1_repr, seq2_repr)
             differing = '%ss differ: %s != %s\n' % elements
 
-            for i in xrange(min(len1, len2)):
+            for i in range(min(len1, len2)):
                 try:
                     item1 = seq1[i]
                 except (TypeError, IndexError, NotImplementedError):
@@ -921,12 +921,12 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
             table = response.context['results_table']
         except KeyError:
             self.fail("No table in response context: %s" %
-                response.context.keys())
+                list(response.context.keys()))
 
         import django_tables2 as tables
         self.assertIsInstance(table, tables.Table)
 
-        columns = table.base_columns.items()
+        columns = list(table.base_columns.items())
         self.assertNotIn('score', [c[0] for c in columns],
             "Score column is disabled on request")
 
@@ -986,7 +986,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
         expected_uri = response.real_request.build_absolute_uri(expected_url)
         self.assertSequenceEqual([(expected_uri, 302)],
             redirect_chain, message)
-        self.assertEquals(expected_code, response.status_code,
+        self.assertEqual(expected_code, response.status_code,
             "final response, after following, should have been a " +
             "%s, not this: %s" % (expected_code, response.content))
 
@@ -1012,7 +1012,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
         try:
             from urllib.parse import urlsplit, urlunsplit
         except ImportError:     # Python 2
-            from urlparse import urlsplit, urlunsplit
+            from urllib.parse import urlsplit, urlunsplit
 
         e_scheme, e_netloc, e_path, e_query, e_fragment = urlsplit(expected_url)
         if not (e_scheme or e_netloc):
@@ -1094,7 +1094,7 @@ def throwing_exception_on_HttpResponseForbidden(decoratee_method):
 
                 return decoratee_method(*args, **kwargs)
 
-    decorated_method.func_name = decoratee_method.func_name
+    decorated_method.__name__ = decoratee_method.__name__
     return decorated_method
 
 

@@ -1,6 +1,6 @@
 from haystack import indexes, fields
 
-import configurable
+from . import configurable
 
 class UserIndex(indexes.SearchIndex, indexes.Indexable):
     text = fields.CharField(model_attr='full_name', document=True)

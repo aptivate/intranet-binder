@@ -7,7 +7,7 @@ UserModel = get_user_model()
 
 from django_dynamic_fixture import G
 
-from test_utils import AptivateEnhancedTestCase
+from .test_utils import AptivateEnhancedTestCase
 
 
 @override_settings(ROOT_URLCONF='intranet_binder.urls')
@@ -35,7 +35,7 @@ class BinderTest(AptivateEnhancedTestCase):
             "Wrong main menu for unauthenticated users")
 
     def test_menu_tag_with_named_route(self):
-        import templatetags.menu as menu_tag
+        from . import templatetags.menu as menu_tag
 
         context = Context({'global': {'path': '/'}})
         self.assertEqual('<td class="selected"><a href="/">Home</a></td>',
@@ -51,7 +51,7 @@ class BinderTest(AptivateEnhancedTestCase):
         super(BinderTest, self).login(user)
 
     def test_TemplatedModelChoiceField_renders_template_correctly(self):
-        from admin import (TemplatedModelChoiceField,
+        from .admin import (TemplatedModelChoiceField,
             TemplatedModelMultipleChoiceField)
 
         class MockQueryset(object):
@@ -81,37 +81,37 @@ class BinderTest(AptivateEnhancedTestCase):
                 field.label_from_instance(fake_object))
 
     def test_lists_templatetags_format_items(self):
-        from templatetags.lists import format_items
+        from .templatetags.lists import format_items
 
         from django.contrib.auth.models import User, Group
 
-        self.assertEquals([m._meta.verbose_name_plural.title() for m in []],
+        self.assertEqual([m._meta.verbose_name_plural.title() for m in []],
             format_items([], "item._meta.verbose_name_plural.title"))
-        self.assertEquals([m._meta.verbose_name_plural.title() for m in [User]],
+        self.assertEqual([m._meta.verbose_name_plural.title() for m in [User]],
             format_items([User], "item._meta.verbose_name_plural.title"))
-        self.assertEquals([m._meta.verbose_name_plural.title() for m in [User, Group]],
+        self.assertEqual([m._meta.verbose_name_plural.title() for m in [User, Group]],
             format_items([User, Group], "item._meta.verbose_name_plural.title"))
 
     def test_lists_templatetags_join_last_two(self):
-        from templatetags.lists import join_last_two
+        from .templatetags.lists import join_last_two
 
-        self.assertEquals([],
+        self.assertEqual([],
             join_last_two([], " whee "))
-        self.assertEquals(["a"],
+        self.assertEqual(["a"],
             join_last_two(["a"], " whee "))
-        self.assertEquals(["a whee b"],
+        self.assertEqual(["a whee b"],
             join_last_two(["a", "b"], " whee "))
-        self.assertEquals(["a", "b whee c"],
+        self.assertEqual(["a", "b whee c"],
             join_last_two(["a", "b", "c"], " whee "))
 
     def test_lists_templatetags_if_empty_list(self):
-        from templatetags.lists import if_empty_list
+        from .templatetags.lists import if_empty_list
 
-        self.assertEquals(["nada"],
+        self.assertEqual(["nada"],
             if_empty_list([], "nada"))
-        self.assertEquals(["a"],
+        self.assertEqual(["a"],
             if_empty_list(["a"], "nada"))
-        self.assertEquals(["a", "b"],
+        self.assertEqual(["a", "b"],
             if_empty_list(["a", "b"], "nada"))
 
     def fake_context(self, get_dict):
@@ -121,14 +121,14 @@ class BinderTest(AptivateEnhancedTestCase):
         }
 
     def test_url_get_params_replace_templatetags_with_field_not_present(self):
-        from templatetags.url_get_params_replace import url_get_params_replace
+        from .templatetags.url_get_params_replace import url_get_params_replace
         path = url_get_params_replace(self.fake_context({'q': 'x'}), 'page', '3')
-        self.assertEquals('q=x&page=3', path)
+        self.assertEqual('q=x&page=3', path)
 
     def test_url_get_params_replace_templatetags_with_field_present(self):
-        from templatetags.url_get_params_replace import url_get_params_replace
+        from .templatetags.url_get_params_replace import url_get_params_replace
         path = url_get_params_replace(self.fake_context({'q': 'x', 'page': '1'}), 'page', '3')
-        self.assertEquals('q=x&page=3', path)
+        self.assertEqual('q=x&page=3', path)
 
     def test_ip_address_range_field_validator(self):
         from intranet_binder.modelfields import IpAddressRangeField

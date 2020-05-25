@@ -16,7 +16,7 @@ def menu_item(context, element, uri_or_name, label):
         attributes['class'] = 'selected'
     
     attributes = ['%s="%s"' % (html.escape(k), html.escape(v))
-        for k, v in attributes.iteritems()]
+        for k, v in attributes.items()]
     attributes = " ".join(attributes)
     
     return '<%s %s><a href="%s">%s</a></%s>' % (element, attributes,

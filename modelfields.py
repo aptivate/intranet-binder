@@ -16,7 +16,7 @@ class ModifyingFieldDescriptor(object):
 class LowerCaseCharField(models.CharField):
     def to_python(self, value):
         value = super(LowerCaseCharField, self).to_python(value)
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return value.lower()
         return value
     def contribute_to_class(self, cls, name):
@@ -172,7 +172,7 @@ class IpAddressRangeValidator(object):
             raise ValidationError(("%s: does not match the pattern: " +
                 "a.b.c.d or a.b.c.d/e") % self.message, code=self.code)
 
-        ip_bits = long(0)
+        ip_bits = int(0)
 
         for i in range(4):
             octet = int(matches.group(i + 1))
@@ -195,7 +195,7 @@ class IpAddressRangeValidator(object):
                 "should be between 0 and 32") %
                 (self.message, matches.group(5)), code=self.code)
 
-        mask = (long(1) << (32 - mask_len)) - 1
+        mask = (int(1) << (32 - mask_len)) - 1
         masked_value = (ip_bits & mask)
         if masked_value != 0:
             raise ValidationError(("%s: according to the network mask %d, " +
