@@ -16,7 +16,14 @@ from django.forms import fields as form_fields
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
-from django.utils.encoding import force_unicode
+
+try:
+    # Python 2
+    from django.utils.encoding import force_unicode
+except ImportError:
+    # Python 3
+    from django.utils.encoding import force_text as force_unicode
+
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
@@ -226,7 +233,13 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             from django.conf.urls import url
         except ImportError:
             from django.conf.urls.defaults import url
-        from django.utils.encoding import force_unicode
+
+        try:
+            # Python 2
+            from django.utils.encoding import force_unicode
+        except ImportError:
+            # Python 3
+            from django.utils.encoding import force_text as force_unicode
 
         opts = self.model._meta
         info = opts.app_label, opts.module_name
