@@ -1,7 +1,7 @@
 # https://code.djangoproject.com/ticket/16929
 
 import django.contrib.admin
-import models
+from . import models
 
 from django import forms, template
 from django.contrib import admin
@@ -43,7 +43,7 @@ class TemplateChoiceMixin(object):
     "template" parameter.
     """
 
-    template = u'{{ obj }}'
+    template = '{{ obj }}'
     context = {}
 
     def __init__(self, template=None, context=None, *args, **kwargs):
@@ -143,7 +143,7 @@ class DisableAddRelatedMixin(object):
         return old_formfield
 
 from django.contrib.admin import ModelAdmin
-import widgets
+from . import widgets
 class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
     DisableAddRelatedMixin, ModelAdmin):
 
@@ -178,7 +178,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
 
         from django.contrib.auth.management import _get_permission_codename
         view_perm = (_get_permission_codename('view', model._meta),
-            u'Can %s %s' % ('view', model._meta.verbose_name_raw))
+            'Can %s %s' % ('view', model._meta.verbose_name_raw))
         expected_perms = ((ctype, view_perm),)
 
         # Find all the Permissions that have a context_type for a model we're
@@ -496,8 +496,8 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             return self.declared_fieldsets
         form = self.get_form(request, obj)
 
-        from ordered_set import OrderedSet
-        fields = OrderedSet(form.base_fields.keys()) \
+        from .ordered_set import OrderedSet
+        fields = OrderedSet(list(form.base_fields.keys())) \
             | OrderedSet(self.get_readonly_fields(request, obj))
         return [(None, {'fields': fields})]
 
