@@ -112,10 +112,10 @@ class SuperClient(Client):
                 first_line = max(lineno - 5, 1)
                 last_line = min(lineno + 5, len(lines))
                 print(xml)
-                print("Context (line %s):\n>>%s<<" % (lineno,
-                    "".join(lines[first_line:last_line])))
+                print(("Context (line %s):\n>>%s<<" % (lineno,
+                    "".join(lines[first_line:last_line]))))
             else:
-                print(repr(e))
+                print((repr(e)))
 
             raise
 
@@ -323,7 +323,7 @@ class FormUtilsMixin(object):
         import django.forms.widgets
         import django.contrib.admin.widgets
         import django.contrib.auth.forms
-        from django.utils.encoding import force_unicode
+        from django.utils.encoding import force_text
 
         try:
             from captcha.widgets import ReCaptcha
@@ -355,7 +355,7 @@ class FormUtilsMixin(object):
                 return {}
 
         elif isinstance(widget, django.forms.widgets.Select):
-            if '__iter__' in dir(value):
+            if isinstance(value, (list, tuple)):
                 values = list(value)
             else:
                 values = [value]
@@ -409,7 +409,7 @@ class FormUtilsMixin(object):
             return self.value_to_datadict(subwidget, name, value, strict)
 
         elif isinstance(widget, django.forms.widgets.Textarea):
-            return {name: force_unicode(value)}
+            return {name: force_text(value)}
 
         elif isinstance(widget, django.contrib.auth.forms.ReadOnlyPasswordHashWidget):
             return {}
@@ -418,8 +418,8 @@ class FormUtilsMixin(object):
             raise Exception("You can't spoof a ReCaptcha, delete it from "
                 "form.fields instead!")
 
-        elif getattr(widget, '_format_value', None):
-            value = widget._format_value(value)
+        elif getattr(widget, 'format_value', None):
+            value = widget.format_value(value)
             if value is None:
                 value = ''
             return {name: value}
@@ -505,8 +505,8 @@ class FormUtilsMixin(object):
                 post_data[field.name] = value
 
         query_dict = QueryDict('', mutable=True).copy()
-        for key, value in post_data.items():
-            if hasattr(value, '__iter__'):
+        for key, value in list(post_data.items()):
+            if isinstance(value, (list, tuple)):
                 query_dict.setlist(key, value)
             else:
                 query_dict.setlist(key, [value])

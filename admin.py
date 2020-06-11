@@ -290,7 +290,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         the access is read-only.
         """
 
-        if (request.user.is_authenticated() and
+        if (request.user.is_authenticated and
             getattr(request, 'is_read_only', False) and
             request.method == 'GET' and
             self.has_view_permission(request, obj)):
@@ -629,13 +629,13 @@ class CustomAdminReadOnlyField(AdminReadonlyField):
     # patch for https://code.djangoproject.com/ticket/16433
     def help_text_for_field(self, name, model):
         from django.db import models
-        from django.utils.encoding import smart_unicode
+        from django.utils.encoding import smart_text
 
         try:
             help_text = model._meta.get_field_by_name(name)[0].help_text
         except (models.FieldDoesNotExist, AttributeError):
             help_text = ""
-        return smart_unicode(help_text)
+        return smart_text(help_text)
 
     # patch __init__ to use the patched help_text_for_field method
     def __init__(self, form, field, is_first, model_admin=None):
