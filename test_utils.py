@@ -1110,11 +1110,7 @@ class MonotonicTimeMixin(object):
             while True:
                 t += datetime.timedelta(minutes=1)
                 yield t
-        import minimock
-        minimock.mock("timezone.now", returns_iter=now_iter(timezone.now()), tracker=None)
-        super(MonotonicTimeMixin, self).setUp()
 
-    def tearDown(self):
-        import minimock
-        minimock.restore()
-        super(MonotonicTimeMixin, self).tearDown()
+        from unittest.mock import patch
+        with patch.object(timezone, 'now', return_value=now_iter(timezone.now())):
+            super(MonotonicTimeMixin, self).setUp()
