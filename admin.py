@@ -8,7 +8,7 @@ from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
 from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import models as db_fields
 from django.db import transaction, router
 from django.forms import ModelForm

@@ -1036,7 +1036,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
     def admin_change_url(self, instance):
         # Return the URL needed to call the admin change form
         # for the given instance
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('admin:%s_%s_change' %
             (instance._meta.app_label, instance._meta.module_name),
             args=[instance.pk])
@@ -1044,12 +1044,12 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
     def admin_changelist_url(self, model):
         # Return the URL needed to call the admin changelist page
         # for the given model
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('admin:%s_%s_changelist' %
             (model._meta.app_label, model._meta.module_name))
 
     def assert_login_required(self, view, message=None):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         uri = reverse(view)
         response = self.client.get(uri)
 
