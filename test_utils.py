@@ -96,12 +96,15 @@ class SuperClient(Client):
             root = etree.fromstring(xml, parser)
         except SyntaxError as e:
             import re
-            match = re.match('Opening and ending tag mismatch: ' +
-                '(\w+) line (\d+) and (\w+), line (\d+), column (\d+)', str(e))
+            match = re.match((
+                r'Opening and ending tag mismatch: '
+                r'(\w+) line (\d+) and (\w+), line (\d+), column (\d+)'),
+                str(e)
+            )
             if match:
                 lineno = int(match.group(2))
             else:
-                match = re.match('.*, line (\d+), column (\d+)', str(e))
+                match = re.match(r'.*, line (\d+), column (\d+)', str(e))
                 if match:
                     lineno = int(match.group(1))
                 else:
@@ -435,8 +438,10 @@ class FormUtilsMixin(object):
         which represent a file upload where no file is provided, and
         return a values dict suitable for self.client.post().
         """
-
         params = dict()
+
+        if new_values is None:
+            new_values = {}
 
         field_names = [bound_field.name for bound_field in form]
         for name in new_values:
