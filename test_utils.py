@@ -456,12 +456,15 @@ class FormUtilsMixin(object):
             widget = form_field.widget
 
             # defaults to the current value bound into the form:
-            value = new_values.get(bound_field.name, bound_field.value())
+            value = new_values.get(bound_field.html_name, bound_field.value())
 
             # be strict with values passed by tests to this function,
             # and lax with values that were already in the record/form
-            new_params = self.value_to_datadict(widget, bound_field.name, value,
-                strict=(bound_field.name in new_values))
+            new_params = self.value_to_datadict(
+                widget, bound_field.html_name,
+                value,
+                strict=(bound_field.name in new_values)
+            )
 
             params.update(new_params)
 
