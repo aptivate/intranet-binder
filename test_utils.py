@@ -201,7 +201,7 @@ class SuperClient(Client):
         else:
             return None
 
-from django.forms.forms import BoundField
+from django.forms import BoundField
 
 
 class FormUtilsMixin(object):

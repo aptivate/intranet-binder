@@ -15,7 +15,7 @@ from django.forms import ModelForm
 from django.forms import fields as form_fields
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 
 try:
     # Python 2
@@ -26,7 +26,7 @@ except ImportError:
 
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 # from django.utils.decorators import method_decorator
 # from django.views.decorators.csrf import csrf_protect
@@ -410,7 +410,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
                 form_template = self.change_form_template
 
         context_instance = template.RequestContext(request, current_app=self.admin_site.name)
-        return render_to_response(form_template or [
+        return render(request, form_template or [
             "admin/%s/%s/change_form.html" % (app_label, opts.object_name.lower()),
             "admin/%s/change_form.html" % app_label,
             "admin/change_form.html"
@@ -487,7 +487,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
         }
         context.update(extra_context or {})
         context_instance = template.RequestContext(request, current_app=self.admin_site.name)
-        return render_to_response(self.delete_confirmation_template or [
+        return render(request, self.delete_confirmation_template or [
             "admin/%s/%s/delete_confirmation.html" % (app_label, opts.object_name.lower()),
             "admin/%s/delete_confirmation.html" % app_label,
             "admin/delete_confirmation.html"
@@ -565,7 +565,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
 
         return generator
 
-from django.forms.forms import BoundField
+from django.forms import BoundField
 class BoundFieldWithReadOnly(BoundField):
     def readonly(self):
         from django.forms.fields import ChoiceField
@@ -628,12 +628,12 @@ class CustomAdminReadOnlyField(AdminReadonlyField):
 
     # patch for https://code.djangoproject.com/ticket/16433
     def help_text_for_field(self, name, model):
-        from django.db import models
+        from django.core.exceptions import FieldDoesNotExist
         from django.utils.encoding import smart_text
 
         try:
             help_text = model._meta.get_field_by_name(name)[0].help_text
-        except (models.FieldDoesNotExist, AttributeError):
+        except (FieldDoesNotExist, AttributeError):
             help_text = ""
         return smart_text(help_text)
 
