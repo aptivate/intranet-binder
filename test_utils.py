@@ -6,6 +6,7 @@ from lxml import etree
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.forms.boundfield import BoundField
 from django.http import HttpRequest
 from django.http.request import QueryDict
 from django.test import TestCase
@@ -201,8 +202,6 @@ class SuperClient(Client):
         else:
             return None
 
-from django.forms.forms import BoundField
-
 
 class FormUtilsMixin(object):
 
@@ -212,7 +211,7 @@ class FormUtilsMixin(object):
         Typical usage:
 
         fields = dict(extract_fields(my_form))
-        self.assertEquals("Foo", fields['bar'].verbose_name)
+        self.assertEqual("Foo", fields['bar'].verbose_name)
         """
         for fieldset in form:
             for line in fieldset:
@@ -724,7 +723,7 @@ class AptivateEnhancedTestCase(FormUtilsMixin, TestCase):
                             msg=None, seq_type=None, max_diff=80*8):
         """
         Argh! Copied and pasted from case.py to change one line: use
-        self.assertEquals instead of ==.
+        self.assertEqual instead of ==.
 
         An equality assertion for ordered sequences (like lists and tuples).
 

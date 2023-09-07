@@ -14,8 +14,9 @@ from django.db import transaction, router
 from django.forms import ModelForm
 from django.forms import fields as form_fields
 from django.forms.utils import ErrorList
+from django.forms.boundfield import BoundField
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 
 try:
     # Python 2
@@ -410,11 +411,15 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
                 form_template = self.change_form_template
 
         context_instance = template.RequestContext(request, current_app=self.admin_site.name)
-        return render_to_response(form_template or [
-            "admin/%s/%s/change_form.html" % (app_label, opts.object_name.lower()),
-            "admin/%s/change_form.html" % app_label,
-            "admin/change_form.html"
-        ], context, context_instance=context_instance)
+        return render(
+            request,
+            form_template or [
+                "admin/%s/%s/change_form.html" % (app_label, opts.object_name.lower()),
+                "admin/%s/change_form.html" % app_label,
+                "admin/change_form.html"
+            ],
+            context,
+        )
 
     def get_changelist(self, request, **kwargs):
         """
@@ -486,12 +491,15 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             "app_label": app_label,
         }
         context.update(extra_context or {})
-        context_instance = template.RequestContext(request, current_app=self.admin_site.name)
-        return render_to_response(self.delete_confirmation_template or [
-            "admin/%s/%s/delete_confirmation.html" % (app_label, opts.object_name.lower()),
-            "admin/%s/delete_confirmation.html" % app_label,
-            "admin/delete_confirmation.html"
-        ], context, context_instance=context_instance)
+        return render(
+            request,
+            self.delete_confirmation_template or [
+                "admin/%s/%s/delete_confirmation.html" % (app_label, opts.object_name.lower()),
+                "admin/%s/delete_confirmation.html" % app_label,
+                "admin/delete_confirmation.html"
+            ],
+            context,
+        )
 
     def get_fieldsets(self, request, obj=None):
         """
@@ -565,7 +573,6 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
 
         return generator
 
-from django.forms.forms import BoundField
 class BoundFieldWithReadOnly(BoundField):
     def readonly(self):
         from django.forms.fields import ChoiceField
