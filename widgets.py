@@ -149,8 +149,8 @@ class CheckboxInputWithEmptyValueSupport(CheckboxInput):
         
         if not (value is True or value is False or value is None):
             # Only add the 'value' attribute if a value is non-empty.
-            from django.utils.encoding import force_text
-            final_attrs['value'] = force_text(value)
+            from django.utils.encoding import force_str
+            final_attrs['value'] = force_str(value)
 
         from django.utils.html import format_html
         from django.forms.util import flatatt
@@ -195,8 +195,8 @@ class ConfigurableCheckboxSelectMultiple(CheckboxSelectMultiple):
         
         cb = self.checkbox_class(final_attrs, check_test)
         
-        from django.utils.encoding import force_text
-        option_value = force_text(option_value)
+        from django.utils.encoding import force_str
+        option_value = force_str(option_value)
         return cb.render(name, option_value)
 
     list_item_template = ('<li>' +
@@ -224,8 +224,8 @@ class ConfigurableCheckboxSelectMultiple(CheckboxSelectMultiple):
         rendered_cb = self.render_checkbox(name, option_value,
             attrs, str_values)
 
-        from django.utils.encoding import force_text
-        option_label = force_text(option_label)
+        from django.utils.encoding import force_str
+        option_label = force_str(option_label)
         
         list_item_context = {
             'checkbox_id': attrs.get('id', None),
@@ -249,8 +249,8 @@ class ConfigurableCheckboxSelectMultiple(CheckboxSelectMultiple):
         final_attrs = self.build_attrs(attrs, name=name)
         output = ['<ul>']
         # Normalize to strings
-        from django.utils.encoding import force_text
-        str_values = set([force_text(v) for v in value])
+        from django.utils.encoding import force_str
+        str_values = set([force_str(v) for v in value])
         
         from itertools import chain
         for i, (option_value, option_label) in enumerate(

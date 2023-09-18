@@ -23,11 +23,11 @@ try:
     from django.utils.encoding import force_unicode
 except ImportError:
     # Python 3
-    from django.utils.encoding import force_text as force_unicode
+    from django.utils.encoding import force_str as force_unicode
 
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 # from django.utils.decorators import method_decorator
 # from django.views.decorators.csrf import csrf_protect
@@ -240,7 +240,7 @@ class AdminWithReadOnly(AllowOverrideAdminFormFieldByNameMixin,
             from django.utils.encoding import force_unicode
         except ImportError:
             # Python 3
-            from django.utils.encoding import force_text as force_unicode
+            from django.utils.encoding import force_str as force_unicode
 
         opts = self.model._meta
         info = opts.app_label, opts.module_name

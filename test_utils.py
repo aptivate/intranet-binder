@@ -325,7 +325,7 @@ class FormUtilsMixin(object):
         import django.forms.widgets
         import django.contrib.admin.widgets
         import django.contrib.auth.forms
-        from django.utils.encoding import force_text
+        from django.utils.encoding import force_str
 
         try:
             from captcha.widgets import ReCaptcha
@@ -411,7 +411,7 @@ class FormUtilsMixin(object):
             return self.value_to_datadict(subwidget, name, value, strict)
 
         elif isinstance(widget, django.forms.widgets.Textarea):
-            return {name: force_text(value)}
+            return {name: force_str(value)}
 
         elif isinstance(widget, django.contrib.auth.forms.ReadOnlyPasswordHashWidget):
             return {}

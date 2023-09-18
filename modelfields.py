@@ -164,10 +164,10 @@ class IpAddressRangeValidator(object):
         """
         Validates that the input matches the regular expression.
         """
-        from django.utils.encoding import force_text
+        from django.utils.encoding import force_str
         from django.core.exceptions import ValidationError
 
-        matches = self.regex.match(force_text(value))
+        matches = self.regex.match(force_str(value))
         if matches is None:
             raise ValidationError(("%s: does not match the pattern: " +
                 "a.b.c.d or a.b.c.d/e") % self.message, code=self.code)
